@@ -41,6 +41,40 @@ query TeacherSearchPaginationQuery($schoolID: ID!, $cursor: String) {
 }
 """
 
+NAME_SEARCH_QUERY = """
+query TeacherSearchQuery($text: String!, $schoolID: ID!) {
+  newSearch {
+    teachers(query: {text: $text, schoolID: $schoolID}, first: 5) {
+      edges {
+        node {
+          id
+          legacyId
+          firstName
+          lastName
+          department
+          avgRating
+          avgDifficulty
+          wouldTakeAgainPercent
+          numRatings
+          ratings(first: 20) {
+            edges {
+              node {
+                comment
+                date
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+"""
+
 
 def parse_teacher_node(node: dict) -> dict:
     """Parse a single teacher node from the GraphQL response."""
@@ -112,3 +146,10 @@ class RmpScraper:
             time.sleep(random.uniform(3, 7))
 
         return teachers
+
+    def search_teacher_by_name(self, name: str) -> list[dict]:
+        """Search for a teacher by name at this school. Returns list of parsed teacher dicts."""
+        variables = {"text": name, "schoolID": self.school_id_encoded}
+        data = self._request(NAME_SEARCH_QUERY, variables)
+        edges = data.get("data", {}).get("newSearch", {}).get("teachers", {}).get("edges", [])
+        return [parse_teacher_node(edge["node"]) for edge in edges]

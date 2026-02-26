@@ -1,0 +1,59 @@
+{
+  "data": {
+    "newSearch": {
+      "teachers": {
+        "edges": [
+          {
+            "node": {
+              "id": "VGVhY2hlci01NTU1",
+              "legacyId": 5555,
+              "firstName": "John",
+              "lastName": "Smith",
+              "department": "Statistics",
+              "avgRating": 4.2,
+              "avgDifficulty": 3.1,
+              "wouldTakeAgainPercent": 85.0,
+              "numRatings": 42,
+              "ratings": {
+                "edges": [
+                  {
+                    "node": {
+                      "comment": "Great professor, clear lectures and fair exams.",
+                      "date": "2024-01-15"
+                    }
+                  },
+                  {
+                    "node": {
+                      "comment": "Tough grader but you learn a lot.",
+                      "date": "2024-03-20"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "VGVhY2hlci02NjY2",
+              "legacyId": 6666,
+              "firstName": "Jane",
+              "lastName": "Smithson",
+              "department": "English",
+              "avgRating": 3.0,
+              "avgDifficulty": 2.5,
+              "wouldTakeAgainPercent": 60.0,
+              "numRatings": 10,
+              "ratings": {
+                "edges": []
+              }
+            }
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "xyz789"
+        }
+      }
+    }
+  }
+}
