@@ -16,7 +16,7 @@ A production dashboard for UCSB students that correlates grade distributions wit
 - **Database:** PostgreSQL 16
 - **Scraping:** curl_cffi (RMP GraphQL), Pandas (Daily Nexus CSV)
 - **NLP:** VADER sentiment + TF-IDF keyword extraction
-- **Matching:** TheFuzz for professor name reconciliation
+- **Matching:** TheFuzz + multi-pass enhanced matcher (initial, fuzzy, dept disambiguation, dedup)
 - **Scheduling:** APScheduler (nightly RMP, quarterly grades)
 - **Deployment:** Docker Compose
 
@@ -37,18 +37,35 @@ docker compose up
 # Visit http://localhost:8501
 ```
 
+## Pipeline
+
+```bash
+python scripts/run_pipeline.py              # full pipeline (scrape -> match -> NLP -> score)
+python scripts/run_pipeline.py --scrape     # targeted RMP scrape only
+python scripts/run_pipeline.py --match      # enhanced professor matching only
+python scripts/run_pipeline.py --nlp        # NLP sentiment/keywords only
+python scripts/run_pipeline.py --score      # Gaucho Score computation only
+```
+
 ## Project Structure
 
 ```
 ├── scrapers/           # RMP GraphQL scraper + grade CSV ingester
-├── etl/                # Name matching, NLP processing, scoring engine
+├── etl/                # Name matching, enhanced matching, NLP, scoring
+│   ├── name_matcher.py        # TheFuzz fuzzy name matching
+│   ├── name_utils.py          # Nexus name parsing (initials, dedup)
+│   ├── department_mapper.py   # UCSB dept code ↔ RMP dept name mapping
+│   ├── enhanced_matcher.py    # 4-pass local matching engine
+│   ├── nlp_processor.py       # VADER sentiment + TF-IDF keywords
+│   └── scoring.py             # Gaucho Value Score computation
 ├── db/                 # SQLAlchemy models + Alembic migrations
 ├── dashboard/          # Streamlit app
-├── scheduler/          # APScheduler jobs (nightly + quarterly)
-├── tests/              # pytest suite
+├── scheduler/          # APScheduler jobs (every-2-day + quarterly)
+├── scripts/            # CLI pipeline runner
+├── tests/              # pytest suite (75 tests)
 ├── docs/               # PRD, design docs, plans
 ├── docker-compose.yml
-└── requirements.txt
+└── pyproject.toml
 ```
 
 ## Data Sources
@@ -60,3 +77,5 @@ docker compose up
 
 - [Product Requirements](docs/PRD.md)
 - [Design Document](docs/plans/2026-02-25-gaucho-course-optimizer-design.md)
+- [Targeted RMP Pipeline](docs/plans/2026-02-25-targeted-rmp-pipeline-implementation.md)
+- [Enhanced Matching Pipeline](docs/plans/2026-02-26-enhanced-matching-implementation.md)

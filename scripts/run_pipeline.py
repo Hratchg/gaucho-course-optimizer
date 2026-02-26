@@ -3,6 +3,7 @@
 Usage:
     python scripts/run_pipeline.py              # full pipeline
     python scripts/run_pipeline.py --scrape     # scrape only
+    python scripts/run_pipeline.py --match      # enhanced matching only
     python scripts/run_pipeline.py --nlp        # NLP only
     python scripts/run_pipeline.py --score      # scoring only
 """
@@ -30,6 +31,14 @@ def run_scrape(session):
     return stats
 
 
+def run_matching(session):
+    from etl.enhanced_matcher import run_enhanced_matching
+    logger.info("=== Phase 1.5: Enhanced Professor Matching ===")
+    stats = run_enhanced_matching(session, min_year=2023)
+    logger.info(f"Matching complete: {stats}")
+    return stats
+
+
 def run_nlp(session):
     from etl.nlp_processor import process_all_comments
     logger.info("=== Phase 2: NLP Processing ===")
@@ -49,16 +58,19 @@ def run_scoring(session):
 def main():
     parser = argparse.ArgumentParser(description="Run the Gaucho Course Optimizer pipeline")
     parser.add_argument("--scrape", action="store_true", help="Run RMP scrape only")
+    parser.add_argument("--match", action="store_true", help="Run enhanced matching only")
     parser.add_argument("--nlp", action="store_true", help="Run NLP processing only")
     parser.add_argument("--score", action="store_true", help="Run scoring only")
     args = parser.parse_args()
 
-    run_all = not (args.scrape or args.nlp or args.score)
+    run_all = not (args.scrape or args.match or args.nlp or args.score)
 
     session = get_session()
     try:
         if run_all or args.scrape:
             run_scrape(session)
+        if run_all or args.match:
+            run_matching(session)
         if run_all or args.nlp:
             run_nlp(session)
         if run_all or args.score:
