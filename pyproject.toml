@@ -1,0 +1,9 @@
+[project]
+name = "gaucho-course-optimizer"
+version = "0.1.0"
+description = "UCSB course optimizer correlating grade distributions with RMP sentiment"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
