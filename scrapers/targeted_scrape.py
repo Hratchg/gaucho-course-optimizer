@@ -26,13 +26,16 @@ def scrape_active_professors(
 
     professors = get_active_professors(session, min_year=min_year)
     total = len(professors)
+    # Store IDs upfront so rollbacks don't invalidate ORM objects
+    prof_ids = [(p.id, p.name_nexus) for p in professors]
+    session.expire_all()
     stats = {"searched": 0, "matched": 0, "skipped": 0, "already_fresh": 0, "errors": 0}
 
-    for i, prof in enumerate(professors):
+    for i, (prof_id, nexus_name) in enumerate(prof_ids):
         # Check if data is already fresh
         latest_rating = (
             session.query(RmpRating)
-            .filter_by(professor_id=prof.id)
+            .filter_by(professor_id=prof_id)
             .order_by(RmpRating.fetched_at.desc())
             .first()
         )
@@ -42,7 +45,6 @@ def scrape_active_professors(
             continue
 
         # Build search name from Nexus name
-        nexus_name = prof.name_nexus
         if not nexus_name:
             stats["skipped"] += 1
             continue
@@ -75,7 +77,7 @@ def scrape_active_professors(
             try:
                 load_rmp_teacher_to_db(
                     best_match, session,
-                    nexus_professor_id=prof.id,
+                    nexus_professor_id=prof_id,
                     match_confidence=best_confidence,
                 )
                 stats["matched"] += 1
