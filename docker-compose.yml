@@ -15,5 +15,25 @@ services:
       timeout: 5s
       retries: 5
 
+  dashboard:
+    build: .
+    command: streamlit run dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      DATABASE_URL: postgresql://gco:gco@db:5432/gco
+    depends_on:
+      db:
+        condition: service_healthy
+
+  scheduler:
+    build: .
+    command: python -m scheduler.jobs
+    environment:
+      DATABASE_URL: postgresql://gco:gco@db:5432/gco
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:

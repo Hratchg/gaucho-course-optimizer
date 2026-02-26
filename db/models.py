@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -70,7 +70,7 @@ class RmpRating(Base):
     difficulty = Column(Float)
     would_take_again_pct = Column(Float, nullable=True)
     num_ratings = Column(Integer)
-    fetched_at = Column(DateTime, default=datetime.utcnow)
+    fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     professor = relationship("Professor", back_populates="rmp_ratings")
     comments = relationship("RmpComment", back_populates="rating")
@@ -97,7 +97,7 @@ class GauchoScore(Base):
     course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
     score = Column(Float)
     weights_used = Column(JSON)
-    computed_at = Column(DateTime, default=datetime.utcnow)
+    computed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     professor = relationship("Professor", back_populates="scores")
     course = relationship("Course", back_populates="scores")
