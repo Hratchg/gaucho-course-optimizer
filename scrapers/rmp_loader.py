@@ -1,5 +1,26 @@
-from datetime import datetime, timezone
-from db.models import Professor, RmpRating, RmpComment
+from datetime import datetime, timezone, timedelta
+from db.models import Professor, RmpRating, RmpComment, GradeDistribution
+
+
+def get_active_professors(session, min_year: int = 2023) -> list[Professor]:
+    """Get professors who have taught at least one course since min_year."""
+    return (
+        session.query(Professor)
+        .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
+        .filter(GradeDistribution.year >= min_year)
+        .group_by(Professor.id)
+        .all()
+    )
+
+
+def is_stale(fetched_at: datetime | None, max_age_days: int = 2) -> bool:
+    """Check if an RMP rating is stale (older than max_age_days or missing)."""
+    if fetched_at is None:
+        return True
+    if fetched_at.tzinfo is None:
+        fetched_at = fetched_at.replace(tzinfo=timezone.utc)
+    age = datetime.now(timezone.utc) - fetched_at
+    return age > timedelta(days=max_age_days)
 
 
 def load_rmp_teacher_to_db(teacher: dict, session) -> Professor:
