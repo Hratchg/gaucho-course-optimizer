@@ -1,3 +1,4 @@
+import base64
 import json
 import random
 import time
@@ -8,7 +9,7 @@ GRAPHQL_URL = "https://www.ratemyprofessors.com/graphql"
 
 TEACHER_SEARCH_QUERY = """
 query TeacherSearchPaginationQuery($schoolID: ID!, $cursor: String) {
-  search {
+  newSearch {
     teachers(query: {schoolID: $schoolID}, first: 20, after: $cursor) {
       edges {
         node {
@@ -67,8 +68,9 @@ def parse_teacher_node(node: dict) -> dict:
 class RmpScraper:
     """Scrape RateMyProfessors via their internal GraphQL endpoint."""
 
-    def __init__(self, school_id: int = 1077, auth_token: str = ""):
+    def __init__(self, school_id: int = 1077, auth_token: str = "dGVzdDp0ZXN0"):
         self.school_id = school_id
+        self.school_id_encoded = base64.b64encode(f"School-{school_id}".encode()).decode()
         self.auth_token = auth_token
 
     def _request(self, query: str, variables: dict) -> dict:
@@ -77,7 +79,7 @@ class RmpScraper:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Basic {self.auth_token}" if self.auth_token else "",
+            "Authorization": f"Basic {self.auth_token}",
             "Referer": "https://www.ratemyprofessors.com/",
         }
         payload = json.dumps({"query": query, "variables": variables})
@@ -91,17 +93,17 @@ class RmpScraper:
         cursor: Optional[str] = None
 
         while True:
-            variables = {"schoolID": str(self.school_id)}
+            variables = {"schoolID": self.school_id_encoded}
             if cursor:
                 variables["cursor"] = cursor
 
             data = self._request(TEACHER_SEARCH_QUERY, variables)
-            edges = data["data"]["search"]["teachers"]["edges"]
+            edges = data["data"]["newSearch"]["teachers"]["edges"]
 
             for edge in edges:
                 teachers.append(parse_teacher_node(edge["node"]))
 
-            page_info = data["data"]["search"]["teachers"]["pageInfo"]
+            page_info = data["data"]["newSearch"]["teachers"]["pageInfo"]
             if not page_info["hasNextPage"]:
                 break
             cursor = page_info["endCursor"]

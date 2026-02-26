@@ -11,7 +11,7 @@ def _load_fixture():
 
 def test_parse_teacher_node():
     fixture = _load_fixture()
-    node = fixture["data"]["search"]["teachers"]["edges"][0]["node"]
+    node = fixture["data"]["newSearch"]["teachers"]["edges"][0]["node"]
     result = parse_teacher_node(node)
 
     assert result["legacy_id"] == 1234
@@ -29,3 +29,4 @@ def test_parse_teacher_node():
 def test_scraper_uses_school_id():
     scraper = RmpScraper(school_id=1077)
     assert scraper.school_id == 1077
+    assert scraper.school_id_encoded == "U2Nob29sLTEwNzc="
