@@ -23,24 +23,43 @@ def is_stale(fetched_at: datetime | None, max_age_days: int = 2) -> bool:
     return age > timedelta(days=max_age_days)
 
 
-def load_rmp_teacher_to_db(teacher: dict, session) -> Professor:
-    """Load a parsed RMP teacher dict into the database."""
+def load_rmp_teacher_to_db(
+    teacher: dict,
+    session,
+    nexus_professor_id: int | None = None,
+    match_confidence: int | None = None,
+) -> Professor:
+    """Load a parsed RMP teacher dict into the database.
+
+    If nexus_professor_id is provided, link RMP data to the existing Nexus professor
+    instead of creating a new professor record.
+    """
     rmp_id = teacher["legacy_id"]
     name_rmp = f"{teacher['first_name']} {teacher['last_name']}"
 
-    # Get or create professor by rmp_id
-    prof = session.query(Professor).filter_by(rmp_id=rmp_id).first()
-    if prof is None:
-        prof = Professor(
-            name_rmp=name_rmp,
-            rmp_id=rmp_id,
-            department=teacher.get("department", ""),
-        )
-        session.add(prof)
-        session.flush()
-    else:
+    if nexus_professor_id is not None:
+        # Link to existing Nexus professor
+        prof = session.query(Professor).get(nexus_professor_id)
+        if prof is None:
+            raise ValueError(f"No professor with id={nexus_professor_id}")
+        prof.rmp_id = rmp_id
         prof.name_rmp = name_rmp
-        prof.department = teacher.get("department", prof.department)
+        if match_confidence is not None:
+            prof.match_confidence = match_confidence
+    else:
+        # Fallback: get or create by rmp_id (original behavior)
+        prof = session.query(Professor).filter_by(rmp_id=rmp_id).first()
+        if prof is None:
+            prof = Professor(
+                name_rmp=name_rmp,
+                rmp_id=rmp_id,
+                department=teacher.get("department", ""),
+            )
+            session.add(prof)
+            session.flush()
+        else:
+            prof.name_rmp = name_rmp
+            prof.department = teacher.get("department", prof.department)
 
     # Upsert rating
     rating = RmpRating(
