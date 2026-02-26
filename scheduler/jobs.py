@@ -4,32 +4,36 @@ from apscheduler.triggers.cron import CronTrigger
 
 logger = logging.getLogger(__name__)
 
-NIGHTLY_JOB_ID = "nightly_rmp_refresh"
+RMP_REFRESH_JOB_ID = "rmp_targeted_refresh"
 QUARTERLY_JOB_ID = "quarterly_grade_update"
 
 
-def nightly_rmp_refresh():
-    """Nightly job: scrape RMP → NLP → recompute scores."""
-    logger.info("Starting nightly RMP refresh...")
-    from scrapers.rmp_scraper import RmpScraper
-    from scrapers.rmp_loader import load_rmp_teacher_to_db
+def rmp_targeted_refresh():
+    """Every-2-days job: targeted RMP scrape -> NLP -> recompute scores."""
+    logger.info("Starting targeted RMP refresh...")
+    from scrapers.targeted_scrape import scrape_active_professors
+    from etl.nlp_processor import process_all_comments
+    from etl.scoring import compute_all_scores
     from db.connection import get_session
 
     session = get_session()
     try:
-        scraper = RmpScraper()
-        teachers = scraper.fetch_all_teachers()
-        for teacher in teachers:
-            load_rmp_teacher_to_db(teacher, session)
-        logger.info(f"Loaded {len(teachers)} teachers from RMP")
+        scrape_stats = scrape_active_professors(session, min_year=2023)
+        logger.info(f"Scrape: {scrape_stats}")
+
+        nlp_stats = process_all_comments(session)
+        logger.info(f"NLP: {nlp_stats}")
+
+        score_stats = compute_all_scores(session)
+        logger.info(f"Scoring: {score_stats}")
     except Exception as e:
-        logger.error(f"Nightly RMP refresh failed: {e}")
+        logger.error(f"RMP refresh failed: {e}")
     finally:
         session.close()
 
 
 def quarterly_grade_update():
-    """Quarterly job: fetch grades CSV → load → match names → recompute scores."""
+    """Quarterly job: fetch grades CSV -> load -> recompute scores."""
     logger.info("Starting quarterly grade update...")
     from scrapers.grades_ingester import fetch_grades_csv
     from scrapers.grades_loader import load_grades_to_db
@@ -52,9 +56,9 @@ def create_scheduler(start: bool = True) -> BlockingScheduler:
     scheduler = BlockingScheduler()
 
     scheduler.add_job(
-        nightly_rmp_refresh,
-        trigger=CronTrigger(hour=2, minute=0),
-        id=NIGHTLY_JOB_ID,
+        rmp_targeted_refresh,
+        trigger=CronTrigger(day="*/2", hour=2, minute=0),
+        id=RMP_REFRESH_JOB_ID,
         replace_existing=True,
     )
 
