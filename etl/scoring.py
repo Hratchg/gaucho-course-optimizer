@@ -38,3 +38,87 @@ def compute_gaucho_score(
         + sentiment_factor * weights.get("sentiment", 0.25)
     )
     return round(max(0.0, min(100.0, raw * 100)), 2)
+
+
+def compute_all_scores(
+    session,
+    weights: dict[str, float] | None = None,
+) -> dict:
+    """Compute Gaucho Scores for all matched professors (those with both grades and RMP data).
+
+    Returns stats dict: {computed, skipped}.
+    """
+    from datetime import datetime, timezone
+    from sqlalchemy import func
+    from db.models import (
+        Professor, Course, GradeDistribution, RmpRating, RmpComment, GauchoScore,
+    )
+
+    if weights is None:
+        weights = {"gpa": 0.25, "quality": 0.25, "difficulty": 0.25, "sentiment": 0.25}
+
+    stats = {"computed": 0, "skipped": 0}
+
+    # Find all (professor, course) pairs where professor has RMP data
+    pairs = (
+        session.query(
+            Professor.id,
+            GradeDistribution.course_id,
+            func.avg(GradeDistribution.avg_gpa).label("mean_gpa"),
+        )
+        .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
+        .join(RmpRating, RmpRating.professor_id == Professor.id)
+        .filter(Professor.rmp_id.isnot(None))
+        .group_by(Professor.id, GradeDistribution.course_id)
+        .all()
+    )
+
+    for prof_id, course_id, mean_gpa in pairs:
+        # Get latest RMP rating
+        rating = (
+            session.query(RmpRating)
+            .filter_by(professor_id=prof_id)
+            .order_by(RmpRating.fetched_at.desc())
+            .first()
+        )
+        if not rating:
+            stats["skipped"] += 1
+            continue
+
+        # Compute factors
+        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa else 0.5
+        qual_f = normalize_quality(rating.overall_quality) if rating.overall_quality else 0.5
+        diff_f = normalize_difficulty(rating.difficulty) if rating.difficulty else 0.5
+
+        # Sentiment: average of comments
+        avg_sentiment = (
+            session.query(func.avg(RmpComment.sentiment_score))
+            .join(RmpRating, RmpComment.rmp_rating_id == RmpRating.id)
+            .filter(RmpRating.professor_id == prof_id, RmpComment.sentiment_score.isnot(None))
+            .scalar()
+        )
+        sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else 0.5
+
+        # Bayesian adjust quality
+        if rating.overall_quality and rating.num_ratings:
+            adj_qual = bayesian_adjust(rating.overall_quality, rating.num_ratings, 3.0)
+            qual_f = normalize_quality(adj_qual)
+
+        score = compute_gaucho_score(gpa_f, qual_f, diff_f, sent_f, weights)
+
+        # Upsert: delete old score for this pair, insert new
+        session.query(GauchoScore).filter_by(
+            professor_id=prof_id, course_id=course_id,
+        ).delete()
+
+        session.add(GauchoScore(
+            professor_id=prof_id,
+            course_id=course_id,
+            score=score,
+            weights_used=weights,
+            computed_at=datetime.now(timezone.utc),
+        ))
+        stats["computed"] += 1
+
+    session.commit()
+    return stats
