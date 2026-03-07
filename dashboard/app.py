@@ -1,8 +1,14 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import streamlit as st
 import plotly.express as px
 from db.connection import get_engine
 from sqlalchemy.orm import sessionmaker
-from dashboard.queries import search_courses, get_professors_for_course, get_grade_history
+from dashboard.queries import (
+    search_courses, get_professors_for_course, get_grade_history,
+    get_comments_for_professor, get_departments,
+)
 from etl.scoring import (
     compute_gaucho_score, normalize_gpa, normalize_quality,
     normalize_difficulty, bayesian_adjust,
@@ -36,15 +42,21 @@ Session = sessionmaker(bind=engine)
 
 
 @st.cache_data(ttl=3600)
-def _search_courses(query: str):
+def _get_departments():
     with Session() as session:
-        return search_courses(session, query)
+        return get_departments(session)
 
 
 @st.cache_data(ttl=3600)
-def _get_professors(course_id: int):
+def _search_courses(query: str, department: str | None = None):
     with Session() as session:
-        return get_professors_for_course(session, course_id)
+        return search_courses(session, query, department=department)
+
+
+@st.cache_data(ttl=3600)
+def _get_professors(course_id: int, min_year: int | None = None):
+    with Session() as session:
+        return get_professors_for_course(session, course_id, min_year=min_year)
 
 
 @st.cache_data(ttl=3600)
@@ -53,11 +65,23 @@ def _get_grade_history(prof_id: int, course_id: int):
         return get_grade_history(session, prof_id, course_id)
 
 
+@st.cache_data(ttl=3600)
+def _get_comments(professor_id: int):
+    with Session() as session:
+        return get_comments_for_professor(session, professor_id)
+
+
+# --- Department filter ---
+departments = _get_departments()
+dept_options = ["All"] + departments
+selected_dept = st.sidebar.selectbox("Department", dept_options)
+dept_filter = None if selected_dept == "All" else selected_dept
+
 # --- Search ---
 search_query = st.text_input("Search for a course (e.g., PSTAT120A, CMPSC8)", "")
 
 if search_query:
-    courses = _search_courses(search_query.replace(" ", ""))
+    courses = _search_courses(search_query.replace(" ", ""), department=dept_filter)
     selected_course = None
 
     if not courses:
@@ -72,7 +96,7 @@ if search_query:
     if selected_course:
         st.header(f"Professors for {selected_course['code']}")
 
-        professors = _get_professors(selected_course["id"])
+        professors = _get_professors(selected_course["id"], min_year=int(min_year))
 
         if not professors:
             st.info("No professor data found for this course.")
@@ -136,10 +160,29 @@ if search_query:
                     if prof.get("keywords"):
                         st.markdown(" ".join(f"`{kw}`" for kw in prof["keywords"][:6]))
 
-                    # Expandable: GPA trend
+                    # Expandable: Grade history
                     with st.expander(f"Grade history for {prof['name']}"):
                         history = _get_grade_history(prof["id"], selected_course["id"])
                         if history:
+                            # Grade distribution bar chart
+                            grade_labels = [
+                                "A+", "A", "A-", "B+", "B", "B-",
+                                "C+", "C", "C-", "D+", "D", "D-", "F",
+                            ]
+                            grade_keys = [
+                                "a_plus", "a", "a_minus", "b_plus", "b", "b_minus",
+                                "c_plus", "c", "c_minus", "d_plus", "d", "d_minus", "f",
+                            ]
+                            totals = {k: sum(h.get(k, 0) or 0 for h in history) for k in grade_keys}
+                            bar_fig = px.bar(
+                                x=grade_labels,
+                                y=[totals[k] for k in grade_keys],
+                                labels={"x": "Grade", "y": "Students"},
+                                title=f"Grade Distribution — {prof['name']}",
+                            )
+                            st.plotly_chart(bar_fig, use_container_width=True)
+
+                            # GPA trend line chart
                             fig = px.line(
                                 x=[h["quarter"] for h in history],
                                 y=[h["avg_gpa"] for h in history],
@@ -148,5 +191,28 @@ if search_query:
                             )
                             fig.update_layout(yaxis_range=[0, 4.0])
                             st.plotly_chart(fig, use_container_width=True)
+
+                    # Expandable: Recent comments
+                    with st.expander(f"Recent student comments for {prof['name']}"):
+                        comments = _get_comments(prof["id"])
+                        if comments:
+                            for comment in comments:
+                                sent = comment.get("sentiment_score")
+                                if sent is not None:
+                                    if sent >= 0.2:
+                                        badge = ":green[Positive]"
+                                    elif sent <= -0.2:
+                                        badge = ":red[Negative]"
+                                    else:
+                                        badge = ":orange[Neutral]"
+                                else:
+                                    badge = ":gray[N/A]"
+
+                                date_str = comment.get("created_at") or "Unknown date"
+                                st.markdown(f"**{date_str}** {badge}")
+                                st.write(comment.get("text") or "_No comment text_")
+                                st.markdown("---")
+                        else:
+                            st.info("No comments found for this professor.")
 
                     st.divider()
