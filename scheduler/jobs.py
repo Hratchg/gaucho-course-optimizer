@@ -1,6 +1,9 @@
 import logging
+from dotenv import load_dotenv
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
