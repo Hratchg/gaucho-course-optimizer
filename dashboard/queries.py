@@ -2,22 +2,30 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment
 
+MONTH_NAMES = [
+    "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
 
-def search_courses(session: Session, query: str) -> list[dict]:
-    """Search courses by code prefix."""
-    courses = (
-        session.query(Course)
-        .filter(Course.code.ilike(f"%{query}%"))
-        .order_by(Course.code)
-        .limit(20)
-        .all()
-    )
+
+def get_departments(session: Session) -> list[str]:
+    """Get all distinct department names, sorted."""
+    rows = session.query(Course.department).distinct().order_by(Course.department).all()
+    return [r[0] for r in rows if r[0]]
+
+
+def search_courses(session: Session, query: str, department: str | None = None) -> list[dict]:
+    """Search courses by code prefix, optionally filtered by department."""
+    q = session.query(Course).filter(Course.code.ilike(f"%{query}%"))
+    if department:
+        q = q.filter(Course.department == department)
+    courses = q.order_by(Course.code).limit(20).all()
     return [{"id": c.id, "code": c.code, "title": c.title, "department": c.department} for c in courses]
 
 
-def get_professors_for_course(session: Session, course_id: int) -> list[dict]:
+def get_professors_for_course(session: Session, course_id: int, min_year: int | None = None) -> list[dict]:
     """Get all professors who have taught a course, with their stats."""
-    results = (
+    q = (
         session.query(
             Professor,
             func.avg(GradeDistribution.avg_gpa).label("mean_gpa"),
@@ -26,9 +34,10 @@ def get_professors_for_course(session: Session, course_id: int) -> list[dict]:
         )
         .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
         .filter(GradeDistribution.course_id == course_id)
-        .group_by(Professor.id)
-        .all()
     )
+    if min_year is not None:
+        q = q.filter(GradeDistribution.year >= min_year)
+    results = q.group_by(Professor.id).all()
 
     professors = []
     for prof, mean_gpa, std_gpa, quarters_taught in results:
@@ -99,3 +108,28 @@ def get_grade_history(session: Session, professor_id: int, course_id: int) -> li
         }
         for g in grades
     ]
+
+
+def get_comments_for_professor(session: Session, professor_id: int, limit: int = 5) -> list[dict]:
+    """Fetch the most recent RMP comments for a professor."""
+    comments = (
+        session.query(RmpComment)
+        .join(RmpRating, RmpComment.rmp_rating_id == RmpRating.id)
+        .filter(RmpRating.professor_id == professor_id)
+        .order_by(RmpComment.created_at.desc().nullslast())
+        .limit(limit)
+        .all()
+    )
+    results = []
+    for c in comments:
+        if c.created_at:
+            formatted_date = f"{MONTH_NAMES[c.created_at.month]} {c.created_at.year}"
+        else:
+            formatted_date = None
+        results.append({
+            "text": c.comment_text,
+            "sentiment_score": c.sentiment_score,
+            "keywords": c.keywords,
+            "created_at": formatted_date,
+        })
+    return results
