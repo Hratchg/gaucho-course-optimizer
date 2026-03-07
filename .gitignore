@@ -6,3 +6,8 @@ dist/
 .venv/
 venv/
 .pytest_cache/
+data/
+*.log
+.DS_Store
+export_err.txt
+scrape_output.log
