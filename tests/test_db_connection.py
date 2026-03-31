@@ -22,8 +22,14 @@ def test_get_session_local_returns_singleton():
 def test_get_session_local_cold_start():
     """get_session_local() works when called before get_engine() (no deadlock)."""
     import db.connection as conn
-    conn._engine = None
-    conn._SessionLocal = None
-    factory = conn.get_session_local()
-    assert factory is not None
-    assert conn._engine is not None  # engine initialized as side effect
+    original_engine = conn._engine
+    original_session_local = conn._SessionLocal
+    try:
+        conn._engine = None
+        conn._SessionLocal = None
+        factory = conn.get_session_local()
+        assert factory is not None
+        assert conn._engine is not None  # engine initialized as side effect
+    finally:
+        conn._engine = original_engine
+        conn._SessionLocal = original_session_local
