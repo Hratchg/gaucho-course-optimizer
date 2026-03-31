@@ -27,7 +27,7 @@ def test_parse_teacher_node():
 
 
 def test_scraper_uses_school_id():
-    scraper = RmpScraper(school_id=1077)
+    scraper = RmpScraper(school_id=1077, auth_token="test_token")
     assert scraper.school_id == 1077
     assert scraper.school_id_encoded == "U2Nob29sLTEwNzc="
 
