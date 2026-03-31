@@ -66,10 +66,7 @@ def test_search_teacher_by_name_parses_results():
 
 def test_search_teacher_by_name_mocked(mocker):
     """search_teacher_by_name calls _request with correct query and returns parsed teachers."""
-    import os, json
-    fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "rmp_name_search_response.json")
-    with open(fixture_path) as f:
-        fixture = json.load(f)
+    fixture = _load_name_search_fixture()
 
     scraper = RmpScraper(school_id=1077, auth_token="test_token")
     mocker.patch.object(scraper, "_request", return_value=fixture)
