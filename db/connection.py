@@ -24,15 +24,21 @@ def get_engine():
     return _engine
 
 
-# Phase 2 FastAPI usage:
-#   from db.connection import get_session_local
-#   SessionLocal = get_session_local()  # not: from db.connection import SessionLocal
 def get_session_local():
+    """Return the module-level SessionLocal sessionmaker factory.
+
+    Phase 2 FastAPI usage:
+        from db.connection import get_session_local
+        SessionLocal = get_session_local()
+    """
     global _SessionLocal
     if _SessionLocal is None:
+        engine = get_engine()   # thread-safe via its own lock; call BEFORE _lock
         with _lock:
             if _SessionLocal is None:
-                _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+                _SessionLocal = sessionmaker(
+                    autocommit=False, autoflush=False, bind=engine
+                )
     return _SessionLocal
 
 
