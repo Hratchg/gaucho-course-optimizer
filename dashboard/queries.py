@@ -94,7 +94,7 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             "rmp_difficulty": rmp.difficulty if rmp else None,
             "rmp_would_take_again": rmp.would_take_again_pct if rmp else None,
             "rmp_num_ratings": rmp.num_ratings if rmp else None,
-            "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment else None,
+            "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment is not None else None,
             "keywords": list(set(kw_list))[:8],
             "match_confidence": prof.match_confidence,
         })
