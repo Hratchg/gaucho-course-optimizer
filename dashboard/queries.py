@@ -24,51 +24,65 @@ def search_courses(session: Session, query: str, department: str | None = None) 
 
 
 def get_professors_for_course(session: Session, course_id: int, min_year: int | None = None) -> list[dict]:
-    """Get all professors who have taught a course, with their stats."""
+    """Get all professors who have taught a course, with their stats. 2 queries max."""
+
+    # Subquery: latest RMP rating per professor
+    latest_rating_sq = (
+        session.query(
+            RmpRating.professor_id,
+            func.max(RmpRating.id).label("latest_rating_id"),
+        )
+        .group_by(RmpRating.professor_id)
+        .subquery("latest_rating")
+    )
+
+    # Subquery: sentiment stats per RMP rating
+    sentiment_sq = (
+        session.query(
+            RmpComment.rmp_rating_id,
+            func.avg(RmpComment.sentiment_score).label("avg_sentiment"),
+        )
+        .filter(RmpComment.sentiment_score.isnot(None))
+        .group_by(RmpComment.rmp_rating_id)
+        .subquery("sentiment")
+    )
+
+    # Main query: professors + grade stats + RMP data + sentiment
     q = (
         session.query(
             Professor,
             func.avg(GradeDistribution.avg_gpa).label("mean_gpa"),
             func.stddev(GradeDistribution.avg_gpa).label("std_gpa"),
             func.count(GradeDistribution.id).label("quarters_taught"),
+            RmpRating,
+            sentiment_sq.c.avg_sentiment,
         )
         .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
         .filter(GradeDistribution.course_id == course_id)
+        .outerjoin(latest_rating_sq, latest_rating_sq.c.professor_id == Professor.id)
+        .outerjoin(RmpRating, RmpRating.id == latest_rating_sq.c.latest_rating_id)
+        .outerjoin(sentiment_sq, sentiment_sq.c.rmp_rating_id == RmpRating.id)
     )
     if min_year is not None:
         q = q.filter(GradeDistribution.year >= min_year)
-    results = q.group_by(Professor.id).all()
+    results = q.group_by(Professor.id, RmpRating.id, sentiment_sq.c.avg_sentiment).all()
+
+    # 2nd query: keywords grouped by rating_id (not N+1)
+    rating_ids = [row[4].id for row in results if row[4] is not None]
+    keywords_map = {}
+    if rating_ids:
+        keyword_rows = (
+            session.query(RmpComment.rmp_rating_id, RmpComment.keywords)
+            .filter(RmpComment.rmp_rating_id.in_(rating_ids), RmpComment.keywords.isnot(None))
+            .all()
+        )
+        for rating_id, kw in keyword_rows:
+            if isinstance(kw, list):
+                keywords_map.setdefault(rating_id, []).extend(kw)
 
     professors = []
-    for prof, mean_gpa, std_gpa, quarters_taught in results:
-        # Get latest RMP rating
-        rmp = (
-            session.query(RmpRating)
-            .filter_by(professor_id=prof.id)
-            .order_by(RmpRating.fetched_at.desc())
-            .first()
-        )
-
-        # Get sentiment stats
-        avg_sentiment = None
-        keywords = []
-        if rmp:
-            sentiment_result = (
-                session.query(func.avg(RmpComment.sentiment_score))
-                .filter(RmpComment.rmp_rating_id == rmp.id)
-                .scalar()
-            )
-            avg_sentiment = float(sentiment_result) if sentiment_result else None
-
-            keyword_rows = (
-                session.query(RmpComment.keywords)
-                .filter(RmpComment.rmp_rating_id == rmp.id, RmpComment.keywords.isnot(None))
-                .all()
-            )
-            for (kw,) in keyword_rows:
-                if isinstance(kw, list):
-                    keywords.extend(kw)
-
+    for prof, mean_gpa, std_gpa, quarters_taught, rmp, avg_sentiment in results:
+        kw_list = keywords_map.get(rmp.id, []) if rmp else []
         professors.append({
             "id": prof.id,
             "name": prof.name_rmp or prof.name_nexus or "Unknown",
@@ -80,8 +94,8 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             "rmp_difficulty": rmp.difficulty if rmp else None,
             "rmp_would_take_again": rmp.would_take_again_pct if rmp else None,
             "rmp_num_ratings": rmp.num_ratings if rmp else None,
-            "avg_sentiment": round(avg_sentiment, 2) if avg_sentiment else None,
-            "keywords": list(set(keywords))[:8],
+            "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment else None,
+            "keywords": list(set(kw_list))[:8],
             "match_confidence": prof.match_confidence,
         })
 
