@@ -1,5 +1,16 @@
 # Gaucho Course Optimizer
 
+## Current Milestone: v1.0 Launch
+
+**Goal:** Replace the internal Streamlit prototype with a public-facing React + FastAPI web app so UCSB students can search courses and find the best professor.
+
+**Target features:**
+- Pipeline verification + critical bug fixes (N+1, connection pooling, hardcoded credentials, missing indexes)
+- Automated pytest test suite (pipeline, matching, scoring, API endpoints)
+- FastAPI backend (course search + professor ranking endpoints)
+- React frontend (course search, professor cards, grade distribution charts, Gaucho Score, weight sliders)
+- Public deployment (React on Vercel, FastAPI on Render, PostgreSQL on Neon)
+
 ## What This Is
 
 A tool for UCSB students to find the best professor for any course using real grade distribution data (Daily Nexus) and Rate My Professors reviews. The backend pipeline scrapes, matches, and scores professor-course combinations into a 0–100 "Gaucho Score." The goal is to replace the existing Streamlit prototype with a polished React + FastAPI web app deployed publicly so students can actually use it.
@@ -78,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after initialization*
+*Last updated: 2026-03-30 — Milestone v1.0 started*
