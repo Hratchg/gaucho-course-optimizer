@@ -1,4 +1,4 @@
-from db.connection import get_engine, get_session
+from db.connection import get_engine, get_session, get_session_local
 
 
 def test_get_engine_returns_engine():
@@ -11,3 +11,9 @@ def test_get_session_returns_session():
     session = get_session()
     assert session is not None
     session.close()
+
+
+def test_get_session_local_returns_singleton():
+    factory1 = get_session_local()
+    factory2 = get_session_local()
+    assert factory1 is factory2
