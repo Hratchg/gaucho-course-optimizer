@@ -33,7 +33,10 @@ def get_session_local():
     """
     global _SessionLocal
     if _SessionLocal is None:
-        engine = get_engine()   # thread-safe via its own lock; call BEFORE _lock
+        # Must call get_engine() OUTSIDE _lock: get_engine() also acquires _lock,
+        # and threading.Lock is not re-entrant — calling it while _lock is held
+        # would deadlock.
+        engine = get_engine()
         with _lock:
             if _SessionLocal is None:
                 _SessionLocal = sessionmaker(
