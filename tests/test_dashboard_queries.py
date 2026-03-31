@@ -139,3 +139,78 @@ def test_get_departments(db_session):
     assert "CHEM" in depts
     # Should be deduplicated
     assert depts.count("PHYS") == 1
+
+
+def test_get_professors_returns_rmp_data(db_session):
+    """Verify get_professors_for_course returns RMP stats without N+1 queries."""
+    # Create 2 professors and a course
+    prof1 = Professor(name_rmp="Alice Smith", name_nexus="A Smith", department="CMPSC")
+    prof2 = Professor(name_nexus="Bob Jones", department="CMPSC")
+    course = Course(code="CMPSC130A", title="Data Structures", department="CMPSC")
+    db_session.add_all([prof1, prof2, course])
+    db_session.flush()
+
+    # Grade distributions for both professors
+    db_session.add_all([
+        GradeDistribution(
+            professor_id=prof1.id, course_id=course.id,
+            quarter="Fall", year=2023, avg_gpa=3.8,
+        ),
+        GradeDistribution(
+            professor_id=prof2.id, course_id=course.id,
+            quarter="Winter", year=2023, avg_gpa=3.5,
+        ),
+    ])
+    db_session.flush()
+
+    # RMP data for professor 1 only
+    rating = RmpRating(
+        professor_id=prof1.id,
+        overall_quality=4.2,
+        difficulty=3.1,
+        would_take_again_pct=85.0,
+        num_ratings=42,
+    )
+    db_session.add(rating)
+    db_session.flush()
+
+    # 2 RMP comments for professor 1
+    db_session.add_all([
+        RmpComment(
+            rmp_rating_id=rating.id,
+            comment_text="Very clear lectures.",
+            sentiment_score=0.8,
+            keywords=["clear"],
+        ),
+        RmpComment(
+            rmp_rating_id=rating.id,
+            comment_text="Quite helpful office hours.",
+            sentiment_score=0.6,
+            keywords=["helpful"],
+        ),
+    ])
+    db_session.flush()
+
+    results = get_professors_for_course(db_session, course.id)
+
+    assert len(results) == 2
+
+    # Find each professor's result by name
+    by_name = {r["name"]: r for r in results}
+
+    # Professor 1 (has RMP data)
+    p1 = by_name["Alice Smith"]
+    assert p1["rmp_quality"] == 4.2
+    assert p1["rmp_difficulty"] == 3.1
+    assert p1["rmp_would_take_again"] == 85.0
+    assert p1["rmp_num_ratings"] == 42
+    assert p1["avg_sentiment"] == 0.7  # mean of 0.8 and 0.6
+    assert isinstance(p1["keywords"], list)
+    assert set(p1["keywords"]) == {"clear", "helpful"}
+
+    # Professor 2 (no RMP data)
+    p2 = by_name["Bob Jones"]
+    assert p2["rmp_quality"] is None
+    assert p2["rmp_difficulty"] is None
+    assert p2["rmp_would_take_again"] is None
+    assert p2["avg_sentiment"] is None
