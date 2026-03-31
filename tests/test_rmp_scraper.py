@@ -1,5 +1,6 @@
 import json
 import os
+import pytest
 from scrapers.rmp_scraper import parse_teacher_node, RmpScraper
 
 
@@ -36,6 +37,12 @@ def _load_name_search_fixture():
     path = os.path.join(os.path.dirname(__file__), "fixtures", "rmp_name_search_response.json")
     with open(path) as f:
         return json.load(f)
+
+
+def test_scraper_raises_if_env_var_unset(monkeypatch):
+    monkeypatch.delenv("RMP_AUTH_TOKEN", raising=False)
+    with pytest.raises(KeyError, match="RMP_AUTH_TOKEN"):
+        RmpScraper()
 
 
 def test_search_teacher_by_name_parses_results():

@@ -15,18 +15,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_index('ix_grade_distributions_professor_id', 'grade_distributions', ['professor_id'])
-    op.create_index('ix_grade_distributions_course_id', 'grade_distributions', ['course_id'])
-    op.create_index('ix_rmp_ratings_professor_id', 'rmp_ratings', ['professor_id'])
-    op.create_index('ix_rmp_comments_rmp_rating_id', 'rmp_comments', ['rmp_rating_id'])
-    op.create_index('ix_gaucho_scores_professor_id', 'gaucho_scores', ['professor_id'])
-    op.create_index('ix_gaucho_scores_course_id', 'gaucho_scores', ['course_id'])
+    op.create_index('ix_grade_distributions_professor_id', 'grade_distributions', ['professor_id'], if_not_exists=True)
+    op.create_index('ix_grade_distributions_course_id', 'grade_distributions', ['course_id'], if_not_exists=True)
+    op.create_index('ix_rmp_ratings_professor_id', 'rmp_ratings', ['professor_id'], if_not_exists=True)
+    op.create_index('ix_rmp_comments_rmp_rating_id', 'rmp_comments', ['rmp_rating_id'], if_not_exists=True)
+    op.create_index('ix_gaucho_scores_professor_id', 'gaucho_scores', ['professor_id'], if_not_exists=True)
+    op.create_index('ix_gaucho_scores_course_id', 'gaucho_scores', ['course_id'], if_not_exists=True)
 
 
 def downgrade() -> None:
-    op.drop_index('ix_gaucho_scores_course_id', table_name='gaucho_scores')
-    op.drop_index('ix_gaucho_scores_professor_id', table_name='gaucho_scores')
-    op.drop_index('ix_rmp_comments_rmp_rating_id', table_name='rmp_comments')
-    op.drop_index('ix_rmp_ratings_professor_id', table_name='rmp_ratings')
-    op.drop_index('ix_grade_distributions_course_id', table_name='grade_distributions')
-    op.drop_index('ix_grade_distributions_professor_id', table_name='grade_distributions')
+    op.drop_index('ix_gaucho_scores_course_id', table_name='gaucho_scores', if_exists=True)
+    op.drop_index('ix_gaucho_scores_professor_id', table_name='gaucho_scores', if_exists=True)
+    op.drop_index('ix_rmp_comments_rmp_rating_id', table_name='rmp_comments', if_exists=True)
+    op.drop_index('ix_rmp_ratings_professor_id', table_name='rmp_ratings', if_exists=True)
+    op.drop_index('ix_grade_distributions_course_id', table_name='grade_distributions', if_exists=True)
+    op.drop_index('ix_grade_distributions_professor_id', table_name='grade_distributions', if_exists=True)
