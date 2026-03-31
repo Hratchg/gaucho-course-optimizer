@@ -29,7 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Developer can run `pytest` and see Gaucho Score formula tests pass for known inputs
   4. Application handles concurrent API requests — connection pool is configured and the database does not exhaust connections under load
   5. Professor ranking query executes as a single JOIN, and database foreign-key indexes exist so queries remain fast as data grows
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Connection pool, FK indexes, RMP auth token, VADER caching verification
+- [ ] 01-02-PLAN.md — N+1 query fix and Gaucho Score formula tests
+- [ ] 01-03-PLAN.md — Retrofit mocking on all scraper tests for deterministic CI
+- [ ] 01-04-PLAN.md — Neon DB seeding, pipeline smoke test, weekly pg_dump GitHub Action
 
 ### Phase 2: FastAPI Backend
 **Goal**: Five REST endpoints are live, tested against a fixture database, and return correctly shaped data ready for React consumption — including raw factor values that enable client-side score recomputation
@@ -73,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Bug Fixes | 0/? | Not started | - |
+| 1. Foundation & Bug Fixes | 0/4 | Not started | - |
 | 2. FastAPI Backend | 0/? | Not started | - |
 | 3. React Frontend | 0/? | Not started | - |
 | 4. Deployment | 0/? | Not started | - |
