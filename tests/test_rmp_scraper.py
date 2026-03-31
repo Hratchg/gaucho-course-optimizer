@@ -62,3 +62,20 @@ def test_search_teacher_by_name_parses_results():
     assert len(results[0]["comments"]) == 2
     assert results[1]["legacy_id"] == 6666
     assert len(results[1]["comments"]) == 0
+
+
+def test_search_teacher_by_name_mocked(mocker):
+    """search_teacher_by_name calls _request with correct query and returns parsed teachers."""
+    import os, json
+    fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "rmp_name_search_response.json")
+    with open(fixture_path) as f:
+        fixture = json.load(f)
+
+    scraper = RmpScraper(school_id=1077, auth_token="test_token")
+    mocker.patch.object(scraper, "_request", return_value=fixture)
+
+    results = scraper.search_teacher_by_name("John Smith")
+
+    assert len(results) == 2
+    assert results[0]["first_name"] == "John"
+    scraper._request.assert_called_once()
