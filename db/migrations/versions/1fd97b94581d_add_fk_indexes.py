@@ -24,9 +24,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index('ix_gaucho_scores_course_id', 'gaucho_scores')
-    op.drop_index('ix_gaucho_scores_professor_id', 'gaucho_scores')
-    op.drop_index('ix_rmp_comments_rmp_rating_id', 'rmp_comments')
-    op.drop_index('ix_rmp_ratings_professor_id', 'rmp_ratings')
-    op.drop_index('ix_grade_distributions_course_id', 'grade_distributions')
-    op.drop_index('ix_grade_distributions_professor_id', 'grade_distributions')
+    op.drop_index('ix_gaucho_scores_course_id', table_name='gaucho_scores')
+    op.drop_index('ix_gaucho_scores_professor_id', table_name='gaucho_scores')
+    op.drop_index('ix_rmp_comments_rmp_rating_id', table_name='rmp_comments')
+    op.drop_index('ix_rmp_ratings_professor_id', table_name='rmp_ratings')
+    op.drop_index('ix_grade_distributions_course_id', table_name='grade_distributions')
+    op.drop_index('ix_grade_distributions_professor_id', table_name='grade_distributions')
