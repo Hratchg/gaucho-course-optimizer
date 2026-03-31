@@ -66,6 +66,8 @@ def test_search_teacher_by_name_parses_results():
 
 def test_search_teacher_by_name_mocked(mocker):
     """search_teacher_by_name calls _request with correct query and returns parsed teachers."""
+    from scrapers.rmp_scraper import NAME_SEARCH_QUERY
+
     fixture = _load_name_search_fixture()
 
     scraper = RmpScraper(school_id=1077, auth_token="test_token")
@@ -75,4 +77,7 @@ def test_search_teacher_by_name_mocked(mocker):
 
     assert len(results) == 2
     assert results[0]["first_name"] == "John"
-    scraper._request.assert_called_once()
+    scraper._request.assert_called_once_with(
+        NAME_SEARCH_QUERY,
+        {"text": "John Smith", "schoolID": scraper.school_id_encoded},
+    )
