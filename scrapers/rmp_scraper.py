@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import random
 import time
 from typing import Optional
@@ -102,9 +103,11 @@ def parse_teacher_node(node: dict) -> dict:
 class RmpScraper:
     """Scrape RateMyProfessors via their internal GraphQL endpoint."""
 
-    def __init__(self, school_id: int = 1077, auth_token: str = "dGVzdDp0ZXN0"):
+    def __init__(self, school_id: int = 1077, auth_token: str | None = None):
         self.school_id = school_id
         self.school_id_encoded = base64.b64encode(f"School-{school_id}".encode()).decode()
+        if auth_token is None:
+            auth_token = os.environ["RMP_AUTH_TOKEN"]
         self.auth_token = auth_token
 
     def _request(self, query: str, variables: dict) -> dict:
