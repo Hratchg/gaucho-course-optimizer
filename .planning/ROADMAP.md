@@ -47,7 +47,14 @@ Plans:
   3. Developer can call `GET /courses/{id}/professors` and receive a ranked list with Gaucho Score, raw factor values (`gpa_factor`, `quality_factor`, `difficulty_factor`, `sentiment_factor`), RMP metrics, and keyword tags
   4. Developer can call `GET /professors/{id}/grades` and `GET /professors/{id}/comments` and receive correctly shaped grade distribution and sentiment-tagged comment data
   5. Developer can run `pytest` and see all endpoint tests pass using the test database session fixture — CI runs the full suite on every push without real HTTP calls
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — N+1 bulk JOIN rewrite of compute_all_scores() in etl/scoring.py
+- [ ] 02-02-PLAN.md — api/ package scaffold: config, dependencies, schemas, GET /health, requirements.txt updates
+- [ ] 02-03-PLAN.md — Course endpoints: GET /courses/search (input validation) and GET /courses/{id}/professors (ranking with raw factors)
+- [ ] 02-04-PLAN.md — Professor endpoints: GET /professors/{id}/grades (grade distribution) and GET /professors/{id}/comments (sentiment comments)
+- [ ] 02-05-PLAN.md — Endpoint tests: client fixture with dependency_overrides, 14+ tests covering all routes
 
 ### Phase 3: React Frontend
 **Goal**: UCSB students can search for any course, see professors ranked by Gaucho Score with all supporting data visible, adjust weights to rerank instantly in the browser, and use the app on a phone
@@ -80,6 +87,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Bug Fixes | 4/4 | Complete | 2026-03-31 |
-| 2. FastAPI Backend | 0/? | Not started | - |
+| 2. FastAPI Backend | 0/5 | Not started | - |
 | 3. React Frontend | 0/? | Not started | - |
 | 4. Deployment | 0/? | Not started | - |
