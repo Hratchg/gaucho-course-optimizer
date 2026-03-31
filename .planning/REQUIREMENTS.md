@@ -81,8 +81,34 @@
 
 ## Traceability
 
-_Filled by roadmapper._
-
-| REQ-ID | Phase |
-|--------|-------|
-| (to be filled) | (to be filled) |
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| FDN-01 | Phase 1 | Pending |
+| FDN-02 | Phase 1 | Pending |
+| FDN-03 | Phase 1 | Pending |
+| FDN-04 | Phase 1 | Pending |
+| FDN-05 | Phase 1 | Pending |
+| FDN-06 | Phase 1 | Pending |
+| TEST-01 | Phase 1 | Pending |
+| TEST-02 | Phase 1 | Pending |
+| API-01 | Phase 2 | Pending |
+| API-02 | Phase 2 | Pending |
+| API-03 | Phase 2 | Pending |
+| API-04 | Phase 2 | Pending |
+| API-05 | Phase 2 | Pending |
+| TEST-03 | Phase 2 | Pending |
+| TEST-04 | Phase 2 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 3 | Pending |
+| UI-05 | Phase 3 | Pending |
+| UI-06 | Phase 3 | Pending |
+| UI-07 | Phase 3 | Pending |
+| UI-08 | Phase 3 | Pending |
+| UI-09 | Phase 3 | Pending |
+| UI-10 | Phase 3 | Pending |
+| UI-11 | Phase 3 | Pending |
+| DEPLOY-01 | Phase 4 | Pending |
+| DEPLOY-02 | Phase 4 | Pending |
+| DEPLOY-03 | Phase 4 | Pending |
