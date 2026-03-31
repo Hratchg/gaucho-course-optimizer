@@ -27,6 +27,13 @@ Already contained `DATABASE_URL=` and `RMP_AUTH_TOKEN=` from initial scaffold �
 - `tests/test_db_connection.py`: 4 pass — engine, session, session_local singleton, cold-start (no deadlock)
 - `tests/test_rmp_scraper.py`: 3 pass — parse, school_id (explicit auth_token), name search
 
+## execute-enhanced Quality Gates (2026-03-30 re-execution)
+
+- **Task 1** — Spec ✅ | Quality ✅ (lock ordering comment improved: cbfa890)
+- **Task 2** — Spec ✅ | Quality ✅ after fixes: idempotency guards + env-var failure test (d2f608f)
+- **Final review** — Ready to merge ✓ (reviewer: pre-existing avg_sentiment falsy guard surfaced)
+- **avg_sentiment fix** — Applied: `if avg_sentiment is not None` in dashboard/queries.py (9a1f171)
+
 ## Requirements Covered
 - FDN-02: Connection pool configured ✓
 - FDN-04: FK indexes in Alembic migration ✓
