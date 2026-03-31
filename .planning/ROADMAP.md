@@ -12,7 +12,7 @@ v1.0 takes a working but internal Python ETL pipeline and exposes it as a public
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Bug Fixes** - Verify the ETL pipeline end-to-end, fix critical bugs, and establish a clean data layer on Neon PostgreSQL
+- [x] **Phase 1: Foundation & Bug Fixes** - Verify the ETL pipeline end-to-end, fix critical bugs, and establish a clean data layer on Neon PostgreSQL
 - [ ] **Phase 2: FastAPI Backend** - Build and test five REST endpoints that expose course search, professor ranking, grade data, comments, and health check
 - [ ] **Phase 3: React Frontend** - Build the full student-facing SPA with course search, professor cards, charts, weight sliders, and mobile-responsive layout
 - [ ] **Phase 4: Deployment** - Deploy both services publicly, configure CORS, and set up cold-start mitigation
@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Connection pool, FK indexes, RMP auth token, VADER caching verification
 - [x] 01-02-PLAN.md — N+1 query fix and Gaucho Score formula tests
-- [ ] 01-03-PLAN.md — Retrofit mocking on all scraper tests for deterministic CI
-- [ ] 01-04-PLAN.md — Neon DB seeding, pipeline smoke test, weekly pg_dump GitHub Action
+- [x] 01-03-PLAN.md — Retrofit mocking on all scraper tests for deterministic CI
+- [x] 01-04-PLAN.md — Neon DB seeding, pipeline smoke test, weekly pg_dump GitHub Action
 
 ### Phase 2: FastAPI Backend
 **Goal**: Five REST endpoints are live, tested against a fixture database, and return correctly shaped data ready for React consumption — including raw factor values that enable client-side score recomputation
@@ -79,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Bug Fixes | 2/4 | In progress | - |
+| 1. Foundation & Bug Fixes | 4/4 | Complete | 2026-03-31 |
 | 2. FastAPI Backend | 0/? | Not started | - |
 | 3. React Frontend | 0/? | Not started | - |
 | 4. Deployment | 0/? | Not started | - |

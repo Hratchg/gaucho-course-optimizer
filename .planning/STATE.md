@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-31T03:25:35.653Z"
-last_activity: 2026-03-30 — Roadmap created, milestone v1.0 initialized
+status: in_progress
+stopped_at: Phase 1 complete — ready for Phase 2 planning
+last_updated: "2026-03-31T20:00:00.000Z"
+last_activity: 2026-03-31 — Phase 1 all 4 plans complete, SUMMARY written
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 25
 ---
 
 # Project State
@@ -21,37 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome — ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Phase 1 — Foundation & Bug Fixes
+**Current focus:** Phase 2 — FastAPI Backend
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation & Bug Fixes)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-30 — Roadmap created, milestone v1.0 initialized
+Phase: 1 of 4 complete → Ready to start Phase 2 (FastAPI Backend)
+Plan: 4/4 complete in Phase 1
+Status: Phase 1 complete
+Last activity: 2026-03-31 — 01-04 SUMMARY written, ROADMAP updated, Phase 1 marked complete
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 4
+- Average duration: ~1 day
+- Total execution time: 2026-03-30 → 2026-03-31
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
+| Phase | Plans | Status |
+|-------|-------|--------|
+| 1. Foundation & Bug Fixes | 4/4 | Complete |
+| 2. FastAPI Backend | 0/? | Not started |
+| 3. React Frontend | 0/? | Not started |
+| 4. Deployment | 0/? | Not started |
 
 ## Accumulated Context
 
@@ -63,18 +59,20 @@ Recent decisions affecting current work:
 - Pre-roadmap: Use Neon (not Render) for PostgreSQL — Render free DB expires every 30 days
 - Pre-roadmap: Fix N+1 query, missing indexes, and connection pool before building API layer
 - Pre-roadmap: Expose raw factor values from API so weight sliders recompute in browser without round-trips
+- Phase 1: Alembic confirmed present — FK indexes applied via migration (not __table_args__)
+- Phase 1: RMP auth token moved to RMP_AUTH_TOKEN env var
+- Phase 1: Scoring N+1 patched with batch sessions; bulk JOIN rewrite needed before Phase 2
 
 ### Pending Todos
 
-None yet.
+- Bulk JOIN rewrite of compute_all_scores() before Phase 2 API work (scoring N+1 documented in memory)
 
 ### Blockers/Concerns
 
-- Phase 1: Alembic migration state unknown — check for `alembic/` directory before deciding index strategy (`__table_args__` vs migration file)
-- Phase 1: Hardcoded RMP auth token in `rmp_scraper.py` must be verified and migrated to env var before any pipeline run against production Neon DB
+- Scoring N+1 pattern (3 queries × 11,750 pairs): patched but not fully solved. Rewrite to bulk JOIN needed before Phase 2 to ensure API endpoint `GET /courses/{id}/professors` is fast.
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:25:35.639Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation-bug-fixes/01-CONTEXT.md
+Last session: 2026-03-31
+Stopped at: Phase 1 complete — wrote 01-04-SUMMARY, updated ROADMAP, updated STATE
+Resume file: None — Phase 1 done, next action is Phase 2 planning
