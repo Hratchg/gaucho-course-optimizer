@@ -31,5 +31,5 @@ export function computeGauchoScore(
     qualityFactor * w.quality +
     difficultyFactor * w.difficulty +
     sentimentFactor * w.sentiment
-  return Math.round(raw * 100)
+  return Math.round(Math.max(0, Math.min(100, raw * 100)))
 }
