@@ -186,8 +186,10 @@ def test_compute_all_scores_returns_computed(mem_session):
     assert result["skipped"] == 0
 
 
-def test_compute_all_scores_skips_professor_without_rmp_rating(mem_session):
-    """Test 2: professor with rmp_id but overall_quality=None is counted in skipped."""
+def test_compute_all_scores_skips_professor_with_null_quality(mem_session):
+    """Test 2: A professor with an RmpRating row where overall_quality is None is counted as skipped.
+    Professors with no RmpRating rows at all are excluded by the INNER JOIN and are not processed.
+    """
     prof = Professor(name_nexus="Prof B", name_rmp="Prof B", rmp_id=1002, department="Math")
     course = Course(code="MATH101", title="Calculus", department="Math")
     mem_session.add_all([prof, course])

@@ -98,7 +98,9 @@ def compute_all_scores(
         .join(latest_rating_sq, latest_rating_sq.c.professor_id == Professor.id)
         .join(RmpRating, RmpRating.id == latest_rating_sq.c.latest_rating_id)
         .outerjoin(sentiment_sq, sentiment_sq.c.rmp_rating_id == RmpRating.id)
+        # Professors with no RmpRating rows are excluded by the INNER JOIN (not counted in skipped). 'skipped' means a row was reached but had null quality.
         .filter(Professor.rmp_id.isnot(None))
+        # RMP columns are 1:1 per rating join; included in GROUP BY as required by SQLAlchemy legacy query() API
         .group_by(
             Professor.id,
             GradeDistribution.course_id,
