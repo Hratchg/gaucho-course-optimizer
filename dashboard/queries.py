@@ -68,7 +68,7 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
     )
     if min_year is not None:
         q = q.filter(GradeDistribution.year >= min_year)
-    results = q.group_by(Professor.id, RmpRating.id).all()
+    results = q.group_by(Professor.id, RmpRating.id, sentiment_sq.c.avg_sentiment).all()
 
     # 2nd query: keywords grouped by rating_id (not N+1)
     rating_ids = [row[4].id for row in results if row[4] is not None]
