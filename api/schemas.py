@@ -24,6 +24,9 @@ class ProfessorRanking(BaseModel):
     rmp_would_take_again: float | None = None
     rmp_num_ratings: int | None = None
     mean_gpa: float | None = None
+    std_gpa: float | None = None
+    avg_sentiment: float | None = None
+    match_confidence: float | None = None
     quarters_taught: int
     keywords: list[str] = []
 
