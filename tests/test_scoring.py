@@ -1,4 +1,13 @@
-from etl.scoring import compute_gaucho_score, normalize_gpa, normalize_quality, normalize_difficulty, bayesian_adjust
+import pytest
+from etl.scoring import (
+    compute_gaucho_score,
+    normalize_gpa,
+    normalize_quality,
+    normalize_difficulty,
+    bayesian_adjust,
+    compute_all_scores,
+)
+from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment, GauchoScore
 
 
 def test_normalize_gpa():
@@ -116,3 +125,112 @@ def test_score_with_gpa_only_weight():
         weights={"gpa": 1.0, "quality": 0.0, "difficulty": 0.0, "sentiment": 0.0},
     )
     assert score == 75.0
+
+
+# ---------------------------------------------------------------------------
+# Integration tests: compute_all_scores() with an in-memory SQLite session
+#
+# These tests use a fresh SQLite in-memory DB so they:
+#   1. Run fast (no network round-trip)
+#   2. Are fully isolated (no production data visible)
+#   3. Test the bulk JOIN logic end-to-end via SQLAlchemy ORM
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mem_session():
+    """Provide a fully isolated SQLite in-memory session for scoring integration tests."""
+    from sqlalchemy import create_engine as _create_engine
+    from sqlalchemy.orm import sessionmaker as _sessionmaker
+    from db.models import Base
+
+    engine = _create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    Session = _sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+    Base.metadata.drop_all(engine)
+    engine.dispose()
+
+
+def _seed_matched_professor(session):
+    """Insert one professor with grades + RMP rating. Returns (professor, course)."""
+    prof = Professor(name_nexus="Prof A", name_rmp="Prof A", rmp_id=1001, department="CS")
+    course = Course(code="CS101", title="Intro CS", department="CS")
+    session.add_all([prof, course])
+    session.flush()
+
+    grade = GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2023, avg_gpa=3.5,
+    )
+    rating = RmpRating(
+        professor_id=prof.id,
+        overall_quality=4.0,
+        difficulty=2.5,
+        num_ratings=20,
+    )
+    session.add_all([grade, rating])
+    session.flush()
+    return prof, course
+
+
+def test_compute_all_scores_returns_computed(mem_session):
+    """Test 1: compute_all_scores with seeded data returns computed > 0, skipped == 0."""
+    _seed_matched_professor(mem_session)
+    result = compute_all_scores(mem_session)
+    assert isinstance(result, dict)
+    assert "computed" in result
+    assert "skipped" in result
+    assert result["computed"] > 0
+    assert result["skipped"] == 0
+
+
+def test_compute_all_scores_skips_professor_without_rmp_rating(mem_session):
+    """Test 2: professor with rmp_id but overall_quality=None is counted in skipped."""
+    prof = Professor(name_nexus="Prof B", name_rmp="Prof B", rmp_id=1002, department="Math")
+    course = Course(code="MATH101", title="Calculus", department="Math")
+    mem_session.add_all([prof, course])
+    mem_session.flush()
+
+    grade = GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2023, avg_gpa=3.2,
+    )
+    # RmpRating exists but overall_quality is None
+    rating = RmpRating(
+        professor_id=prof.id,
+        overall_quality=None,
+        difficulty=None,
+        num_ratings=0,
+    )
+    mem_session.add_all([grade, rating])
+    mem_session.flush()
+
+    result = compute_all_scores(mem_session)
+    assert result["skipped"] >= 1
+
+
+def test_compute_all_scores_no_duplicates_on_second_call(mem_session):
+    """Test 3: calling compute_all_scores twice does not create duplicate GauchoScore rows."""
+    prof, course = _seed_matched_professor(mem_session)
+
+    compute_all_scores(mem_session)
+    compute_all_scores(mem_session)
+
+    count = (
+        mem_session.query(GauchoScore)
+        .filter_by(professor_id=prof.id, course_id=course.id)
+        .count()
+    )
+    assert count == 1
+
+
+def test_compute_all_scores_return_dict_always_has_both_keys(mem_session):
+    """Test 4: return dict always has both 'computed' and 'skipped' integer keys."""
+    # Empty DB — no professors at all
+    result = compute_all_scores(mem_session)
+    assert "computed" in result
+    assert "skipped" in result
+    assert isinstance(result["computed"], int)
+    assert isinstance(result["skipped"], int)
