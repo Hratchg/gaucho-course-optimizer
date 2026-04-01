@@ -11,7 +11,7 @@ import {
   CommandLoading,
 } from '@/components/ui/command'
 
-export function CourseSearch() {
+export default function CourseSearch() {
   const [query, setQuery] = useState('')
   const { data: courses, isLoading } = useCourseSearch(query)
   const navigate = useNavigate()
