@@ -29,6 +29,7 @@ export function WeightSliders({ weights, onWeightsChange }: WeightSlidersProps) 
             </span>
           </div>
           <Slider
+            aria-label={label}
             value={[weights[key]]}
             onValueChange={([value]) =>
               onWeightsChange({ ...weights, [key]: value })
