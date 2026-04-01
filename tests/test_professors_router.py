@@ -82,10 +82,10 @@ def test_get_grades_returns_200_with_grade_quarter_list(monkeypatch):
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/1/grades?course_id=42")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/1/grades?course_id=42")
+
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
@@ -120,10 +120,10 @@ def test_get_grades_no_data_returns_404(monkeypatch):
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/999/grades?course_id=1")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/999/grades?course_id=1")
+
         assert resp.status_code == 404
         assert "999" in resp.json()["detail"]
     finally:
@@ -141,10 +141,10 @@ def test_get_comments_returns_200_with_comment_result_list(monkeypatch):
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/1/comments")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/1/comments")
+
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)
@@ -164,19 +164,24 @@ def test_get_comments_returns_200_with_comment_result_list(monkeypatch):
 
 def test_get_comments_with_limit_returns_at_most_n_results(monkeypatch):
     # Simulate the query respecting the limit — return exactly 3
-    comments = [_make_comment(text=f"Comment {i}") for i in range(3)]
-    monkeypatch.setattr("api.routers.professors.get_comments_for_professor", lambda db, pid, limit: comments)
+    captured = {}
+    def mock_query(db, pid, limit=5):
+        captured["limit"] = limit
+        return [_make_comment(text=f"Comment {i}") for i in range(min(limit, 3))]
+
+    monkeypatch.setattr("api.routers.professors.get_comments_for_professor", mock_query)
 
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/1/comments?limit=3")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/1/comments?limit=3")
+
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) <= 3
+        assert captured.get("limit") == 3
     finally:
         app.dependency_overrides.clear()
 
@@ -191,10 +196,10 @@ def test_get_comments_no_data_returns_404(monkeypatch):
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/999/comments")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/999/comments")
+
         assert resp.status_code == 404
         assert "999" in resp.json()["detail"]
     finally:
@@ -214,10 +219,10 @@ def test_comment_sentiment_score_is_raw_vader_float(monkeypatch):
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
 
-    client = TestClient(app)
-    resp = client.get("/professors/1/comments")
-
     try:
+        client = TestClient(app)
+        resp = client.get("/professors/1/comments")
+
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == 1
