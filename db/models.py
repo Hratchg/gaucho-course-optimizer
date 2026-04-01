@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime, JSON, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -91,6 +91,9 @@ class RmpComment(Base):
 
 class GauchoScore(Base):
     __tablename__ = "gaucho_scores"
+    __table_args__ = (
+        UniqueConstraint("professor_id", "course_id", name="uq_gaucho_score_pair"),
+    )
 
     id = Column(Integer, primary_key=True)
     professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False)
