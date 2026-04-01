@@ -88,7 +88,7 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
           </div>
         )}
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="mt-3 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <CollapsibleTrigger className="mt-3 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             {isOpen ? (
               <><ChevronUp className="h-4 w-4" /> Hide details</>
             ) : (
