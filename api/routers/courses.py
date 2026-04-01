@@ -26,6 +26,7 @@ def search(
     q: Annotated[
         str,
         Query(
+            min_length=1,
             max_length=100,
             pattern=r"^[a-zA-Z0-9 \-]+$",
             description="Course code or title fragment. Max 100 chars, alphanumeric + space + hyphen.",
