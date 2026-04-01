@@ -44,16 +44,17 @@ def compute_all_scores(
     session,
     weights: dict[str, float] | None = None,
 ) -> dict:
-    """Compute Gaucho Scores for all matched professors (those with both grades and RMP data).
+    """Compute Gaucho Scores for all matched professors via a single bulk JOIN.
+
+    Replaces the former N+1 loop (3 queries × 11,750 pairs = ~35k queries).
+    Loads all data in one query, computes scores in Python, bulk-upserts results.
 
     Returns stats dict: {computed, skipped}.
-    Uses fresh sessions per batch to prevent long-running transaction timeouts on cloud DBs.
     """
     from datetime import datetime, timezone
     from sqlalchemy import func
-    from db.connection import get_session
     from db.models import (
-        Professor, Course, GradeDistribution, RmpRating, RmpComment, GauchoScore,
+        Professor, GradeDistribution, RmpRating, RmpComment, GauchoScore,
     )
 
     if weights is None:
@@ -61,88 +62,94 @@ def compute_all_scores(
 
     stats = {"computed": 0, "skipped": 0}
 
-    # Load all (professor, course) pairs into memory, then release the connection.
-    # This large JOIN query can leave the session in a state that causes cloud DBs
-    # (e.g. Neon) to drop the connection before the subsequent per-professor queries run.
-    pairs = (
+    # Subquery 1: latest RMP rating id per professor
+    latest_rating_sq = (
         session.query(
-            Professor.id,
+            RmpRating.professor_id,
+            func.max(RmpRating.id).label("latest_rating_id"),
+        )
+        .group_by(RmpRating.professor_id)
+        .subquery("latest_rating")
+    )
+
+    # Subquery 2: avg sentiment per rmp_rating_id
+    sentiment_sq = (
+        session.query(
+            RmpComment.rmp_rating_id,
+            func.avg(RmpComment.sentiment_score).label("avg_sentiment"),
+        )
+        .filter(RmpComment.sentiment_score.isnot(None))
+        .group_by(RmpComment.rmp_rating_id)
+        .subquery("sentiment")
+    )
+
+    # Single bulk JOIN: professors + grade avg + latest RMP + avg sentiment
+    rows = (
+        session.query(
+            Professor.id.label("professor_id"),
             GradeDistribution.course_id,
             func.avg(GradeDistribution.avg_gpa).label("mean_gpa"),
+            RmpRating.overall_quality,
+            RmpRating.difficulty,
+            RmpRating.num_ratings,
+            sentiment_sq.c.avg_sentiment,
         )
         .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
-        .join(RmpRating, RmpRating.professor_id == Professor.id)
+        .join(latest_rating_sq, latest_rating_sq.c.professor_id == Professor.id)
+        .join(RmpRating, RmpRating.id == latest_rating_sq.c.latest_rating_id)
+        .outerjoin(sentiment_sq, sentiment_sq.c.rmp_rating_id == RmpRating.id)
         .filter(Professor.rmp_id.isnot(None))
-        .group_by(Professor.id, GradeDistribution.course_id)
+        .group_by(
+            Professor.id,
+            GradeDistribution.course_id,
+            RmpRating.overall_quality,
+            RmpRating.difficulty,
+            RmpRating.num_ratings,
+            sentiment_sq.c.avg_sentiment,
+        )
         .all()
     )
-    session.close()
 
-    # After the large JOIN query, dispose the pool and pause briefly.
-    # Neon may throttle connections for a moment after a resource-intensive query;
-    # the sleep avoids the first batch connection being dropped mid-query.
-    import time
-    from db.connection import get_engine
-    get_engine().dispose(close=False)
-    time.sleep(3)
+    # Compute scores in Python, bulk-upsert
+    for row in rows:
+        prof_id = row.professor_id
+        course_id = row.course_id
+        mean_gpa = row.mean_gpa
+        quality = row.overall_quality
+        difficulty = row.difficulty
+        num_ratings = row.num_ratings
+        avg_sentiment = row.avg_sentiment
 
-    # Process in batches with a fresh session per batch to stay within connection timeouts.
-    batch_session = get_session()
-    try:
-        for prof_id, course_id, mean_gpa in pairs:
-            # Get latest RMP rating
-            rating = (
-                batch_session.query(RmpRating)
-                .filter_by(professor_id=prof_id)
-                .order_by(RmpRating.fetched_at.desc())
-                .first()
-            )
-            if not rating:
-                stats["skipped"] += 1
-                continue
+        if quality is None:
+            stats["skipped"] += 1
+            continue
 
-            # Compute factors
-            gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa else 0.5
-            qual_f = normalize_quality(rating.overall_quality) if rating.overall_quality else 0.5
-            diff_f = normalize_difficulty(rating.difficulty) if rating.difficulty else 0.5
+        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa else 0.5
+        qual_f = normalize_quality(quality) if quality else 0.5
+        diff_f = normalize_difficulty(difficulty) if difficulty else 0.5
+        sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else 0.5
 
-            # Sentiment: average of comments
-            avg_sentiment = (
-                batch_session.query(func.avg(RmpComment.sentiment_score))
-                .join(RmpRating, RmpComment.rmp_rating_id == RmpRating.id)
-                .filter(RmpRating.professor_id == prof_id, RmpComment.sentiment_score.isnot(None))
-                .scalar()
-            )
-            sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else 0.5
+        # Bayesian adjust quality factor
+        if quality and num_ratings:
+            adj_qual = bayesian_adjust(quality, num_ratings, 3.0)
+            qual_f = normalize_quality(adj_qual)
 
-            # Bayesian adjust quality
-            if rating.overall_quality and rating.num_ratings:
-                adj_qual = bayesian_adjust(rating.overall_quality, rating.num_ratings, 3.0)
-                qual_f = normalize_quality(adj_qual)
+        score = compute_gaucho_score(gpa_f, qual_f, diff_f, sent_f, weights)
 
-            score = compute_gaucho_score(gpa_f, qual_f, diff_f, sent_f, weights)
+        # Upsert: delete old record for this (professor, course) pair, insert new
+        session.query(GauchoScore).filter_by(
+            professor_id=prof_id,
+            course_id=course_id,
+        ).delete()
 
-            # Upsert: delete old score for this pair, insert new
-            batch_session.query(GauchoScore).filter_by(
-                professor_id=prof_id, course_id=course_id,
-            ).delete()
+        session.add(GauchoScore(
+            professor_id=prof_id,
+            course_id=course_id,
+            score=score,
+            weights_used=weights,
+            computed_at=datetime.now(timezone.utc),
+        ))
+        stats["computed"] += 1
 
-            batch_session.add(GauchoScore(
-                professor_id=prof_id,
-                course_id=course_id,
-                score=score,
-                weights_used=weights,
-                computed_at=datetime.now(timezone.utc),
-            ))
-            stats["computed"] += 1
-
-            if stats["computed"] % 50 == 0:
-                batch_session.commit()
-                batch_session.close()
-                batch_session = get_session()
-
-        batch_session.commit()
-    finally:
-        batch_session.close()
-
+    session.commit()
     return stats

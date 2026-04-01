@@ -3,6 +3,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+# Load .env if present so DATABASE_URL is available without manual env injection.
+# setdefault ensures that an already-set DATABASE_URL (e.g. from CI env) wins.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
+except ImportError:
+    pass  # python-dotenv not installed; rely on environment
+
 os.environ.setdefault("DATABASE_URL", "postgresql://gco:gco@localhost:5432/gco_test")
 
 from db.models import Base
