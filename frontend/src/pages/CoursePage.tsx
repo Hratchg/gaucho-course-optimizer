@@ -2,9 +2,11 @@ import { useParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
+import { SkeletonCard } from '@/components/SkeletonCard'
 import { WeightSliders } from '@/components/WeightSliders'
 import { computeGauchoScore, DEFAULT_WEIGHTS } from '@/lib/scoring'
 import type { Weights } from '@/lib/scoring'
+import { useColdStartMessage } from '@/hooks/useElapsedTime'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -21,6 +23,7 @@ export default function CoursePage() {
 
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const showColdStart = useColdStartMessage(isLoading)
 
   const rankedProfessors = useMemo(() => {
     if (!professors) return []
@@ -73,9 +76,16 @@ export default function CoursePage() {
               </p>
             </div>
           ) : isLoading ? (
-            <div className="py-12">
-              <p>Loading...</p>
-            </div>
+            <>
+              {showColdStart && (
+                <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                  Waking up the server... free-tier cold start may take 15-30 seconds.
+                </div>
+              )}
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
           ) : rankedProfessors.length === 0 ? (
             <div className="py-12 text-center">
               <p className="font-semibold">No professors found for this course</p>
