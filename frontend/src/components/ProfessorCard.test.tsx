@@ -1,8 +1,22 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ProfessorRanking } from '@/types/api'
 import { ProfessorCard } from './ProfessorCard'
+
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+}
+
+function renderWithClient(ui: React.ReactElement) {
+  const client = makeQueryClient()
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+  )
+}
 
 const mockProfessor: ProfessorRanking = {
   id: 1, name: 'Dr. Test Professor', department: 'CMPSC',
@@ -16,35 +30,35 @@ const mockProfessor: ProfessorRanking = {
 
 describe('ProfessorCard', () => {
   it('displays the professor name', () => {
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     expect(screen.getByText('Dr. Test Professor')).toBeInTheDocument()
   })
 
   it('displays the computed score', () => {
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     expect(screen.getByText('75')).toBeInTheDocument()
   })
 
   it('displays RMP quality rating', () => {
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     expect(screen.getByText(/Quality:.*4\.2/)).toBeInTheDocument()
   })
 
   it('displays keyword tags', () => {
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     expect(screen.getByText('engaging')).toBeInTheDocument()
     expect(screen.getByText('fair grader')).toBeInTheDocument()
     expect(screen.getByText('helpful')).toBeInTheDocument()
   })
 
   it('displays avg GPA', () => {
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     expect(screen.getByText(/Avg GPA:.*3\.45/)).toBeInTheDocument()
   })
 
   it('toggles "Show details" / "Hide details" on click', async () => {
     const user = userEvent.setup()
-    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
 
     const trigger = screen.getByText(/Show details/i)
     expect(trigger).toBeInTheDocument()
