@@ -43,7 +43,7 @@ export default function CoursePage() {
       <div className="mb-4 md:hidden">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full min-h-[44px]">
               Adjust weights
             </Button>
           </SheetTrigger>
