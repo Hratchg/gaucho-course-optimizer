@@ -1,0 +1,58 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, it, expect } from 'vitest'
+import type { ProfessorRanking } from '@/types/api'
+import { ProfessorCard } from './ProfessorCard'
+
+const mockProfessor: ProfessorRanking = {
+  id: 1, name: 'Dr. Test Professor', department: 'CMPSC',
+  gaucho_score: 75, gpa_factor: 0.8, quality_factor: 0.7,
+  difficulty_factor: 0.6, sentiment_factor: 0.5,
+  rmp_quality: 4.2, rmp_difficulty: 3.1, rmp_would_take_again: 85,
+  rmp_num_ratings: 50, mean_gpa: 3.45, std_gpa: 0.3,
+  avg_sentiment: 0.4, match_confidence: 0.95,
+  quarters_taught: 8, keywords: ['engaging', 'fair grader', 'helpful'],
+}
+
+describe('ProfessorCard', () => {
+  it('displays the professor name', () => {
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    expect(screen.getByText('Dr. Test Professor')).toBeInTheDocument()
+  })
+
+  it('displays the computed score', () => {
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    expect(screen.getByText('75')).toBeInTheDocument()
+  })
+
+  it('displays RMP quality rating', () => {
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    expect(screen.getByText(/Quality:.*4\.2/)).toBeInTheDocument()
+  })
+
+  it('displays keyword tags', () => {
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    expect(screen.getByText('engaging')).toBeInTheDocument()
+    expect(screen.getByText('fair grader')).toBeInTheDocument()
+    expect(screen.getByText('helpful')).toBeInTheDocument()
+  })
+
+  it('displays avg GPA', () => {
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+    expect(screen.getByText(/Avg GPA:.*3\.45/)).toBeInTheDocument()
+  })
+
+  it('toggles "Show details" / "Hide details" on click', async () => {
+    const user = userEvent.setup()
+    render(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
+
+    const trigger = screen.getByText(/Show details/i)
+    expect(trigger).toBeInTheDocument()
+
+    await user.click(trigger)
+    expect(screen.getByText(/Hide details/i)).toBeInTheDocument()
+
+    await user.click(screen.getByText(/Hide details/i))
+    expect(screen.getByText(/Show details/i)).toBeInTheDocument()
+  })
+})
