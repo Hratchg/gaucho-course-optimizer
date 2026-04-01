@@ -66,7 +66,7 @@ def compute_all_scores(
     latest_rating_sq = (
         session.query(
             RmpRating.professor_id,
-            func.max(RmpRating.id).label("latest_rating_id"),
+            func.max(RmpRating.id).label("latest_rating_id"),  # MAX(id) is valid "latest" proxy: rmp_loader always inserts a new row on re-scrape, so IDs are monotonically increasing
         )
         .group_by(RmpRating.professor_id)
         .subquery("latest_rating")
