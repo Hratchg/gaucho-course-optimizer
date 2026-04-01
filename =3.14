@@ -1,0 +1,17 @@
+WARNING: Ignoring invalid distribution ~ (C:\Python312\Lib\site-packages)
+WARNING: Ignoring invalid distribution ~ip (C:\Python312\Lib\site-packages)
+Collecting pytest-mock
+  Downloading pytest_mock-3.15.1-py3-none-any.whl.metadata (3.9 kB)
+Requirement already satisfied: pytest>=6.2.5 in c:\python312\lib\site-packages (from pytest-mock) (9.0.2)
+Requirement already satisfied: colorama>=0.4 in c:\python312\lib\site-packages (from pytest>=6.2.5->pytest-mock) (0.4.6)
+Requirement already satisfied: iniconfig>=1.0.1 in c:\python312\lib\site-packages (from pytest>=6.2.5->pytest-mock) (2.3.0)
+Requirement already satisfied: packaging>=22 in c:\python312\lib\site-packages (from pytest>=6.2.5->pytest-mock) (24.2)
+Requirement already satisfied: pluggy<2,>=1.5 in c:\python312\lib\site-packages (from pytest>=6.2.5->pytest-mock) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in c:\python312\lib\site-packages (from pytest>=6.2.5->pytest-mock) (2.19.2)
+Downloading pytest_mock-3.15.1-py3-none-any.whl (10 kB)
+WARNING: Ignoring invalid distribution ~ (C:\Python312\Lib\site-packages)
+WARNING: Ignoring invalid distribution ~ip (C:\Python312\Lib\site-packages)
+Installing collected packages: pytest-mock
+WARNING: Ignoring invalid distribution ~ (C:\Python312\Lib\site-packages)
+WARNING: Ignoring invalid distribution ~ip (C:\Python312\Lib\site-packages)
+Successfully installed pytest-mock-3.15.1
