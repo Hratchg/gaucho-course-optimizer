@@ -36,7 +36,11 @@ created: 2026-04-01
 | Slider | Four weight sliders | UI-07 |
 
 **Install command (executor reference):**
+
+Run `npx shadcn@latest init` FIRST to establish the Tailwind CSS v4 config, then add components:
+
 ```bash
+npx shadcn@latest init
 npx shadcn@latest add command skeleton sheet collapsible card badge slider
 ```
 
@@ -68,14 +72,15 @@ Exceptions:
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 14px | 400 (regular) | 1.5 | Card body text, RMP stats, comment text, slider labels |
-| Label | 12px | 500 (medium) | 1.4 | Keyword tags, VADER badge text, chart axis labels, stat captions |
+| Label | 12px | 400 (regular) | 1.4 | Keyword tags, VADER badge text, chart axis labels, stat captions |
 | Heading | 20px | 600 (semibold) | 1.2 | Professor name on card, page section headings |
-| Display | 28px | 700 (bold) | 1.1 | Gaucho Score number (prominent on card per D-01) |
+| Display | 28px | 600 (semibold) | 1.1 | Gaucho Score number (prominent on card per D-01) |
 
 Notes:
 - Exactly 4 sizes declared. No other sizes may be introduced without amending this contract.
-- Exactly 2 primary weights in use for body/label content: 400 and 600. Weight 500 applies only to badge/tag labels; weight 700 applies only to the score display — treat both as approved exceptions.
-- The Gaucho Score display uses Display size (28px) + Bold (700) because D-01 requires it to be "prominent" — it is the primary decision-making signal on the card.
+- Exactly 2 weights declared: 400 and 600. No other weights may be used.
+- The Gaucho Score display uses Display size (28px) at weight 600 — the 28px size alone provides sufficient prominence as the primary decision-making signal on the card (D-01).
+- Label role uses 400 at 12px — the reduced size provides visual hierarchy without needing a distinct weight.
 
 ---
 
@@ -92,8 +97,12 @@ Notes:
 - The "Search courses" Command input focus ring
 - The "Adjust weights" button (mobile, primary CTA)
 - Active slider thumb and track fill
-- Bar chart bar fill (`#6366f1` indigo — see RESEARCH.md Pattern 5)
-- GPA trend line stroke (`#10b981` emerald — see RESEARCH.md Pattern 6)
+
+**Data visualization colors (NOT interactive accent):**
+- `#6366f1` (indigo) — bar chart bar fill only; data visualization, not interactive
+- `#10b981` (emerald) — GPA trend line stroke only; data visualization, not interactive
+
+These two hues are chart-only. They must not be reused for interactive elements, focus rings, or semantic status indicators.
 
 **Semantic score color bands (NOT accent — these are status colors):**
 
@@ -183,10 +192,10 @@ Source: CONTEXT.md Specifics, RESEARCH.md SentimentBadge.
 |---------|----------|------------|
 | Colored left border strip | Left edge | 4px, score-banded color |
 | Professor name | Top-left | Heading (20px, 600) |
-| Gaucho Score | Top-right | Display (28px, 700), plain text color |
+| Gaucho Score | Top-right | Display (28px, 600), plain text color |
 | Avg GPA | Below name | Body (14px, 400) |
 | RMP Quality / Difficulty / WTRA | Below GPA, horizontal row | Body (14px, 400), labeled |
-| Keyword tags | Below RMP stats | Badge components, Label (12px, 500) |
+| Keyword tags | Below RMP stats | Badge components, Label (12px, 400) |
 | Expand toggle | Bottom of card | Body (14px, 400), "Show details ▾" / "Hide details ▴" |
 
 ### Professor Card — Expanded State (toggle reveals)
@@ -199,7 +208,7 @@ Both sections appear together below the collapsed header:
 
 **Section B — Recent Comments:**
 - 5 most recent RMP comments
-- Each comment: body text (14px, 400, line-height 1.5) + VADER badge (12px, 500) at right or below
+- Each comment: body text (14px, 400, line-height 1.5) + VADER badge (12px, 400) at right or below
 
 ### Routes
 
@@ -271,6 +280,7 @@ Source: CONTEXT.md D-08.
 | Card expand toggle (expanded) | "Hide details" | Default |
 | Mobile slider button label | "Adjust weights" | CONTEXT.md D-06 |
 | Sheet title | "Adjust Weights" | D-06 (sheet header) |
+| Sheet close button aria-label | "Close weight sliders" | Accessibility — Dimension 2 |
 | Weight slider labels | "GPA Weight", "Quality Weight", "Difficulty Weight", "Sentiment Weight" | CONTEXT.md Specifics |
 | VADER badge — positive | "Positive" | CONTEXT.md Specifics |
 | VADER badge — neutral | "Neutral" | CONTEXT.md Specifics |
@@ -291,6 +301,8 @@ Destructive actions: None. Phase 3 has no delete, remove, or irreversible operat
 | Third-party | none | not applicable |
 
 No third-party registries declared. Registry vetting gate: not triggered.
+
+**Executor note:** Run `npx shadcn@latest init` before `npx shadcn@latest add [components]`. The init step establishes the Tailwind CSS v4 config that all added components depend on. Adding components before init will fail or produce misconfigured output.
 
 ---
 
