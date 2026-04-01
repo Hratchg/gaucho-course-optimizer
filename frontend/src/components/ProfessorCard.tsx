@@ -17,7 +17,7 @@ function scoreBorderClass(score: number): string {
   return 'border-l-4 border-l-red-500'
 }
 
-export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps) {
+export function ProfessorCard({ professor, score, courseId: _courseId }: ProfessorCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
