@@ -6,7 +6,5 @@ export function useProfessorGrades(professorId: number, courseId: number) {
     queryKey: ['grades', professorId, courseId],
     queryFn: () => fetchGrades(professorId, courseId),
     enabled: professorId > 0 && courseId > 0,
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
   })
 }

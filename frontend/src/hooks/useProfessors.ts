@@ -6,7 +6,5 @@ export function useProfessors(courseId: number) {
     queryKey: ['professors', courseId],
     queryFn: () => fetchProfessors(courseId),
     enabled: courseId > 0,
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
   })
 }

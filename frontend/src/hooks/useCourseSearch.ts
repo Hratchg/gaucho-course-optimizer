@@ -6,7 +6,5 @@ export function useCourseSearch(query: string) {
     queryKey: ['courses', 'search', query],
     queryFn: () => fetchCourses(query),
     enabled: query.trim().length >= 2,
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
   })
 }
