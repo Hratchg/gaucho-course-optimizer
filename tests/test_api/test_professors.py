@@ -62,9 +62,8 @@ def test_grades_returns_distribution(client, seeded_professor):
     assert "f" in row
 
 
-def test_grades_requires_course_id(client, seeded_professor):
-    prof_id = seeded_professor["professor"].id
-    response = client.get(f"/professors/{prof_id}/grades")
+def test_grades_requires_course_id(client):
+    response = client.get("/professors/1/grades")
     assert response.status_code == 422
 
 
@@ -92,7 +91,7 @@ def test_comments_limit(client, seeded_professor):
     response = client.get(f"/professors/{prof_id}/comments?limit=2")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) <= 2
+    assert 1 <= len(data) <= 2
 
 
 def test_comments_not_found(client):
