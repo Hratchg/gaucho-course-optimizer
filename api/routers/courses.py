@@ -79,6 +79,9 @@ def get_professors(
             "rmp_would_take_again": p["rmp_would_take_again"],
             "rmp_num_ratings": p["rmp_num_ratings"],
             "mean_gpa": p["mean_gpa"],
+            "std_gpa": p["std_gpa"],
+            "avg_sentiment": p["avg_sentiment"],
+            "match_confidence": p["match_confidence"],
             "quarters_taught": p["quarters_taught"],
             "keywords": p.get("keywords", []),
         })

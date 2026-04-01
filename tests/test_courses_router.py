@@ -53,17 +53,6 @@ def _make_course(*, id: int = 1, code: str = "CS 130A", title: str = "Data Struc
     return {"id": id, "code": code, "title": title, "department": department}
 
 
-def _db_override(search_result=None, professors_result=None):
-    """Return a get_db override that injects a mock session."""
-    mock_session = MagicMock()
-
-    # Patch search_courses and get_professors_for_course at the router's import site
-    # We override at module level using monkeypatch instead — see test bodies.
-    def override():
-        yield mock_session
-
-    return override, mock_session
-
 
 # ---------------------------------------------------------------------------
 # Test 1: GET /courses/search?q=CS → 200 with correct keys
@@ -79,17 +68,18 @@ def test_search_returns_200_with_correct_keys(monkeypatch):
     client = TestClient(app)
     resp = client.get("/courses/search?q=CS")
 
-    app.dependency_overrides.clear()
-
-    assert resp.status_code == 200
-    data = resp.json()
-    assert isinstance(data, list)
-    assert len(data) == 2
-    for item in data:
-        assert "id" in item
-        assert "code" in item
-        assert "title" in item
-        assert "department" in item
+    try:
+        assert resp.status_code == 200
+        data = resp.json()
+        assert isinstance(data, list)
+        assert len(data) == 2
+        for item in data:
+            assert "id" in item
+            assert "code" in item
+            assert "title" in item
+            assert "department" in item
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -131,13 +121,14 @@ def test_get_professors_sorted_by_gaucho_score(monkeypatch):
     client = TestClient(app)
     resp = client.get("/courses/1/professors")
 
-    app.dependency_overrides.clear()
-
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) == 3
-    scores = [item["gaucho_score"] for item in data]
-    assert scores == sorted(scores, reverse=True), f"Not sorted descending: {scores}"
+    try:
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 3
+        scores = [item["gaucho_score"] for item in data]
+        assert scores == sorted(scores, reverse=True), f"Not sorted descending: {scores}"
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -153,10 +144,11 @@ def test_get_professors_404_when_empty(monkeypatch):
     client = TestClient(app)
     resp = client.get("/courses/999999/professors")
 
-    app.dependency_overrides.clear()
-
-    assert resp.status_code == 404
-    assert "not found" in resp.json()["detail"].lower()
+    try:
+        assert resp.status_code == 404
+        assert "not found" in resp.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -173,14 +165,15 @@ def test_sentiment_factor_vader_normalization(monkeypatch):
     client = TestClient(app)
     resp = client.get("/courses/1/professors")
 
-    app.dependency_overrides.clear()
-
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) == 1
-    assert data[0]["sentiment_factor"] == pytest.approx(0.5), (
-        f"Expected sentiment_factor=0.5 for avg_sentiment=0.0, got {data[0]['sentiment_factor']}"
-    )
+    try:
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["sentiment_factor"] == pytest.approx(0.5), (
+            f"Expected sentiment_factor=0.5 for avg_sentiment=0.0, got {data[0]['sentiment_factor']}"
+        )
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -197,14 +190,15 @@ def test_quality_factor_none_safe_fallback(monkeypatch):
     client = TestClient(app)
     resp = client.get("/courses/1/professors")
 
-    app.dependency_overrides.clear()
-
-    assert resp.status_code == 200
-    data = resp.json()
-    assert len(data) == 1
-    assert data[0]["quality_factor"] == pytest.approx(0.5), (
-        f"Expected quality_factor=0.5 for rmp_quality=None, got {data[0]['quality_factor']}"
-    )
+    try:
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["quality_factor"] == pytest.approx(0.5), (
+            f"Expected quality_factor=0.5 for rmp_quality=None, got {data[0]['quality_factor']}"
+        )
+    finally:
+        app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -230,10 +224,33 @@ def test_search_route_not_shadowed_by_course_id_route(monkeypatch):
     # not try to parse "search" as a course_id integer.
     resp = client.get("/courses/search?q=physics")
 
-    app.dependency_overrides.clear()
+    try:
+        # The /search handler accepts q=physics (valid pattern), returns 200
+        assert resp.status_code == 200, (
+            f"Expected 200 (search route matched), got {resp.status_code}. "
+            "This indicates /{course_id}/professors shadowed /search."
+        )
+    finally:
+        app.dependency_overrides.clear()
 
-    # The /search handler accepts q=physics (valid pattern), returns 200
-    assert resp.status_code == 200, (
-        f"Expected 200 (search route matched), got {resp.status_code}. "
-        "This indicates /{course_id}/professors shadowed /search."
-    )
+
+# ---------------------------------------------------------------------------
+# Test 9: avg_sentiment, std_gpa, match_confidence are passed through to response
+# ---------------------------------------------------------------------------
+
+def test_professor_response_includes_passthrough_fields(monkeypatch):
+    """avg_sentiment, std_gpa, match_confidence from query are present in response."""
+    prof = _make_prof(avg_sentiment=0.6, std_gpa=0.3, match_confidence=0.95)
+    monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, cid: [prof])
+    mock_db = MagicMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    client = TestClient(app)
+    try:
+        resp = client.get("/courses/1/professors")
+        assert resp.status_code == 200
+        data = resp.json()[0]
+        assert data["avg_sentiment"] == 0.6
+        assert data["std_gpa"] == 0.3
+        assert data["match_confidence"] == 0.95
+    finally:
+        app.dependency_overrides.clear()
