@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment
 
@@ -15,8 +15,11 @@ def get_departments(session: Session) -> list[str]:
 
 
 def search_courses(session: Session, query: str, department: str | None = None) -> list[dict]:
-    """Search courses by code prefix, optionally filtered by department."""
-    q = session.query(Course).filter(Course.code.ilike(f"%{query}%"))
+    """Search courses by code or title fragment, optionally filtered by department."""
+    pattern = f"%{query}%"
+    q = session.query(Course).filter(
+        or_(Course.code.ilike(pattern), Course.title.ilike(pattern))
+    )
     if department:
         q = q.filter(Course.department == department)
     courses = q.order_by(Course.code).limit(20).all()
