@@ -4,6 +4,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import type { ProfessorRanking } from '@/types/api'
+import { GradeChart } from './GradeChart'
+import { GpaTrendChart } from './GpaTrendChart'
+import { SentimentBadge } from './SentimentBadge'
+import { useProfessorGrades } from '@/hooks/useProfessorGrades'
+import { useProfessorComments } from '@/hooks/useProfessorComments'
 
 interface ProfessorCardProps {
   professor: ProfessorRanking
@@ -17,7 +22,47 @@ function scoreBorderClass(score: number): string {
   return 'border-l-4 border-l-red-500'
 }
 
-export function ProfessorCard({ professor, score, courseId: _courseId }: ProfessorCardProps) {
+function ExpandedCharts({ professorId, courseId }: { professorId: number; courseId: number }) {
+  const { data: grades, isLoading } = useProfessorGrades(professorId, courseId)
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading charts...</p>
+  if (!grades || grades.length === 0) return <p className="text-sm text-muted-foreground">No grade data available</p>
+  return (
+    <div className="space-y-4">
+      <div>
+        <h4 className="mb-2 text-sm font-semibold">Grade Distribution</h4>
+        <GradeChart quarters={grades} />
+      </div>
+      <div>
+        <h4 className="mb-2 text-sm font-semibold">GPA Trend</h4>
+        <GpaTrendChart quarters={grades} />
+      </div>
+    </div>
+  )
+}
+
+function ExpandedComments({ professorId }: { professorId: number }) {
+  const { data: comments, isLoading } = useProfessorComments(professorId)
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading comments...</p>
+  if (!comments || comments.length === 0) return <p className="text-sm text-muted-foreground">No comments found for this professor.</p>
+  return (
+    <div>
+      <h4 className="mb-2 text-sm font-semibold">Recent Comments</h4>
+      <div className="space-y-3">
+        {comments.map((comment, i) => (
+          <div key={i} className="border-b pb-3 last:border-b-0">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{comment.created_at ?? 'Unknown date'}</span>
+              <SentimentBadge score={comment.sentiment_score} />
+            </div>
+            <p className="mt-1 text-sm leading-relaxed">{comment.text ?? 'No comment text'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -51,8 +96,9 @@ export function ProfessorCard({ professor, score, courseId: _courseId }: Profess
             )}
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-4 text-sm text-muted-foreground">
-              Details loading...
+            <div className="mt-4 space-y-6">
+              <ExpandedCharts professorId={professor.id} courseId={courseId} />
+              <ExpandedComments professorId={professor.id} />
             </div>
           </CollapsibleContent>
         </Collapsible>
