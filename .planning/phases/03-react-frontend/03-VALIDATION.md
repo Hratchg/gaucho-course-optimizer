@@ -38,22 +38,21 @@ created: 2026-04-01
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 0 | (infra) | config | `cd frontend && npm run test -- --run` | ❌ W0 | ⬜ pending |
-| 03-02-01 | 02 | 1 | UI-01 | component + MSW | `vitest run src/components/CourseSearch.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-02-02 | 02 | 1 | UI-01 | component | `vitest run src/components/CourseSearch.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-03-01 | 03 | 1 | UI-02 | component | `vitest run src/components/ProfessorCard.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-03-02 | 03 | 1 | UI-02 | unit | `vitest run src/lib/scoring.test.ts` | ❌ W0 | ⬜ pending |
-| 03-03-03 | 03 | 1 | UI-03 | component | `vitest run src/components/GradeChart.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-03-04 | 03 | 1 | UI-04 | component | `vitest run src/components/GpaTrendChart.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-03-05 | 03 | 1 | UI-05 | component | `vitest run src/components/ProfessorCard.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-03-06 | 03 | 1 | UI-06 | unit | `vitest run src/components/SentimentBadge.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-04-01 | 04 | 1 | UI-07 | unit | `vitest run src/lib/scoring.test.ts` | ❌ W0 | ⬜ pending |
-| 03-04-02 | 04 | 1 | UI-07 | component | `vitest run src/components/WeightSliders.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-04-03 | 04 | 1 | UI-08 | component | `vitest run src/components/ProfessorCard.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-05-01 | 05 | 2 | UI-10 | component | `vitest run src/components/SkeletonCard.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-05-02 | 05 | 2 | UI-11 | unit (timer mock) | `vitest run src/hooks/useElapsedTime.test.ts` | ❌ W0 | ⬜ pending |
-| 03-05-03 | 05 | 2 | DEPLOY-01 | config check | `vitest run src/vercel.test.ts` | ❌ W0 | ⬜ pending |
-| 03-06-01 | 06 | 2 | UI-09 | manual (visual) | — | manual only | ⬜ pending |
+| 03-01-01 | 01 | 0 | (infra) | config | `cd frontend && npm run build` | n/a | ⬜ pending |
+| 03-02-01 | 02 | 1 | UI-02, UI-07 | unit + config | `cd frontend && npx tsc --noEmit` | ❌ W0 | ⬜ pending |
+| 03-02-02 | 02 | 1 | UI-02, UI-07 | unit (TDD) | `vitest run src/lib/scoring.test.ts` | ❌ W0 | ⬜ pending |
+| 03-03-01 | 03 | 2 | UI-01 | component | `vitest run src/components/CourseSearch.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-03-02 | 03 | 2 | UI-01 | component + MSW | `vitest run src/components/CourseSearch.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-04-01 | 04 | 2 | UI-02, UI-05, UI-08 | component | `vitest run src/components/ProfessorCard.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-04-02 | 04 | 2 | UI-02 | unit | `vitest run src/components/SentimentBadge.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-05-01 | 05 | 3 | UI-03 | component | `vitest run src/components/GradeChart.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-05-02 | 05 | 3 | UI-04 | component | `vitest run src/components/GpaTrendChart.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-06-01 | 06 | 3 | UI-07 | component | `vitest run src/components/WeightSliders.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-06-02 | 06 | 3 | UI-07 | unit | `vitest run src/lib/scoring.test.ts` | ❌ W0 | ⬜ pending |
+| 03-07-01 | 07 | 4 | UI-10 | component | `vitest run src/components/SkeletonCard.test.tsx` | ❌ W0 | ⬜ pending |
+| 03-07-02 | 07 | 4 | UI-11 | unit (timer mock) | `vitest run src/hooks/useElapsedTime.test.ts` | ❌ W0 | ⬜ pending |
+| 03-07-03 | 07 | 4 | DEPLOY-01 | config check | `grep -q "/(.\*)" frontend/vercel.json && echo "PASS"` | n/a | ⬜ pending |
+| 03-07-04 | 07 | 4 | UI-09 | manual (visual) | — | manual only | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
