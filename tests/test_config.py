@@ -1,4 +1,3 @@
-import pytest
 from api.config import Settings
 
 
@@ -18,7 +17,7 @@ def test_allowed_origins_strips_whitespace():
 
 
 def test_allowed_origins_default_when_not_set():
-    s = Settings()
+    s = Settings(_env_file=None)
     assert s.allowed_origins == ["http://localhost:5173", "http://localhost:3000"]
 
 
