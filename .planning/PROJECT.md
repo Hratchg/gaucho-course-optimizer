@@ -1,15 +1,15 @@
 # Gaucho Course Optimizer
 
-## Current Milestone: v1.0 Launch
+## Current Milestone: v1.1 UI/UX Overhaul
 
-**Goal:** Replace the internal Streamlit prototype with a public-facing React + FastAPI web app so UCSB students can search courses and find the best professor.
+**Goal:** Transform the app from a functional MVP into a polished, branded experience with proper navigation, a tutorial landing page, and simplified weight controls.
 
 **Target features:**
-- Pipeline verification + critical bug fixes (N+1, connection pooling, hardcoded credentials, missing indexes)
-- Automated pytest test suite (pipeline, matching, scoring, API endpoints)
-- FastAPI backend (course search + professor ranking endpoints)
-- React frontend (course search, professor cards, grade distribution charts, Gaucho Score, weight sliders)
-- Public deployment (React on Vercel, FastAPI on Render, PostgreSQL on Neon)
+- Deep Teal + Amber branding (primary #0F766E, accent #D97706) with professional typography and cohesive visual identity
+- Navigation system with navbar routing, breadcrumbs, and consistent back-navigation
+- Tutorial landing page explaining Gaucho Score, factor meanings, calculation methodology, and guiding students to search
+- Toggle-based weight controls replacing sliders with student-friendly checkboxes ("Easy Grades", "Great Teaching", "Low Difficulty", "Good Reviews") and auto-distributed weights
+- Overall UI polish — clean flat design, responsive improvements, accessibility enhancements
 
 ## What This Is
 
@@ -23,21 +23,24 @@ Students can search any UCSB course and instantly see which professor will give 
 
 ### Validated
 
-- ✓ ETL pipeline: Scrape → Match → NLP → Score — existing
-- ✓ Gaucho Score computation (0–100 weighted, Bayesian-adjusted) — existing
-- ✓ PostgreSQL database with SQLAlchemy ORM models — existing
-- ✓ APScheduler jobs for automated data refresh (nightly RMP, quarterly grades) — existing
-- ✓ Docker Compose dev environment — existing
-- ✓ Streamlit dashboard (prototype: course search, professor rankings, weight sliders) — existing
+- ✓ ETL pipeline: Scrape → Match → NLP → Score — v1.0
+- ✓ Gaucho Score computation (0–100 weighted, Bayesian-adjusted) — v1.0
+- ✓ PostgreSQL database with SQLAlchemy ORM models — v1.0
+- ✓ APScheduler jobs for automated data refresh (nightly RMP, quarterly grades) — v1.0
+- ✓ Docker Compose dev environment — v1.0
+- ✓ FastAPI backend (health, course search, professor ranking, grades, comments) — v1.0
+- ✓ React frontend (course search, professor cards, grade charts, GPA trends, weight sliders) — v1.0
+- ✓ Deployed publicly (Vercel frontend, Render backend, Neon PostgreSQL) — v1.0
 
 ### Active
 
-- [ ] Pipeline verified end-to-end with real data (run scrape → match → score, confirm output)
-- [ ] Critical bugs fixed: N+1 queries, no connection pooling, hardcoded credentials, missing DB indexes
-- [ ] Automated pytest test suite covering pipeline, matching, scoring, and API endpoints
-- [ ] FastAPI backend exposing course search and professor ranking endpoints
-- [ ] React frontend: course search, professor cards, grade distribution charts, Gaucho Score display
-- [ ] Deployed publicly — React on Vercel, FastAPI + PostgreSQL on Render (free tier)
+- [ ] Deep Teal + Amber color scheme applied across all pages and components
+- [ ] Professional typography system (heading + body font pairing)
+- [ ] Navbar with routing across distinct pages (Home/Tutorial, Search, Course Results)
+- [ ] Breadcrumb navigation for page orientation and back-navigation
+- [ ] Tutorial landing page explaining Gaucho Score, factors, and calculation methodology
+- [ ] Toggle-based weight controls replacing sliders with student-friendly labels and auto-distributed weights
+- [ ] Responsive and accessibility improvements across all views
 
 ### Out of Scope
 
@@ -89,4 +92,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 — Milestone v1.0 started*
+*Last updated: 2026-04-02 — Milestone v1.1 started*
