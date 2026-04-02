@@ -85,7 +85,11 @@ Plans:
   1. Student can access the React SPA at a public Vercel URL and navigate directly to `/course/:id` deep links without a 404
   2. Student's browser can make API calls from the Vercel URL to the Render service without CORS errors — no wildcard origins in production
   3. Render API service responds within normal latency during UCSB registration hours — UptimeRobot pings `/health` every 10 minutes to prevent cold starts
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — CORS env-var migration, .python-version, .env.example files, config unit tests
+- [ ] 04-02-PLAN.md — Deploy Render backend, Vercel frontend, configure CORS origins, set up UptimeRobot
 
 ## Progress
 
@@ -97,4 +101,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation & Bug Fixes | 4/4 | Complete | 2026-03-31 |
 | 2. FastAPI Backend | 0/5 | Not started | - |
 | 3. React Frontend | 0/7 | Not started | - |
-| 4. Deployment | 0/? | Not started | - |
+| 4. Deployment | 0/2 | Not started | - |
