@@ -79,25 +79,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BRAND-01 | — | Pending |
-| BRAND-02 | — | Pending |
-| BRAND-03 | — | Pending |
-| NAV-01 | — | Pending |
-| NAV-02 | — | Pending |
-| NAV-03 | — | Pending |
-| NAV-04 | — | Pending |
-| TUT-01 | — | Pending |
-| TUT-02 | — | Pending |
-| TUT-03 | — | Pending |
-| TUT-04 | — | Pending |
-| WGHT-01 | — | Pending |
-| WGHT-02 | — | Pending |
+| BRAND-01 | Phase 5 | Pending |
+| BRAND-02 | Phase 5 | Pending |
+| BRAND-03 | Phase 5 | Pending |
+| NAV-01 | Phase 6 | Pending |
+| NAV-02 | Phase 6 | Pending |
+| NAV-03 | Phase 6 | Pending |
+| NAV-04 | Phase 6 | Pending |
+| TUT-01 | Phase 7 | Pending |
+| TUT-02 | Phase 7 | Pending |
+| TUT-03 | Phase 7 | Pending |
+| TUT-04 | Phase 7 | Pending |
+| WGHT-01 | Phase 8 | Pending |
+| WGHT-02 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13 ⚠️
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 — Traceability filled in after roadmap creation*
