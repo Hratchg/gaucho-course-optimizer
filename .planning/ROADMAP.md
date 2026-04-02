@@ -13,9 +13,9 @@ v1.0 takes a working but internal Python ETL pipeline and exposes it as a public
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Bug Fixes** - Verify the ETL pipeline end-to-end, fix critical bugs, and establish a clean data layer on Neon PostgreSQL
-- [ ] **Phase 2: FastAPI Backend** - Build and test five REST endpoints that expose course search, professor ranking, grade data, comments, and health check
-- [ ] **Phase 3: React Frontend** - Build the full student-facing SPA with course search, professor cards, charts, weight sliders, and mobile-responsive layout
-- [ ] **Phase 4: Deployment** - Deploy both services publicly, configure CORS, and set up cold-start mitigation
+- [x] **Phase 2: FastAPI Backend** - Build and test five REST endpoints that expose course search, professor ranking, grade data, comments, and health check
+- [x] **Phase 3: React Frontend** - Build the full student-facing SPA with course search, professor cards, charts, weight sliders, and mobile-responsive layout
+- [x] **Phase 4: Deployment** - Deploy both services publicly, configure CORS, and set up cold-start mitigation
 
 ## Phase Details
 
@@ -50,11 +50,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — N+1 bulk JOIN rewrite of compute_all_scores() in etl/scoring.py
-- [ ] 02-02-PLAN.md — api/ package scaffold: config, dependencies, schemas, GET /health, requirements.txt updates
-- [ ] 02-03-PLAN.md — Course endpoints: GET /courses/search (input validation) and GET /courses/{id}/professors (ranking with raw factors)
-- [ ] 02-04-PLAN.md — Professor endpoints: GET /professors/{id}/grades (grade distribution) and GET /professors/{id}/comments (sentiment comments)
-- [ ] 02-05-PLAN.md — Endpoint tests: client fixture with dependency_overrides, 14+ tests covering all routes
+- [x] 02-01-PLAN.md — N+1 bulk JOIN rewrite of compute_all_scores() in etl/scoring.py
+- [x] 02-02-PLAN.md — api/ package scaffold: config, dependencies, schemas, GET /health, requirements.txt updates
+- [x] 02-03-PLAN.md — Course endpoints: GET /courses/search (input validation) and GET /courses/{id}/professors (ranking with raw factors)
+- [x] 02-04-PLAN.md — Professor endpoints: GET /professors/{id}/grades (grade distribution) and GET /professors/{id}/comments (sentiment comments)
+- [x] 02-05-PLAN.md — Endpoint tests: client fixture with dependency_overrides, 14+ tests covering all routes
 
 ### Phase 3: React Frontend
 **Goal**: UCSB students can search for any course, see professors ranked by Gaucho Score with all supporting data visible, adjust weights to rerank instantly in the browser, and use the app on a phone
@@ -69,13 +69,13 @@ Plans:
 **Plans:** 7 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Project scaffold: Vite + React + TS, Tailwind v4, shadcn/ui init, all dependencies installed
-- [ ] 03-02-PLAN.md — Shared code: TypeScript types, API helpers, scoring lib, TanStack Query hooks, Vitest + MSW test infra
-- [ ] 03-03-PLAN.md — Course search page: SearchPage + CourseSearch autocomplete (UI-01)
-- [ ] 03-04-PLAN.md — CoursePage shell + ProfessorCard collapsed state with score, RMP stats, tags (UI-02, UI-05, UI-08)
-- [ ] 03-05-PLAN.md — Card expanded details: GradeChart, GpaTrendChart, comments with SentimentBadge (UI-03, UI-04, UI-06)
-- [ ] 03-06-PLAN.md — Weight sliders + instant reranking with sidebar (desktop) and Sheet (mobile) layouts (UI-07)
-- [ ] 03-07-PLAN.md — Loading UX (skeleton cards, cold-start banner), vercel.json, mobile polish, visual checkpoint (UI-09, UI-10, UI-11, DEPLOY-01)
+- [x] 03-01-PLAN.md — Project scaffold: Vite + React + TS, Tailwind v4, shadcn/ui init, all dependencies installed
+- [x] 03-02-PLAN.md — Shared code: TypeScript types, API helpers, scoring lib, TanStack Query hooks, Vitest + MSW test infra
+- [x] 03-03-PLAN.md — Course search page: SearchPage + CourseSearch autocomplete (UI-01)
+- [x] 03-04-PLAN.md — CoursePage shell + ProfessorCard collapsed state with score, RMP stats, tags (UI-02, UI-05, UI-08)
+- [x] 03-05-PLAN.md — Card expanded details: GradeChart, GpaTrendChart, comments with SentimentBadge (UI-03, UI-04, UI-06)
+- [x] 03-06-PLAN.md — Weight sliders + instant reranking with sidebar (desktop) and Sheet (mobile) layouts (UI-07)
+- [x] 03-07-PLAN.md — Loading UX (skeleton cards, cold-start banner), vercel.json, mobile polish, visual checkpoint (UI-09, UI-10, UI-11, DEPLOY-01)
 
 ### Phase 4: Deployment
 **Goal**: Both services are live at public URLs, CORS is correctly scoped to the production Vercel domain, and the Render service stays warm during UCSB registration hours
@@ -88,8 +88,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — CORS env-var migration, .python-version, .env.example files, config unit tests
-- [ ] 04-02-PLAN.md — Deploy Render backend, Vercel frontend, configure CORS origins, set up UptimeRobot
+- [x] 04-01-PLAN.md — CORS env-var migration, .python-version, .env.example files, config unit tests
+- [x] 04-02-PLAN.md — Deploy Render backend, Vercel frontend, configure CORS origins, set up UptimeRobot
 
 ## Progress
 
@@ -99,6 +99,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Bug Fixes | 4/4 | Complete | 2026-03-31 |
-| 2. FastAPI Backend | 0/5 | Not started | - |
-| 3. React Frontend | 0/7 | Not started | - |
-| 4. Deployment | 0/2 | Not started | - |
+| 2. FastAPI Backend | 5/5 | Complete | 2026-04-01 |
+| 3. React Frontend | 7/7 | Complete | 2026-04-01 |
+| 4. Deployment | 2/2 | Complete | 2026-04-02 |
