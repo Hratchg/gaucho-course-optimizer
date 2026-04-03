@@ -16,10 +16,10 @@ interface ProfessorCardProps {
   courseId: number
 }
 
-function scoreBorderClass(score: number): string {
-  if (score >= 70) return 'border-l-4 border-l-green-500'
-  if (score >= 50) return 'border-l-4 border-l-yellow-500'
-  return 'border-l-4 border-l-red-500'
+function scoreColorClass(score: number): string {
+  if (score >= 70) return 'bg-green-500 text-white hover:bg-green-500'
+  if (score >= 50) return 'bg-yellow-500 text-white hover:bg-yellow-500'
+  return 'bg-red-500 text-white hover:bg-red-500'
 }
 
 function ExpandedCharts({ professorId, courseId }: { professorId: number; courseId: number }) {
@@ -66,11 +66,11 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <Card className={`${scoreBorderClass(score)} mb-6`}>
+    <Card className="mb-6">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
-          <span className="text-[28px] font-semibold leading-none">{score}</span>
+          <Badge className={`${scoreColorClass(score)} text-sm font-bold px-2.5 py-1 rounded-full`}>{score}</Badge>
         </div>
         <p className="mt-1 text-sm">
           Avg GPA: {professor.mean_gpa !== null ? professor.mean_gpa.toFixed(2) : 'N/A'}

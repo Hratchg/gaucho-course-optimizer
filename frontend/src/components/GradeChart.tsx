@@ -27,7 +27,7 @@ export function GradeChart({ quarters }: GradeChartProps) {
         <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} />
         <Tooltip />
-        <Bar dataKey="count" fill="#6366f1" />
+        <Bar dataKey="count" fill="#0F766E" />
       </BarChart>
     </ResponsiveContainer>
   )
