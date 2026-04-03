@@ -18,7 +18,7 @@ export function GpaTrendChart({ quarters }: GpaTrendChartProps) {
         <XAxis dataKey="quarter" tick={{ fontSize: 12 }} />
         <YAxis domain={[0, 4.0]} tick={{ fontSize: 12 }} />
         <Tooltip />
-        <Line type="monotone" dataKey="avg_gpa" stroke="#10b981" dot={false} />
+        <Line type="monotone" dataKey="avg_gpa" stroke="#0D9488" dot={false} />
       </LineChart>
     </ResponsiveContainer>
   )
