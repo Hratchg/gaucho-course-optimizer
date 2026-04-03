@@ -96,7 +96,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Student sees the Gaucho Course Optimizer favicon in the browser tab on all pages
   4. Student sees a descriptive page title in the browser tab (not the default "Vite App") that updates per page
   5. When a student shares a link, the Open Graph preview shows the correct title, description, and image
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Design tokens (Deep Teal + Amber palette), typography (Poppins + Open Sans), chart colors, and score badge refactor
+- [ ] 05-02-PLAN.md — Favicon, OG meta tags, Twitter Cards, and per-page document titles
 **UI hint**: yes
 
 ### Phase 6: Navigation & Routing
@@ -137,7 +140,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Progress
 
 **Execution Order:**
-v1.0 phases (1–4) complete. v1.1 phases execute in numeric order: 5 → 6 → 7 → 8
+v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -145,7 +148,7 @@ v1.0 phases (1–4) complete. v1.1 phases execute in numeric order: 5 → 6 → 
 | 2. FastAPI Backend | 5/5 | Complete | 2026-04-01 |
 | 3. React Frontend | 7/7 | Complete | 2026-04-01 |
 | 4. Deployment | 2/2 | Complete | 2026-04-02 |
-| 5. Branding & Design System | 0/TBD | Not started | - |
+| 5. Branding & Design System | 0/2 | Planned | - |
 | 6. Navigation & Routing | 0/TBD | Not started | - |
 | 7. Tutorial Landing Page | 0/TBD | Not started | - |
 | 8. Weight Controls Overhaul | 0/TBD | Not started | - |
