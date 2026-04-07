@@ -504,17 +504,13 @@ expect(searchLink).toHaveAttribute('aria-current', 'page')
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What is the actual courseId format in the URL?**
-   - What we know: `CoursePage.tsx` calls `Number(courseId)` suggesting it may be a numeric ID (e.g., `/courses/42`), not a code like `cmpsc-130a`
-   - What's unclear: If courseId is numeric, `rawId.replace(/-/g, ' ').toUpperCase()` would produce "42", not "CMPSC 130A"
-   - Recommendation: Check `CourseSearch.tsx` to see how it navigates to `/courses/:courseId`. The UI-SPEC says "reads `courseId` URL param, formats as uppercase course code" — this implies the courseId IS the course code (hyphenated). But `CoursePage.tsx`'s `Number(courseId)` implies it's numeric. The planner should resolve this before implementing Breadcrumbs.
+   - RESOLVED: courseId is numeric (e.g., `/courses/42`). Plan 06-01 Task 2 passes `{ state: { courseCode: course.code } }` via React Router navigate from CourseSearch. Plan 06-02 Task 1 reads `location.state?.courseCode` in Breadcrumbs, with "Course Results" fallback for direct URL access where no state is available.
 
 2. **Does `SearchPage.tsx` header text need updating after moving to `/search`?**
-   - What we know: `SearchPage.tsx` currently has `<h1>Gaucho Course Optimizer</h1>` as a page heading
-   - What's unclear: Now that there's a Navbar with the brand name and a Home page, this h1 may be redundant or inconsistent
-   - Recommendation: Plan a sub-task to clean up SearchPage's existing heading content when moving it to `/search`
+   - RESOLVED: Plan 06-01 Task 2 explicitly updates SearchPage to replace the old `<h1>Gaucho Course Optimizer</h1>` heading with "Search Courses" since the brand name is now in the Navbar.
 
 ---
 
