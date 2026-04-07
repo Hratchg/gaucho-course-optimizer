@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
@@ -24,6 +24,10 @@ export default function CoursePage() {
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
   const showColdStart = useColdStartMessage(isLoading)
+
+  useEffect(() => {
+    document.title = 'Course Results | Gaucho Course Optimizer'
+  }, [])
 
   const rankedProfessors = useMemo(() => {
     if (!professors) return []
