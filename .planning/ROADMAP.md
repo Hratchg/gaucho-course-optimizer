@@ -111,7 +111,10 @@ Plans:
   2. Student on an interior page (Search or Course Results) can see breadcrumbs showing their path (e.g., Home > Search > CMPSC 130A) and click any breadcrumb to navigate back to that level
   3. Student on a mobile device can tap a hamburger icon to open a navigation menu and tap any link to navigate — the menu closes after selection
   4. Student can paste a direct URL to any page (e.g., `/course/cmpsc-130a`) into a new browser tab and land on the correct page without a 404 or redirect to home
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 06-01-PLAN.md — Layout shell, sticky Navbar, placeholder HomePage, App.tsx route restructure (/ /search /courses/:id)
+- [ ] 06-02-PLAN.md — Breadcrumbs component, mobile hamburger Sheet menu, visual verification checkpoint
 **UI hint**: yes
 
 ### Phase 7: Tutorial Landing Page
@@ -119,7 +122,7 @@ Plans:
 **Depends on**: Phase 6
 **Requirements**: TUT-01, TUT-02, TUT-03, TUT-04
 **Success Criteria** (what must be TRUE):
-  1. Student can see a visual diagram or breakdown on the home page showing how the four factors (GPA, Quality, Difficulty, Sentiment) combine into a 0–100 Gaucho Score
+  1. Student can see a visual diagram or breakdown on the home page showing how the four factors (GPA, Quality, Difficulty, Sentiment) combine into a 0-100 Gaucho Score
   2. Student can read a clear definition and real example for each of the four scoring factors — no jargon, no unexplained acronyms
   3. Student can follow a step-by-step guide on the home page (at least three steps) that walks through searching a course and interpreting the results
   4. Student can click a prominent call-to-action button on the home page that takes them directly to the Search page to begin finding professors
@@ -149,6 +152,6 @@ v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 ->
 | 3. React Frontend | 7/7 | Complete | 2026-04-01 |
 | 4. Deployment | 2/2 | Complete | 2026-04-02 |
 | 5. Branding & Design System | 0/2 | Planned | - |
-| 6. Navigation & Routing | 0/TBD | Not started | - |
+| 6. Navigation & Routing | 0/2 | Planned | - |
 | 7. Tutorial Landing Page | 0/TBD | Not started | - |
 | 8. Weight Controls Overhaul | 0/TBD | Not started | - |
