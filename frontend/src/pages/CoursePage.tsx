@@ -66,7 +66,7 @@ export default function CoursePage() {
       <div className="flex gap-6">
         {/* Left sidebar -- desktop only, sticky */}
         <aside className="hidden w-64 shrink-0 md:block">
-          <div className="sticky top-6">
+          <div className="sticky top-20">
             <WeightSliders weights={weights} onWeightsChange={setWeights} />
           </div>
         </aside>
