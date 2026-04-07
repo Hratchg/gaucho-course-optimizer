@@ -1,6 +1,11 @@
+import { useEffect } from 'react'
 import CourseSearch from '@/components/CourseSearch'
 
 export default function SearchPage() {
+  useEffect(() => {
+    document.title = 'Search | Gaucho Course Optimizer'
+  }, [])
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-2 text-2xl font-semibold">Gaucho Course Optimizer</h1>
