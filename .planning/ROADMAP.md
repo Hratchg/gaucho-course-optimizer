@@ -20,21 +20,21 @@ v1.0 took a working but internal Python ETL pipeline and exposed it as a public-
 **Depends on**: Nothing (first phase)
 **Requirements**: FDN-01, FDN-02, FDN-03, FDN-04, FDN-05, FDN-06, TEST-01, TEST-02
 **Success Criteria** (what must be TRUE):
-  1. Developer can run the full ETL pipeline (scrape → match → NLP → score) and confirm professor-course records with Gaucho Scores are present in the Neon database
-  2. Developer can run `pytest` and see pipeline tests (scraping, matching, scoring) pass with mocked HTTP — no real calls to RMP or Daily Nexus
+  1. Developer can run the full ETL pipeline (scrape -> match -> NLP -> score) and confirm professor-course records with Gaucho Scores are present in the Neon database
+  2. Developer can run `pytest` and see pipeline tests (scraping, matching, scoring) pass with mocked HTTP -- no real calls to RMP or Daily Nexus
   3. Developer can run `pytest` and see Gaucho Score formula tests pass for known inputs
-  4. Application handles concurrent API requests — connection pool is configured and the database does not exhaust connections under load
+  4. Application handles concurrent API requests -- connection pool is configured and the database does not exhaust connections under load
   5. Professor ranking query executes as a single JOIN, and database foreign-key indexes exist so queries remain fast as data grows
 **Plans:** 4 plans (all complete)
 **Status**: Complete (2026-03-31)
 
 #### Phase 2: FastAPI Backend
-**Goal**: Five REST endpoints are live, tested against a fixture database, and return correctly shaped data ready for React consumption — including raw factor values that enable client-side score recomputation
+**Goal**: Five REST endpoints are live, tested against a fixture database, and return correctly shaped data ready for React consumption -- including raw factor values that enable client-side score recomputation
 **Depends on**: Phase 1
 **Requirements**: API-01, API-02, API-03, API-04, API-05, TEST-03, TEST-04
 **Success Criteria** (what must be TRUE):
   1. Developer can call `GET /health` and receive `{"status": "ok"}` with no database query
-  2. Developer can call `GET /courses/search?q=physics` and receive up to 20 validated results — input with special characters or excessive length is rejected
+  2. Developer can call `GET /courses/search?q=physics` and receive up to 20 validated results -- input with special characters or excessive length is rejected
   3. Developer can call `GET /courses/{id}/professors` and receive a ranked list with Gaucho Score, raw factor values, RMP metrics, and keyword tags
   4. Developer can call `GET /professors/{id}/grades` and `GET /professors/{id}/comments` and receive correctly shaped data
   5. Developer can run `pytest` and see all endpoint tests pass using the test database session fixture
@@ -49,7 +49,7 @@ v1.0 took a working but internal Python ETL pipeline and exposed it as a public-
   1. Student can type a partial course name or code and see autocomplete suggestions appear, navigable by keyboard, firing after 1-2 characters
   2. Student can select a course and see all professors ranked by Gaucho Score with color-banded score indicators, grade distribution bar charts, GPA trend line charts, RMP metrics, keyword tags, and the 5 most recent RMP comments with VADER sentiment badges
   3. Student can drag four weight sliders and see the professor list rerank instantly in the browser with no API round-trip
-  4. Student can use the app on a mobile phone — professor cards stack full-width, charts resize responsively, all interactive elements have adequate touch targets
+  4. Student can use the app on a mobile phone -- professor cards stack full-width, charts resize responsively, all interactive elements have adequate touch targets
   5. Student sees skeleton loading cards while the API responds, and a "Waking up the server..." message appears after 3 seconds of waiting
 **Plans:** 7 plans (all complete)
 **Status**: Complete (2026-04-01)
@@ -60,8 +60,8 @@ v1.0 took a working but internal Python ETL pipeline and exposed it as a public-
 **Requirements**: DEPLOY-01, DEPLOY-02, DEPLOY-03
 **Success Criteria** (what must be TRUE):
   1. Student can access the React SPA at a public Vercel URL and navigate directly to `/course/:id` deep links without a 404
-  2. Student's browser can make API calls from the Vercel URL to the Render service without CORS errors — no wildcard origins in production
-  3. Render API service responds within normal latency during UCSB registration hours — UptimeRobot pings `/health` every 10 minutes to prevent cold starts
+  2. Student's browser can make API calls from the Vercel URL to the Render service without CORS errors -- no wildcard origins in production
+  3. Render API service responds within normal latency during UCSB registration hours -- UptimeRobot pings `/health` every 10 minutes to prevent cold starts
 **Plans:** 2 plans (all complete)
 **Status**: Complete (2026-04-02)
 
@@ -87,12 +87,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 5: Branding & Design System
-**Goal**: Every page and component reflects the Deep Teal + Amber visual identity — design tokens are the single source of truth and typography is set globally
+**Goal**: Every page and component reflects the Deep Teal + Amber visual identity -- design tokens are the single source of truth and typography is set globally
 **Depends on**: Phase 4
 **Requirements**: BRAND-01, BRAND-02, BRAND-03
 **Success Criteria** (what must be TRUE):
-  1. Student sees Deep Teal (#0F766E) primary color and Amber (#D97706) accent color applied consistently across all interactive elements, headings, and highlights — no legacy gray or blue defaults remain
-  2. Student sees a professional heading font and a distinct, readable body font applied globally — fonts load without flash of unstyled text
+  1. Student sees Deep Teal (#0F766E) primary color and Amber (#D97706) accent color applied consistently across all interactive elements, headings, and highlights -- no legacy gray or blue defaults remain
+  2. Student sees a professional heading font and a distinct, readable body font applied globally -- fonts load without flash of unstyled text
   3. Student sees the Gaucho Course Optimizer favicon in the browser tab on all pages
   4. Student sees a descriptive page title in the browser tab (not the default "Vite App") that updates per page
   5. When a student shares a link, the Open Graph preview shows the correct title, description, and image
@@ -109,7 +109,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Student can see a top navbar on every page with links to Home and Search, and click any link to navigate without a full page reload
   2. Student on an interior page (Search or Course Results) can see breadcrumbs showing their path (e.g., Home > Search > CMPSC 130A) and click any breadcrumb to navigate back to that level
-  3. Student on a mobile device can tap a hamburger icon to open a navigation menu and tap any link to navigate — the menu closes after selection
+  3. Student on a mobile device can tap a hamburger icon to open a navigation menu and tap any link to navigate -- the menu closes after selection
   4. Student can paste a direct URL to any page (e.g., `/course/cmpsc-130a`) into a new browser tab and land on the correct page without a 404 or redirect to home
 **Plans:** 2 plans
 Plans:
@@ -123,20 +123,22 @@ Plans:
 **Requirements**: TUT-01, TUT-02, TUT-03, TUT-04
 **Success Criteria** (what must be TRUE):
   1. Student can see a visual diagram or breakdown on the home page showing how the four factors (GPA, Quality, Difficulty, Sentiment) combine into a 0-100 Gaucho Score
-  2. Student can read a clear definition and real example for each of the four scoring factors — no jargon, no unexplained acronyms
+  2. Student can read a clear definition and real example for each of the four scoring factors -- no jargon, no unexplained acronyms
   3. Student can follow a step-by-step guide on the home page (at least three steps) that walks through searching a course and interpreting the results
   4. Student can click a prominent call-to-action button on the home page that takes them directly to the Search page to begin finding professors
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 07-01-PLAN.md — Full tutorial landing page: score breakdown bar, factor definition cards, 3-step usage guide, and final CTA banner (TDD)
 **UI hint**: yes
 
 ### Phase 8: Weight Controls Overhaul
-**Goal**: Students control professor ranking through four clearly labeled toggle checkboxes rather than numeric sliders — selected factors share weight equally, and the ranking updates instantly on every toggle
+**Goal**: Students control professor ranking through four clearly labeled toggle checkboxes rather than numeric sliders -- selected factors share weight equally, and the ranking updates instantly on every toggle
 **Depends on**: Phase 7
 **Requirements**: WGHT-01, WGHT-02
 **Success Criteria** (what must be TRUE):
   1. Student on the Course Results page sees four toggle checkboxes labeled "Easy Grades", "Great Teaching", "Low Difficulty", and "Good Reviews" instead of numeric sliders
   2. Student can toggle any checkbox on or off and see the professor ranking update immediately in the browser with no loading spinner or API call
-  3. Student who enables two checkboxes sees those two factors weighted equally in the ranking, while disabled factors are de-emphasized — the weighting logic is transparent (e.g., labels or tooltips explain the distribution)
+  3. Student who enables two checkboxes sees those two factors weighted equally in the ranking, while disabled factors are de-emphasized -- the weighting logic is transparent (e.g., labels or tooltips explain the distribution)
 **Plans**: TBD
 **UI hint**: yes
 
@@ -153,5 +155,5 @@ v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 ->
 | 4. Deployment | 2/2 | Complete | 2026-04-02 |
 | 5. Branding & Design System | 0/2 | Planned | - |
 | 6. Navigation & Routing | 0/2 | Planned | - |
-| 7. Tutorial Landing Page | 0/TBD | Not started | - |
+| 7. Tutorial Landing Page | 0/1 | Planned | - |
 | 8. Weight Controls Overhaul | 0/TBD | Not started | - |
