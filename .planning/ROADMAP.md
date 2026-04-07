@@ -113,8 +113,8 @@ Plans:
   4. Student can paste a direct URL to any page (e.g., `/course/cmpsc-130a`) into a new browser tab and land on the correct page without a 404 or redirect to home
 **Plans:** 2 plans
 Plans:
-- [ ] 06-01-PLAN.md — Layout shell, sticky Navbar, placeholder HomePage, App.tsx route restructure (/ /search /courses/:id)
-- [ ] 06-02-PLAN.md — Breadcrumbs component, mobile hamburger Sheet menu, visual verification checkpoint
+- [x] 06-01-PLAN.md — Layout shell, sticky Navbar, placeholder HomePage, App.tsx route restructure (/ /search /courses/:id)
+- [x] 06-02-PLAN.md — Breadcrumbs component, mobile hamburger Sheet menu, visual verification checkpoint
 **UI hint**: yes
 
 ### Phase 7: Tutorial Landing Page
