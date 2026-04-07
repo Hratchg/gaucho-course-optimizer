@@ -40,7 +40,7 @@ export default function CourseSearch() {
                 <CommandItem
                   key={course.id}
                   value={`${course.code} ${course.title ?? ''}`}
-                  onSelect={() => navigate(`/courses/${course.id}`)}
+                  onSelect={() => navigate(`/courses/${course.id}`, { state: { courseCode: course.code } })}
                 >
                   <span className="font-semibold">{course.code}</span>
                   {course.title && (
