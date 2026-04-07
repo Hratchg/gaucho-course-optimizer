@@ -1,11 +1,7 @@
-import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import MobileMenu from '@/components/MobileMenu'
 
-interface NavbarProps {
-  children?: ReactNode
-}
-
-export default function Navbar({ children }: NavbarProps) {
+export default function Navbar() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? 'font-bold text-white'
@@ -29,9 +25,9 @@ export default function Navbar({ children }: NavbarProps) {
             </NavLink>
           </div>
 
-          {/* Mobile menu slot for MobileMenu component (Plan 02) */}
+          {/* Mobile hamburger menu */}
           <div className="flex md:hidden">
-            {children}
+            <MobileMenu />
           </div>
         </div>
       </nav>
