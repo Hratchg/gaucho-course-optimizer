@@ -98,8 +98,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. When a student shares a link, the Open Graph preview shows the correct title, description, and image
 **Plans:** 2 plans
 Plans:
-- [ ] 05-01-PLAN.md — Design tokens (Deep Teal + Amber palette), typography (Poppins + Open Sans), chart colors, and score badge refactor
-- [ ] 05-02-PLAN.md — Favicon, OG meta tags, Twitter Cards, and per-page document titles
+- [x] 05-01-PLAN.md — Design tokens (Deep Teal + Amber palette), typography (Poppins + Open Sans), chart colors, and score badge refactor
+- [x] 05-02-PLAN.md — Favicon, OG meta tags, Twitter Cards, and per-page document titles
 **UI hint**: yes
 
 ### Phase 6: Navigation & Routing
