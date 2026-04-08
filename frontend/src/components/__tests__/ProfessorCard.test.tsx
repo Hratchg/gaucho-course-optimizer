@@ -1,9 +1,36 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ProfessorCard } from '../ProfessorCard'
 import type { ProfessorRanking } from '@/types/api'
+import type { GradeQuarter } from '@/types/api'
+
+class ResizeObserverMock { observe() {} unobserve() {} disconnect() {} }
+globalThis.ResizeObserver = ResizeObserverMock as any
+
+vi.mock('@/hooks/useProfessorGrades', () => ({
+  useProfessorGrades: vi.fn(),
+}))
+
+vi.mock('@/hooks/useProfessorComments', () => ({
+  useProfessorComments: vi.fn(() => ({ data: [], isLoading: false })),
+}))
+
+import { useProfessorGrades } from '@/hooks/useProfessorGrades'
+
+const multiQuarters: GradeQuarter[] = [
+  {
+    quarter: 'Fall 2023', avg_gpa: 3.0,
+    a_plus: 2, a: 10, a_minus: 5, b_plus: 4, b: 8, b_minus: 3,
+    c_plus: 2, c: 3, c_minus: 1, d_plus: 0, d: 1, d_minus: 0, f: 1,
+  },
+  {
+    quarter: 'Winter 2024', avg_gpa: 3.4,
+    a_plus: 5, a: 15, a_minus: 8, b_plus: 6, b: 10, b_minus: 4,
+    c_plus: 1, c: 2, c_minus: 1, d_plus: 0, d: 0, d_minus: 0, f: 0,
+  },
+]
 
 function makeProfessor(overrides: Partial<ProfessorRanking> = {}): ProfessorRanking {
   return {
@@ -43,6 +70,10 @@ function renderCard(professor: ProfessorRanking, score = 75) {
 }
 
 describe('ProfessorCard - Active Teaching', () => {
+  beforeEach(() => {
+    (useProfessorGrades as ReturnType<typeof vi.fn>).mockReturnValue({ data: undefined, isLoading: false })
+  })
+
   it('renders Actively Teaching badge when is_active_teacher is true', () => {
     renderCard(makeProfessor({ is_active_teacher: true }))
     expect(screen.getByText('Actively Teaching')).toBeInTheDocument()
@@ -69,5 +100,25 @@ describe('ProfessorCard - Active Teaching', () => {
     await user.click(screen.getByText(/Quarters Taught/))
     expect(screen.getByText('Fall 2024')).toBeInTheDocument()
     expect(screen.getByText('Winter 2024')).toBeInTheDocument()
+  })
+})
+
+describe('ProfessorCard - Quarter Selector', () => {
+  beforeEach(() => {
+    (useProfessorGrades as ReturnType<typeof vi.fn>).mockReturnValue({ data: multiQuarters, isLoading: false })
+  })
+
+  it('shows quarter Select dropdown when expanded with grade data', async () => {
+    const user = userEvent.setup()
+    renderCard(makeProfessor())
+    await user.click(screen.getByText(/Show details/))
+    expect(screen.getByText('Most Recent')).toBeInTheDocument()
+  })
+
+  it('defaults to Most Recent selection', async () => {
+    const user = userEvent.setup()
+    renderCard(makeProfessor())
+    await user.click(screen.getByText(/Show details/))
+    expect(screen.getByText('Most Recent')).toBeInTheDocument()
   })
 })
