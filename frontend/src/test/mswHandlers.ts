@@ -24,7 +24,11 @@ const mockProfessors: ProfessorRanking[] = [
     avg_sentiment: 0.6,
     match_confidence: 0.95,
     quarters_taught: 8,
-    keywords: ['clear', 'helpful', 'challenging'],
+    tags: [
+      { name: 'Clear Explanations', count: 12 },
+      { name: 'Helpful', count: 8 },
+      { name: 'Engaging', count: 5 },
+    ],
     is_active_teacher: true,
     recent_quarters: ['Fall 2024', 'Winter 2024', 'Spring 2024'],
   },
@@ -46,7 +50,9 @@ const mockProfessors: ProfessorRanking[] = [
     avg_sentiment: 0.3,
     match_confidence: 0.88,
     quarters_taught: 5,
-    keywords: ['straightforward', 'fair'],
+    tags: [
+      { name: 'Fair Tests', count: 4 },
+    ],
     is_active_teacher: false,
     recent_quarters: ['Winter 2023'],
   },

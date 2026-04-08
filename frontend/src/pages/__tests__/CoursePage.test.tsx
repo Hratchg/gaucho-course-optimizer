@@ -41,7 +41,10 @@ function makeProfessorData(overrides: Record<string, unknown> = {}) {
     avg_sentiment: 0.6,
     match_confidence: 0.95,
     quarters_taught: 8,
-    keywords: ['clear', 'helpful'],
+    tags: [
+      { name: 'Clear Explanations', count: 12 },
+      { name: 'Helpful', count: 8 },
+    ],
     is_active_teacher: true,
     recent_quarters: ['Fall 2024', 'Winter 2024', 'Spring 2024'],
     ...overrides,

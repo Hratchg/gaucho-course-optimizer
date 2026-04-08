@@ -51,7 +51,7 @@ function makeProfessor(overrides: Partial<ProfessorRanking> = {}): ProfessorRank
     avg_sentiment: 0.5,
     match_confidence: 0.9,
     quarters_taught: 5,
-    keywords: [],
+    tags: [],
     is_active_teacher: false,
     recent_quarters: [],
     ...overrides,

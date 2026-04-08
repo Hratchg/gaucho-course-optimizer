@@ -5,6 +5,11 @@ export interface CourseResult {
   department: string | null
 }
 
+export interface ProfessorTag {
+  name: string
+  count: number
+}
+
 export interface ProfessorRanking {
   id: number
   name: string
@@ -23,7 +28,7 @@ export interface ProfessorRanking {
   avg_sentiment: number | null
   match_confidence: number | null
   quarters_taught: number
-  keywords: string[]
+  tags: ProfessorTag[]
   is_active_teacher: boolean
   recent_quarters: string[]
 }
