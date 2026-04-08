@@ -84,7 +84,7 @@ def get_professors(
             "avg_sentiment": p["avg_sentiment"],
             "match_confidence": p["match_confidence"],
             "quarters_taught": p["quarters_taught"],
-            "keywords": p.get("keywords", []),
+            "tags": p.get("tags", []),
             "is_active_teacher": p.get("is_active_teacher", False),
             "recent_quarters": p.get("recent_quarters", []),
         })

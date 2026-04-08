@@ -9,6 +9,11 @@ class CourseResult(BaseModel):
     department: str | None = None
 
 
+class ProfessorTag(BaseModel):
+    name: str
+    count: int
+
+
 class ProfessorRanking(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -28,7 +33,7 @@ class ProfessorRanking(BaseModel):
     avg_sentiment: float | None = None
     match_confidence: float | None = None
     quarters_taught: int
-    keywords: list[str] = []
+    tags: list[ProfessorTag] = []
     is_active_teacher: bool = False
     recent_quarters: list[str] = []
 
