@@ -168,7 +168,9 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
   2. Student can select a specific quarter from a dropdown menu and see the grade chart update to show only that quarter's distribution
   3. Student can toggle between "Most Recent" and "All Quarters Combined" views, and the chart reflects the selected mode immediately
   4. The quarter dropdown lists all available quarters in reverse chronological order, and the selected quarter's label is clearly visible above or within the chart
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 10-01-PLAN.md -- Install shadcn Select, add quarter filtering to GradeChart, add quarter selector dropdown to ProfessorCard, update tests
 **UI hint**: yes
 
 ### Phase 11: Standardized Keywords
@@ -199,5 +201,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 7. Tutorial Landing Page | 1/1 | Complete | - |
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
-| 10. Grade Distribution by Quarter | 0/0 | Not started | - |
+| 10. Grade Distribution by Quarter | 0/1 | Not started | - |
 | 11. Standardized Keywords | 0/0 | Not started | - |
