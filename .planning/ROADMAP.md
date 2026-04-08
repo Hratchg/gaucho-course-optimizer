@@ -140,7 +140,7 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
 
 ### v1.2 Phases
 
-- [ ] **Phase 9: Active Teaching** - Compute active teaching status from grade history, expose it in the API, and display badges, quarter history, and a filter on professor cards
+- [x] **Phase 9: Active Teaching** - Compute active teaching status from grade history, expose it in the API, and display badges, quarter history, and a filter on professor cards
 - [ ] **Phase 10: Grade Distribution by Quarter** - Enrich the grades API with per-quarter breakdowns, default the chart to the most recent quarter, and add a quarter selector with an all-time toggle
 - [ ] **Phase 11: Standardized Keywords** - Define a curated tag vocabulary, map raw NLP output to standard labels with frequency filtering in the ETL pipeline, and display filterable tags with review-count tooltips
 
@@ -155,7 +155,8 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
   2. Student can click a filter toggle to show only actively teaching professors, and the list updates immediately to hide inactive professors
   3. Student can see which specific quarters (e.g., "Fall 2024", "Winter 2025") a professor taught the searched course -- this information is visible on the professor card or in an expandable detail
   4. The active teaching computation runs server-side so the badge and quarter list are present in the API response without requiring additional client-side requests
-**Plans**: TBD
+**Plans**: 2/2 complete
+**Status**: Complete (2026-04-08)
 **UI hint**: yes
 
 ### Phase 10: Grade Distribution by Quarter
@@ -197,6 +198,6 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 6. Navigation & Routing | 2/2 | Complete | - |
 | 7. Tutorial Landing Page | 1/1 | Complete | - |
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
-| 9. Active Teaching | 0/0 | Not started | - |
+| 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 0/0 | Not started | - |
 | 11. Standardized Keywords | 0/0 | Not started | - |

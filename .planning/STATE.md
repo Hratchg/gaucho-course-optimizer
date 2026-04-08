@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Data Quality & Insights
-status: ready_to_plan
-stopped_at: Roadmap created, ready to plan Phase 9
-last_updated: "2026-04-08T02:00:00.000Z"
+status: executing
+stopped_at: Completed 09-02-PLAN.md (Phase 9 complete)
+last_updated: "2026-04-08T05:41:00.000Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
+  percent: 33
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-07)
 
 ## Current Position
 
-Phase: 9 of 11 (Active Teaching) -- first phase of v1.2
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-04-08 -- v1.2 roadmap created (Phases 9-11)
+Phase: 9 of 11 (Active Teaching) -- COMPLETE
+Plan: 2 of 2 (all plans complete)
+Status: Phase 9 complete, ready for Phase 10
+Last activity: 2026-04-08 -- Phase 9 complete (backend + frontend for active teaching)
 
-Progress: [░░░░░░░░░░] 0% (0/3 v1.2 phases complete)
+Progress: [███░░░░░░░] 33% (1/3 v1.2 phases complete)
 
 ## Accumulated Context
 
@@ -44,10 +44,12 @@ Recent decisions affecting current work:
 - v1.2 structure: Three feature-vertical phases (Active Teaching, Grade Distribution, Keywords)
 - v1.2 ordering: Active Teaching first (establishes backend enrichment pattern), then Grade Distribution (API + chart changes), then Keywords (ETL pipeline changes)
 - v1.2 scope: Full-stack changes -- backend (FastAPI, SQLAlchemy, ETL) + frontend (React)
+- Phase 9 Plan 1: Two-level subquery for active teaching, server-side cutoff_year, separate 3rd query for quarter detail
+- Phase 9 Plan 2: Used Checkbox (not Switch) for filter toggle, QuartersList inline in ProfessorCard, fixed MSW URLs to match VITE_API_URL
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -57,5 +59,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-08
-Stopped at: v1.2 roadmap created
-Resume file: None -- next step is `/gsd-plan-phase 9`
+Stopped at: Completed 09-02-PLAN.md (Phase 9 fully complete)
+Resume file: None -- next step is Phase 10 (Most-Recent-Quarter Grade Distribution)
