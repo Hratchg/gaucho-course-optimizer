@@ -36,7 +36,7 @@ describe('CourseSearch', () => {
   it('shows empty state when no results', async () => {
     // CRITICAL: Override MSW handler to return empty array for this test.
     server.use(
-      http.get('http://localhost:8000/courses/search', () => {
+      http.get('http://localhost:8001/courses/search', () => {
         return HttpResponse.json([])
       })
     )

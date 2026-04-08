@@ -25,6 +25,8 @@ const mockProfessors: ProfessorRanking[] = [
     match_confidence: 0.95,
     quarters_taught: 8,
     keywords: ['clear', 'helpful', 'challenging'],
+    is_active_teacher: true,
+    recent_quarters: ['Fall 2024', 'Winter 2024', 'Spring 2024'],
   },
   {
     id: 102,
@@ -45,6 +47,8 @@ const mockProfessors: ProfessorRanking[] = [
     match_confidence: 0.88,
     quarters_taught: 5,
     keywords: ['straightforward', 'fair'],
+    is_active_teacher: false,
+    recent_quarters: ['Winter 2023'],
   },
 ]
 
@@ -85,19 +89,19 @@ const mockComments: CommentResult[] = [
 ]
 
 export const handlers = [
-  http.get('http://localhost:8000/courses/search', () => {
+  http.get('http://localhost:8001/courses/search', () => {
     return HttpResponse.json(mockCourses)
   }),
 
-  http.get('http://localhost:8000/courses/:id/professors', () => {
+  http.get('http://localhost:8001/courses/:id/professors', () => {
     return HttpResponse.json(mockProfessors)
   }),
 
-  http.get('http://localhost:8000/professors/:id/grades', () => {
+  http.get('http://localhost:8001/professors/:id/grades', () => {
     return HttpResponse.json(mockGrades)
   }),
 
-  http.get('http://localhost:8000/professors/:id/comments', () => {
+  http.get('http://localhost:8001/professors/:id/comments', () => {
     return HttpResponse.json(mockComments)
   }),
 ]

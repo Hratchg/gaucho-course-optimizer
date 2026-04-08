@@ -26,6 +26,7 @@ const mockProfessor: ProfessorRanking = {
   rmp_num_ratings: 50, mean_gpa: 3.45, std_gpa: 0.3,
   avg_sentiment: 0.4, match_confidence: 0.95,
   quarters_taught: 8, keywords: ['engaging', 'fair grader', 'helpful'],
+  is_active_teacher: false, recent_quarters: [],
 }
 
 describe('ProfessorCard', () => {

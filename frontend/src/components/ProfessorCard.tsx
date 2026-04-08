@@ -62,6 +62,27 @@ function ExpandedComments({ professorId }: { professorId: number }) {
   )
 }
 
+function QuartersList({ quarters }: { quarters: string[] }) {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger className="mt-2 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        Quarters Taught ({quarters.length})
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {quarters.map((q) => (
+            <Badge key={q} variant="outline" className="text-xs">
+              {q}
+            </Badge>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
 export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -69,7 +90,14 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
     <Card className="mb-6">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
+            {professor.is_active_teacher && (
+              <Badge className="bg-primary text-primary-foreground hover:bg-primary text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
+                Actively Teaching
+              </Badge>
+            )}
+          </div>
           <Badge className={`${scoreColorClass(score)} text-sm font-bold px-2.5 py-1 rounded-full`}>{score}</Badge>
         </div>
         <p className="mt-1 text-sm">
@@ -86,6 +114,9 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
               <Badge key={kw} variant="secondary" className="text-xs">{kw}</Badge>
             ))}
           </div>
+        )}
+        {professor.recent_quarters.length > 0 && (
+          <QuartersList quarters={professor.recent_quarters} />
         )}
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger className="mt-3 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground">

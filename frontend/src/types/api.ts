@@ -24,6 +24,8 @@ export interface ProfessorRanking {
   match_confidence: number | null
   quarters_taught: number
   keywords: string[]
+  is_active_teacher: boolean
+  recent_quarters: string[]
 }
 
 export interface GradeQuarter {
