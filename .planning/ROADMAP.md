@@ -67,26 +67,20 @@ v1.0 took a working but internal Python ETL pipeline and exposed it as a public-
 
 ---
 
-## Milestone v1.1: UI/UX Overhaul (ACTIVE)
+## Milestone v1.1: UI/UX Overhaul (COMPLETED)
 
 v1.1 transforms the functional MVP into a polished, branded experience. All changes are frontend-only (React + Vite + Tailwind + shadcn/ui). The work proceeds in four natural phases: establish the design system first so every subsequent phase inherits consistent tokens, wire up routing and navigation so pages can exist, build the tutorial content that lives on the home page, then replace the weight sliders with the new toggle-based control system.
 
-## Phases
+### v1.1 Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- [x] **Phase 5: Branding & Design System** - Apply the Deep Teal + Amber color scheme, professional typography, and brand identity (favicon, meta tags) globally across all pages and components
+- [x] **Phase 6: Navigation & Routing** - Build a persistent top navbar with page routing, breadcrumb navigation, responsive hamburger menu, and browser history support
+- [x] **Phase 7: Tutorial Landing Page** - Build the home page with a visual Gaucho Score breakdown, factor definitions, step-by-step usage guide, and a prominent CTA to begin searching
+- [x] **Phase 8: Weight Controls Overhaul** - Replace sliders with student-friendly toggle checkboxes, implement auto-distributed equal weighting, and confirm instant re-ranking on the results page
 
-Decimal phases appear between their surrounding integers in numeric order.
+### v1.1 Phase Details
 
-- [ ] **Phase 5: Branding & Design System** - Apply the Deep Teal + Amber color scheme, professional typography, and brand identity (favicon, meta tags) globally across all pages and components
-- [ ] **Phase 6: Navigation & Routing** - Build a persistent top navbar with page routing, breadcrumb navigation, responsive hamburger menu, and browser history support
-- [ ] **Phase 7: Tutorial Landing Page** - Build the home page with a visual Gaucho Score breakdown, factor definitions, step-by-step usage guide, and a prominent CTA to begin searching
-- [ ] **Phase 8: Weight Controls Overhaul** - Replace sliders with student-friendly toggle checkboxes, implement auto-distributed equal weighting, and confirm instant re-ranking on the results page
-
-## Phase Details
-
-### Phase 5: Branding & Design System
+#### Phase 5: Branding & Design System
 **Goal**: Every page and component reflects the Deep Teal + Amber visual identity -- design tokens are the single source of truth and typography is set globally
 **Depends on**: Phase 4
 **Requirements**: BRAND-01, BRAND-02, BRAND-03
@@ -96,13 +90,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Student sees the Gaucho Course Optimizer favicon in the browser tab on all pages
   4. Student sees a descriptive page title in the browser tab (not the default "Vite App") that updates per page
   5. When a student shares a link, the Open Graph preview shows the correct title, description, and image
-**Plans:** 2 plans
-Plans:
-- [x] 05-01-PLAN.md — Design tokens (Deep Teal + Amber palette), typography (Poppins + Open Sans), chart colors, and score badge refactor
-- [x] 05-02-PLAN.md — Favicon, OG meta tags, Twitter Cards, and per-page document titles
+**Plans:** 2 plans (all complete)
+**Status**: Complete
 **UI hint**: yes
 
-### Phase 6: Navigation & Routing
+#### Phase 6: Navigation & Routing
 **Goal**: Students can move between Home, Search, and Course Results pages via a persistent navbar, always know where they are, and use the browser naturally including back/forward buttons and direct URLs
 **Depends on**: Phase 5
 **Requirements**: NAV-01, NAV-02, NAV-03, NAV-04
@@ -111,13 +103,11 @@ Plans:
   2. Student on an interior page (Search or Course Results) can see breadcrumbs showing their path (e.g., Home > Search > CMPSC 130A) and click any breadcrumb to navigate back to that level
   3. Student on a mobile device can tap a hamburger icon to open a navigation menu and tap any link to navigate -- the menu closes after selection
   4. Student can paste a direct URL to any page (e.g., `/course/cmpsc-130a`) into a new browser tab and land on the correct page without a 404 or redirect to home
-**Plans:** 2 plans
-Plans:
-- [x] 06-01-PLAN.md — Layout shell, sticky Navbar, placeholder HomePage, App.tsx route restructure (/ /search /courses/:id)
-- [x] 06-02-PLAN.md — Breadcrumbs component, mobile hamburger Sheet menu, visual verification checkpoint
+**Plans:** 2 plans (all complete)
+**Status**: Complete
 **UI hint**: yes
 
-### Phase 7: Tutorial Landing Page
+#### Phase 7: Tutorial Landing Page
 **Goal**: A student who has never used the app can land on the home page, understand exactly how Gaucho Score works and what each factor means, follow a clear usage guide, and confidently start searching
 **Depends on**: Phase 6
 **Requirements**: TUT-01, TUT-02, TUT-03, TUT-04
@@ -126,12 +116,11 @@ Plans:
   2. Student can read a clear definition and real example for each of the four scoring factors -- no jargon, no unexplained acronyms
   3. Student can follow a step-by-step guide on the home page (at least three steps) that walks through searching a course and interpreting the results
   4. Student can click a prominent call-to-action button on the home page that takes them directly to the Search page to begin finding professors
-**Plans:** 1 plan
-Plans:
-- [x] 07-01-PLAN.md — Full tutorial landing page: score breakdown bar, factor definition cards, 3-step usage guide, and final CTA banner (TDD)
+**Plans:** 1 plan (all complete)
+**Status**: Complete
 **UI hint**: yes
 
-### Phase 8: Weight Controls Overhaul
+#### Phase 8: Weight Controls Overhaul
 **Goal**: Students control professor ranking through four clearly labeled toggle checkboxes rather than numeric sliders -- selected factors share weight equally, and the ranking updates instantly on every toggle
 **Depends on**: Phase 7
 **Requirements**: WGHT-01, WGHT-02
@@ -139,15 +128,64 @@ Plans:
   1. Student on the Course Results page sees four toggle checkboxes labeled "Easy Grades", "Great Teaching", "Low Difficulty", and "Good Reviews" instead of numeric sliders
   2. Student can toggle any checkbox on or off and see the professor ranking update immediately in the browser with no loading spinner or API call
   3. Student who enables two checkboxes sees those two factors weighted equally in the ranking, while disabled factors are de-emphasized -- the weighting logic is transparent (e.g., labels or tooltips explain the distribution)
-**Plans:** 1 plan
-Plans:
-- [x] 08-01-PLAN.md — Toggle scoring logic (ToggleWeights type, normalizeToggles, overloaded computeGauchoScore), WeightToggles component, CoursePage integration, old slider cleanup
+**Plans:** 1 plan (all complete)
+**Status**: Complete
+**UI hint**: yes
+
+---
+
+## Milestone v1.2: Data Quality & Insights (ACTIVE)
+
+v1.2 surfaces more meaningful, actionable information on professor cards so students make better-informed decisions. The work spans both backend (FastAPI + SQLAlchemy + ETL pipeline) and frontend (React). Three features ship in three phases: first, compute and display active teaching status (backend logic + badge + filter); second, switch grade charts from all-time aggregate to per-quarter views (API enrichment + chart overhaul); third, replace raw NLP-extracted keywords with a curated vocabulary backed by frequency filtering (ETL pipeline changes + new tag display).
+
+### v1.2 Phases
+
+- [ ] **Phase 9: Active Teaching** - Compute active teaching status from grade history, expose it in the API, and display badges, quarter history, and a filter on professor cards
+- [ ] **Phase 10: Grade Distribution by Quarter** - Enrich the grades API with per-quarter breakdowns, default the chart to the most recent quarter, and add a quarter selector with an all-time toggle
+- [ ] **Phase 11: Standardized Keywords** - Define a curated tag vocabulary, map raw NLP output to standard labels with frequency filtering in the ETL pipeline, and display filterable tags with review-count tooltips
+
+### v1.2 Phase Details
+
+### Phase 9: Active Teaching
+**Goal**: Students can immediately see which professors are actively teaching a course, filter out inactive professors, and view the specific quarters each professor has taught
+**Depends on**: Phase 8
+**Requirements**: TEACH-01, TEACH-02, TEACH-03
+**Success Criteria** (what must be TRUE):
+  1. Student searching a course sees an "Actively Teaching" badge on professor cards for any professor who taught the course 3 or more times in the past 3 years -- professors who do not meet this threshold have no badge
+  2. Student can click a filter toggle to show only actively teaching professors, and the list updates immediately to hide inactive professors
+  3. Student can see which specific quarters (e.g., "Fall 2024", "Winter 2025") a professor taught the searched course -- this information is visible on the professor card or in an expandable detail
+  4. The active teaching computation runs server-side so the badge and quarter list are present in the API response without requiring additional client-side requests
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 10: Grade Distribution by Quarter
+**Goal**: Students see the most recent quarter's grade distribution by default instead of an all-time aggregate, and can drill into any specific quarter or switch to the combined historical view
+**Depends on**: Phase 9
+**Requirements**: GRADE-01, GRADE-02, GRADE-03
+**Success Criteria** (what must be TRUE):
+  1. Student viewing a professor's grade chart sees the most recent quarter's distribution (e.g., "Winter 2025") displayed by default -- not the all-time aggregate that was previously shown
+  2. Student can select a specific quarter from a dropdown menu and see the grade chart update to show only that quarter's distribution
+  3. Student can toggle between "Most Recent" and "All Quarters Combined" views, and the chart reflects the selected mode immediately
+  4. The quarter dropdown lists all available quarters in reverse chronological order, and the selected quarter's label is clearly visible above or within the chart
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 11: Standardized Keywords
+**Goal**: Professor cards display a curated set of meaningful, human-readable tags instead of raw NLP-extracted words, with noise filtering so only frequently mentioned attributes appear
+**Depends on**: Phase 10
+**Requirements**: KW-01, KW-02, KW-03
+**Success Criteria** (what must be TRUE):
+  1. Student viewing a professor card sees tags drawn from a curated vocabulary of 15-20 labels (e.g., "Easy Grader", "Tough Exams", "Engaging Lectures", "Heavy Homework") instead of raw single-word NLP extractions
+  2. Tags only appear on a professor card if the underlying concept was mentioned in 3 or more reviews for that professor -- low-frequency noise words are absent
+  3. Student can hover (or tap on mobile) any tag to see a tooltip showing how many reviews mentioned it (e.g., "Easy Grader -- 7 reviews")
+  4. The curated vocabulary mapping and frequency filtering are computed during the ETL pipeline, not at request time -- the API serves pre-computed tags
+**Plans**: TBD
 **UI hint**: yes
 
 ## Progress
 
 **Execution Order:**
-v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 -> 8
+v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in numeric order: 9 -> 10 -> 11
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -155,7 +193,10 @@ v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 ->
 | 2. FastAPI Backend | 5/5 | Complete | 2026-04-01 |
 | 3. React Frontend | 7/7 | Complete | 2026-04-01 |
 | 4. Deployment | 2/2 | Complete | 2026-04-02 |
-| 5. Branding & Design System | 0/2 | Planned | - |
-| 6. Navigation & Routing | 0/2 | Planned | - |
-| 7. Tutorial Landing Page | 0/1 | Planned | - |
-| 8. Weight Controls Overhaul | 0/1 | Planned | - |
+| 5. Branding & Design System | 2/2 | Complete | - |
+| 6. Navigation & Routing | 2/2 | Complete | - |
+| 7. Tutorial Landing Page | 1/1 | Complete | - |
+| 8. Weight Controls Overhaul | 1/1 | Complete | - |
+| 9. Active Teaching | 0/0 | Not started | - |
+| 10. Grade Distribution by Quarter | 0/0 | Not started | - |
+| 11. Standardized Keywords | 0/0 | Not started | - |

@@ -31,6 +31,8 @@ def _make_prof(
     keywords: list[str] | None = None,
     match_confidence: float | None = None,
     std_gpa: float | None = None,
+    is_active_teacher: bool = False,
+    recent_quarters: list[str] | None = None,
 ) -> dict:
     return {
         "id": id,
@@ -46,6 +48,8 @@ def _make_prof(
         "quarters_taught": quarters_taught,
         "keywords": keywords or [],
         "match_confidence": match_confidence,
+        "is_active_teacher": is_active_teacher,
+        "recent_quarters": recent_quarters or [],
     }
 
 
@@ -252,5 +256,27 @@ def test_professor_response_includes_passthrough_fields(monkeypatch):
         assert data["avg_sentiment"] == 0.6
         assert data["std_gpa"] == 0.3
         assert data["match_confidence"] == 0.95
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Test 10: Active teaching fields in professor response
+# ---------------------------------------------------------------------------
+
+def test_professor_response_includes_active_teaching_fields(monkeypatch):
+    """Response JSON contains is_active_teacher (bool) and recent_quarters (list of strings)."""
+    prof = _make_prof(is_active_teacher=True, recent_quarters=["Fall 2024", "Winter 2024"])
+    monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, cid: [prof])
+    mock_db = MagicMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    client = TestClient(app)
+    try:
+        resp = client.get("/courses/1/professors")
+        assert resp.status_code == 200
+        data = resp.json()[0]
+        assert data["is_active_teacher"] is True
+        assert isinstance(data["recent_quarters"], list)
+        assert data["recent_quarters"] == ["Fall 2024", "Winter 2024"]
     finally:
         app.dependency_overrides.clear()

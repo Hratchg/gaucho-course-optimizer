@@ -85,6 +85,8 @@ def get_professors(
             "match_confidence": p["match_confidence"],
             "quarters_taught": p["quarters_taught"],
             "keywords": p.get("keywords", []),
+            "is_active_teacher": p.get("is_active_teacher", False),
+            "recent_quarters": p.get("recent_quarters", []),
         })
 
     return sorted(results, key=lambda x: x["gaucho_score"], reverse=True)
