@@ -7,6 +7,7 @@ import type { ProfessorRanking } from '@/types/api'
 import { GradeChart } from './GradeChart'
 import { GpaTrendChart } from './GpaTrendChart'
 import { SentimentBadge } from './SentimentBadge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProfessorGrades } from '@/hooks/useProfessorGrades'
 import { useProfessorComments } from '@/hooks/useProfessorComments'
 
@@ -24,13 +25,31 @@ function scoreColorClass(score: number): string {
 
 function ExpandedCharts({ professorId, courseId }: { professorId: number; courseId: number }) {
   const { data: grades, isLoading } = useProfessorGrades(professorId, courseId)
+  const [selectedQuarter, setSelectedQuarter] = useState<string>('most-recent')
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading charts...</p>
   if (!grades || grades.length === 0) return <p className="text-sm text-muted-foreground">No grade data available</p>
+
+  const quarterOptions = [...grades].reverse().map(q => q.quarter)
+
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="mb-2 text-sm font-semibold">Grade Distribution</h4>
-        <GradeChart quarters={grades} />
+        <div className="mb-2 flex items-center justify-between">
+          <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="most-recent">Most Recent</SelectItem>
+              <SelectItem value="all">All Quarters Combined</SelectItem>
+              {quarterOptions.map(q => (
+                <SelectItem key={q} value={q}>{q}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <GradeChart quarters={grades} selectedQuarter={selectedQuarter} />
       </div>
       <div>
         <h4 className="mb-2 text-sm font-semibold">GPA Trend</h4>
