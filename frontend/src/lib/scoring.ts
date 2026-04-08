@@ -5,7 +5,21 @@ export interface Weights {
   sentiment: number
 }
 
+export interface ToggleWeights {
+  gpa: boolean
+  quality: boolean
+  difficulty: boolean
+  sentiment: boolean
+}
+
 export const DEFAULT_WEIGHTS: Weights = { gpa: 4, quality: 3, difficulty: 2, sentiment: 1 }
+
+export const DEFAULT_TOGGLE_WEIGHTS: ToggleWeights = {
+  gpa: true,
+  quality: true,
+  difficulty: true,
+  sentiment: true,
+}
 
 export function normalizeWeights(weights: Weights): Weights {
   const total = weights.gpa + weights.quality + weights.difficulty + weights.sentiment
@@ -18,14 +32,28 @@ export function normalizeWeights(weights: Weights): Weights {
   }
 }
 
+export function normalizeToggles(toggles: ToggleWeights): Weights {
+  const enabledCount = [toggles.gpa, toggles.quality, toggles.difficulty, toggles.sentiment]
+    .filter(Boolean).length
+  const share = enabledCount > 0 ? 1 / enabledCount : 0.25
+  return {
+    gpa: toggles.gpa ? share : 0,
+    quality: toggles.quality ? share : 0,
+    difficulty: toggles.difficulty ? share : 0,
+    sentiment: toggles.sentiment ? share : 0,
+  }
+}
+
 export function computeGauchoScore(
   gpaFactor: number,
   qualityFactor: number,
   difficultyFactor: number,
   sentimentFactor: number,
-  weights: Weights
+  weights: Weights | ToggleWeights
 ): number {
-  const w = normalizeWeights(weights)
+  const w = typeof weights.gpa === 'boolean'
+    ? normalizeToggles(weights as ToggleWeights)
+    : normalizeWeights(weights as Weights)
   const raw =
     gpaFactor * w.gpa +
     qualityFactor * w.quality +
