@@ -141,7 +141,7 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
 ### v1.2 Phases
 
 - [x] **Phase 9: Active Teaching** - Compute active teaching status from grade history, expose it in the API, and display badges, quarter history, and a filter on professor cards
-- [ ] **Phase 10: Grade Distribution by Quarter** - Enrich the grades API with per-quarter breakdowns, default the chart to the most recent quarter, and add a quarter selector with an all-time toggle
+- [x] **Phase 10: Grade Distribution by Quarter** - Enrich the grades API with per-quarter breakdowns, default the chart to the most recent quarter, and add a quarter selector with an all-time toggle (completed 2026-04-08)
 - [ ] **Phase 11: Standardized Keywords** - Define a curated tag vocabulary, map raw NLP output to standard labels with frequency filtering in the ETL pipeline, and display filterable tags with review-count tooltips
 
 ### v1.2 Phase Details
@@ -168,9 +168,9 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
   2. Student can select a specific quarter from a dropdown menu and see the grade chart update to show only that quarter's distribution
   3. Student can toggle between "Most Recent" and "All Quarters Combined" views, and the chart reflects the selected mode immediately
   4. The quarter dropdown lists all available quarters in reverse chronological order, and the selected quarter's label is clearly visible above or within the chart
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 10-01-PLAN.md -- Install shadcn Select, add quarter filtering to GradeChart, add quarter selector dropdown to ProfessorCard, update tests
+- [x] 10-01-PLAN.md -- Install shadcn Select, add quarter filtering to GradeChart, add quarter selector dropdown to ProfessorCard, update tests
 **UI hint**: yes
 
 ### Phase 11: Standardized Keywords
@@ -201,5 +201,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 7. Tutorial Landing Page | 1/1 | Complete | - |
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
-| 10. Grade Distribution by Quarter | 0/1 | Not started | - |
+| 10. Grade Distribution by Quarter | 1/1 | Complete   | 2026-04-08 |
 | 11. Standardized Keywords | 0/0 | Not started | - |
