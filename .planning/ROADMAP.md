@@ -141,7 +141,7 @@ Plans:
   3. Student who enables two checkboxes sees those two factors weighted equally in the ranking, while disabled factors are de-emphasized -- the weighting logic is transparent (e.g., labels or tooltips explain the distribution)
 **Plans:** 1 plan
 Plans:
-- [ ] 08-01-PLAN.md — Toggle scoring logic (ToggleWeights type, normalizeToggles, overloaded computeGauchoScore), WeightToggles component, CoursePage integration, old slider cleanup
+- [x] 08-01-PLAN.md — Toggle scoring logic (ToggleWeights type, normalizeToggles, overloaded computeGauchoScore), WeightToggles component, CoursePage integration, old slider cleanup
 **UI hint**: yes
 
 ## Progress
