@@ -127,10 +127,17 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
           <span>Difficulty: {professor.rmp_difficulty !== null ? professor.rmp_difficulty.toFixed(1) : 'N/A'}</span>
           <span>Would take again: {professor.rmp_would_take_again !== null ? `${professor.rmp_would_take_again.toFixed(0)}%` : 'N/A'}</span>
         </div>
-        {professor.keywords.length > 0 && (
+        {professor.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
-            {professor.keywords.slice(0, 6).map((kw) => (
-              <Badge key={kw} variant="secondary" className="text-xs">{kw}</Badge>
+            {professor.tags.slice(0, 6).map((tag) => (
+              <Badge
+                key={tag.name}
+                variant="secondary"
+                className="text-xs"
+                title={`${tag.name} \u2014 ${tag.count} reviews`}
+              >
+                {tag.name}
+              </Badge>
             ))}
           </div>
         )}
