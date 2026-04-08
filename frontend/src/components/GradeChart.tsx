@@ -13,22 +13,52 @@ const GRADE_LABELS = [
 
 interface GradeChartProps {
   quarters: GradeQuarter[]
+  selectedQuarter: string
 }
 
-export function GradeChart({ quarters }: GradeChartProps) {
+function getFilteredQuarters(quarters: GradeQuarter[], selectedQuarter: string): GradeQuarter[] {
+  if (selectedQuarter === 'all') {
+    return quarters
+  }
+  if (selectedQuarter === 'most-recent') {
+    return quarters.length > 0 ? [quarters[quarters.length - 1]] : []
+  }
+  const match = quarters.find(q => q.quarter === selectedQuarter)
+  return match ? [match] : []
+}
+
+function getTitle(quarters: GradeQuarter[], selectedQuarter: string): string {
+  if (selectedQuarter === 'all') {
+    return 'Grade Distribution \u2014 All Quarters Combined'
+  }
+  if (selectedQuarter === 'most-recent') {
+    const label = quarters.length > 0 ? quarters[quarters.length - 1].quarter : 'N/A'
+    return `Grade Distribution \u2014 ${label}`
+  }
+  return `Grade Distribution \u2014 ${selectedQuarter}`
+}
+
+export function GradeChart({ quarters, selectedQuarter }: GradeChartProps) {
+  const filtered = getFilteredQuarters(quarters, selectedQuarter)
+
   const data = GRADE_LABELS.map((label, i) => ({
     grade: label,
-    count: quarters.reduce((sum, q) => sum + (q[GRADE_KEYS[i]] ?? 0), 0),
+    count: filtered.reduce((sum, q) => sum + (q[GRADE_KEYS[i]] ?? 0), 0),
   }))
 
+  const title = getTitle(quarters, selectedQuarter)
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
-        <YAxis tick={{ fontSize: 12 }} />
-        <Tooltip />
-        <Bar dataKey="count" fill="#0F766E" />
-      </BarChart>
-    </ResponsiveContainer>
+    <div>
+      <h4 className="mb-2 text-sm font-semibold">{title}</h4>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+          <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip />
+          <Bar dataKey="count" fill="#0F766E" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
