@@ -128,7 +128,7 @@ Plans:
   4. Student can click a prominent call-to-action button on the home page that takes them directly to the Search page to begin finding professors
 **Plans:** 1 plan
 Plans:
-- [ ] 07-01-PLAN.md — Full tutorial landing page: score breakdown bar, factor definition cards, 3-step usage guide, and final CTA banner (TDD)
+- [x] 07-01-PLAN.md — Full tutorial landing page: score breakdown bar, factor definition cards, 3-step usage guide, and final CTA banner (TDD)
 **UI hint**: yes
 
 ### Phase 8: Weight Controls Overhaul
