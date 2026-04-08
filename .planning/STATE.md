@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Foundation to Public App
-status: verifying
-stopped_at: Completed 10-01-PLAN.md (Phase 10 fully complete)
-last_updated: "2026-04-08T06:19:42.961Z"
+status: executing
+stopped_at: Completed 11-02-PLAN.md (Phase 11 fully complete)
+last_updated: "2026-04-08T20:45:52.469Z"
 last_activity: 2026-04-08
 progress:
   total_phases: 4
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Phase 10 — grade-distribution-quarter
+**Current focus:** Phase 11 — standardized-keywords
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 11 (standardized-keywords) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-08
 
 Progress: [███░░░░░░░] 33% (1/3 v1.2 phases complete)
@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - Phase 9 Plan 1: Two-level subquery for active teaching, server-side cutoff_year, separate 3rd query for quarter detail
 - Phase 9 Plan 2: Used Checkbox (not Switch) for filter toggle, QuartersList inline in ProfessorCard, fixed MSW URLs to match VITE_API_URL
 - [Phase 10-grade-distribution-quarter]: Quarter filtering via selectedQuarter prop (string: most-recent | all | specific quarter); helpers extracted for testability
+- [Phase 11-standardized-keywords]: Used native HTML title tooltip for tag badges (simple, cross-platform, per CONTEXT.md decision)
 
 ### Pending Todos
 
@@ -59,6 +60,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-08T06:18:57.277Z
-Stopped at: Completed 10-01-PLAN.md (Phase 10 fully complete)
+Last session: 2026-04-08T20:45:52.459Z
+Stopped at: Completed 11-02-PLAN.md (Phase 11 fully complete)
 Resume file: None
