@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
-import { WeightSliders } from '@/components/WeightSliders'
-import { computeGauchoScore, DEFAULT_WEIGHTS } from '@/lib/scoring'
-import type { Weights } from '@/lib/scoring'
+import { WeightToggles } from '@/components/WeightToggles'
+import { computeGauchoScore, DEFAULT_TOGGLE_WEIGHTS } from '@/lib/scoring'
+import type { ToggleWeights } from '@/lib/scoring'
 import { useColdStartMessage } from '@/hooks/useElapsedTime'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +21,7 @@ export default function CoursePage() {
   const numericCourseId = Number(courseId)
   const { data: professors, isLoading, error } = useProfessors(numericCourseId)
 
-  const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS)
+  const [weights, setWeights] = useState<ToggleWeights>(DEFAULT_TOGGLE_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
   const showColdStart = useColdStartMessage(isLoading)
 
@@ -48,15 +48,15 @@ export default function CoursePage() {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" className="w-full min-h-[44px]">
-              Adjust weights
+              Customize Ranking
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="px-6 pb-8">
             <SheetHeader>
-              <SheetTitle>Adjust Weights</SheetTitle>
+              <SheetTitle>Customize Ranking</SheetTitle>
             </SheetHeader>
             <div className="mt-4">
-              <WeightSliders weights={weights} onWeightsChange={setWeights} />
+              <WeightToggles weights={weights} onWeightsChange={setWeights} />
             </div>
           </SheetContent>
         </Sheet>
