@@ -8,6 +8,7 @@ import { computeGauchoScore, DEFAULT_TOGGLE_WEIGHTS } from '@/lib/scoring'
 import type { ToggleWeights } from '@/lib/scoring'
 import { useColdStartMessage } from '@/hooks/useElapsedTime'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,30 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 
+function ActiveTeacherFilter({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id="active-filter"
+        checked={checked}
+        onCheckedChange={(val) => onCheckedChange(val === true)}
+      />
+      <label
+        htmlFor="active-filter"
+        className="text-sm cursor-pointer select-none"
+      >
+        Show only active teachers
+      </label>
+    </div>
+  )
+}
+
 export default function CoursePage() {
   const { courseId } = useParams<{ courseId: string }>()
   const numericCourseId = Number(courseId)
@@ -23,6 +48,7 @@ export default function CoursePage() {
 
   const [weights, setWeights] = useState<ToggleWeights>(DEFAULT_TOGGLE_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [showActiveOnly, setShowActiveOnly] = useState(false)
   const showColdStart = useColdStartMessage(isLoading)
 
   useEffect(() => {
@@ -31,7 +57,18 @@ export default function CoursePage() {
 
   const rankedProfessors = useMemo(() => {
     if (!professors) return []
-    return [...professors]
+    let filtered = [...professors]
+
+    // Apply active teacher filter
+    if (showActiveOnly) {
+      const activeProfs = filtered.filter(p => p.is_active_teacher)
+      // If no professors are active, show all (per edge case decision)
+      if (activeProfs.length > 0) {
+        filtered = activeProfs
+      }
+    }
+
+    return filtered
       .map((p) => ({
         ...p,
         computedScore: computeGauchoScore(
@@ -39,7 +76,12 @@ export default function CoursePage() {
         ),
       }))
       .sort((a, b) => b.computedScore - a.computedScore)
-  }, [professors, weights])
+  }, [professors, weights, showActiveOnly])
+
+  const hasActiveProfs = useMemo(
+    () => professors?.some(p => p.is_active_teacher) ?? false,
+    [professors]
+  )
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -55,7 +97,11 @@ export default function CoursePage() {
             <SheetHeader>
               <SheetTitle>Customize Ranking</SheetTitle>
             </SheetHeader>
-            <div className="mt-4">
+            <div className="mt-4 space-y-6">
+              <ActiveTeacherFilter
+                checked={showActiveOnly}
+                onCheckedChange={setShowActiveOnly}
+              />
               <WeightToggles weights={weights} onWeightsChange={setWeights} />
             </div>
           </SheetContent>
@@ -66,7 +112,11 @@ export default function CoursePage() {
       <div className="flex gap-6">
         {/* Left sidebar -- desktop only, sticky */}
         <aside className="hidden w-64 shrink-0 md:block">
-          <div className="sticky top-20">
+          <div className="sticky top-20 space-y-6">
+            <ActiveTeacherFilter
+              checked={showActiveOnly}
+              onCheckedChange={setShowActiveOnly}
+            />
             <WeightToggles weights={weights} onWeightsChange={setWeights} />
           </div>
         </aside>
@@ -98,14 +148,21 @@ export default function CoursePage() {
               </p>
             </div>
           ) : (
-            rankedProfessors.map((prof) => (
+            <>
+            {showActiveOnly && !hasActiveProfs && rankedProfessors.length > 0 && (
+              <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+                No professors have taught this course recently. Showing all professors.
+              </div>
+            )}
+            {rankedProfessors.map((prof) => (
               <ProfessorCard
                 key={prof.id}
                 professor={prof}
                 score={prof.computedScore}
                 courseId={numericCourseId}
               />
-            ))
+            ))}
+            </>
           )}
         </main>
       </div>

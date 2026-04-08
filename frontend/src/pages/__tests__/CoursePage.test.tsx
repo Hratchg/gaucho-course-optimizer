@@ -58,7 +58,7 @@ describe('CoursePage - Active Teacher Filter', () => {
 
   it('checking filter hides inactive professor', async () => {
     server.use(
-      http.get('http://localhost:8000/courses/:id/professors', () => {
+      http.get('http://localhost:8001/courses/:id/professors', () => {
         return HttpResponse.json([
           makeProfessorData({ id: 101, name: 'Alice Smith', is_active_teacher: true }),
           makeProfessorData({ id: 102, name: 'Bob Jones', is_active_teacher: false, gaucho_score: 71, gpa_factor: 0.72, quality_factor: 0.68, difficulty_factor: 0.55, sentiment_factor: 0.60 }),
@@ -78,7 +78,7 @@ describe('CoursePage - Active Teacher Filter', () => {
 
   it('shows all professors with note when filter on but none active', async () => {
     server.use(
-      http.get('http://localhost:8000/courses/:id/professors', () => {
+      http.get('http://localhost:8001/courses/:id/professors', () => {
         return HttpResponse.json([
           makeProfessorData({ id: 101, name: 'Alice Smith', is_active_teacher: false }),
           makeProfessorData({ id: 102, name: 'Bob Jones', is_active_teacher: false, gaucho_score: 71, gpa_factor: 0.72, quality_factor: 0.68, difficulty_factor: 0.55, sentiment_factor: 0.60 }),
