@@ -25,7 +25,11 @@ const mockProfessor: ProfessorRanking = {
   rmp_quality: 4.2, rmp_difficulty: 3.1, rmp_would_take_again: 85,
   rmp_num_ratings: 50, mean_gpa: 3.45, std_gpa: 0.3,
   avg_sentiment: 0.4, match_confidence: 0.95,
-  quarters_taught: 8, keywords: ['engaging', 'fair grader', 'helpful'],
+  quarters_taught: 8, tags: [
+    { name: 'Engaging', count: 10 },
+    { name: 'Fair Grader', count: 7 },
+    { name: 'Helpful', count: 5 },
+  ],
   is_active_teacher: false, recent_quarters: [],
 }
 
@@ -45,11 +49,11 @@ describe('ProfessorCard', () => {
     expect(screen.getByText(/Quality:.*4\.2/)).toBeInTheDocument()
   })
 
-  it('displays keyword tags', () => {
+  it('displays tag badges', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
-    expect(screen.getByText('engaging')).toBeInTheDocument()
-    expect(screen.getByText('fair grader')).toBeInTheDocument()
-    expect(screen.getByText('helpful')).toBeInTheDocument()
+    expect(screen.getByText('Engaging')).toBeInTheDocument()
+    expect(screen.getByText('Fair Grader')).toBeInTheDocument()
+    expect(screen.getByText('Helpful')).toBeInTheDocument()
   })
 
   it('displays avg GPA', () => {
