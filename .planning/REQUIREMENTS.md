@@ -48,9 +48,9 @@ Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 
 ### Active Teaching
 
-- [ ] **TEACH-01**: Student can see an "Actively Teaching" badge on professor cards for professors who taught the course 3+ times in the past 3 years
-- [ ] **TEACH-02**: Student can filter the professor list to show only actively teaching professors
-- [ ] **TEACH-03**: Student can see which specific quarters a professor taught the course
+- [x] **TEACH-01**: Student can see an "Actively Teaching" badge on professor cards for professors who taught the course 3+ times in the past 3 years
+- [x] **TEACH-02**: Student can filter the professor list to show only actively teaching professors
+- [x] **TEACH-03**: Student can see which specific quarters a professor taught the course
 
 ### Grade Distribution
 
@@ -113,9 +113,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TUT-04 | Phase 7 | Complete |
 | WGHT-01 | Phase 8 | Complete |
 | WGHT-02 | Phase 8 | Complete |
-| TEACH-01 | Phase 9 | Pending |
-| TEACH-02 | Phase 9 | Pending |
-| TEACH-03 | Phase 9 | Pending |
+| TEACH-01 | Phase 9 | Complete |
+| TEACH-02 | Phase 9 | Complete |
+| TEACH-03 | Phase 9 | Complete |
 | GRADE-01 | Phase 10 | Pending |
 | GRADE-02 | Phase 10 | Pending |
 | GRADE-03 | Phase 10 | Pending |
