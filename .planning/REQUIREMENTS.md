@@ -60,8 +60,8 @@ Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 
 ### Standardized Keywords
 
-- [ ] **KW-01**: Professor cards display tags from a curated vocabulary of ~15-20 meaningful labels (e.g., "Easy Grader", "Tough Exams", "Engaging Lectures") instead of raw NLP-extracted words
-- [ ] **KW-02**: Tags only appear if mentioned in 3+ reviews for that professor (noise filtering)
+- [x] **KW-01**: Professor cards display tags from a curated vocabulary of ~15-20 meaningful labels (e.g., "Easy Grader", "Tough Exams", "Engaging Lectures") instead of raw NLP-extracted words
+- [x] **KW-02**: Tags only appear if mentioned in 3+ reviews for that professor (noise filtering)
 - [x] **KW-03**: Student can hover a tag to see how many reviews mentioned it (e.g., "Easy Grader — 7 reviews")
 
 ## Future Requirements
@@ -119,8 +119,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRADE-01 | Phase 10 | Complete |
 | GRADE-02 | Phase 10 | Complete |
 | GRADE-03 | Phase 10 | Complete |
-| KW-01 | Phase 11 | Pending |
-| KW-02 | Phase 11 | Pending |
+| KW-01 | Phase 11 | Complete |
+| KW-02 | Phase 11 | Complete |
 | KW-03 | Phase 11 | Complete |
 
 **Coverage:**
