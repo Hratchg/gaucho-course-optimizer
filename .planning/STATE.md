@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Foundation to Public App
-status: completed
-stopped_at: Completed 09-02-PLAN.md (Phase 9 fully complete)
-last_updated: "2026-04-08T05:44:34.479Z"
+status: verifying
+stopped_at: Completed 10-01-PLAN.md (Phase 10 fully complete)
+last_updated: "2026-04-08T06:18:57.285Z"
 last_activity: 2026-04-08
 progress:
-  total_phases: 11
-  completed_phases: 7
-  total_plans: 26
-  completed_plans: 20
-  percent: 77
+  total_phases: 4
+  completed_phases: 2
+  total_plans: 18
+  completed_plans: 12
+  percent: 67
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Milestone v1.2 -- Data Quality & Insights (Phase 9: Active Teaching)
+**Current focus:** Phase 10 — grade-distribution-quarter
 
 ## Current Position
 
-Phase: 10 of 11 (grade distribution by quarter)
-Plan: Not started
-Status: Phase 9 complete, ready for Phase 10
+Phase: 10 (grade-distribution-quarter) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
 Last activity: 2026-04-08
 
 Progress: [███░░░░░░░] 33% (1/3 v1.2 phases complete)
@@ -46,6 +46,7 @@ Recent decisions affecting current work:
 - v1.2 scope: Full-stack changes -- backend (FastAPI, SQLAlchemy, ETL) + frontend (React)
 - Phase 9 Plan 1: Two-level subquery for active teaching, server-side cutoff_year, separate 3rd query for quarter detail
 - Phase 9 Plan 2: Used Checkbox (not Switch) for filter toggle, QuartersList inline in ProfessorCard, fixed MSW URLs to match VITE_API_URL
+- [Phase 10-grade-distribution-quarter]: Quarter filtering via selectedQuarter prop (string: most-recent | all | specific quarter); helpers extracted for testability
 
 ### Pending Todos
 
@@ -58,6 +59,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-08
-Stopped at: Completed 09-02-PLAN.md (Phase 9 fully complete)
-Resume file: None -- next step is Phase 10 (Most-Recent-Quarter Grade Distribution)
+Last session: 2026-04-08T06:18:57.277Z
+Stopped at: Completed 10-01-PLAN.md (Phase 10 fully complete)
+Resume file: None

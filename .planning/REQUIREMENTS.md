@@ -54,9 +54,9 @@ Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 
 ### Grade Distribution
 
-- [ ] **GRADE-01**: Student sees the most recent quarter's grade distribution by default (not all-time aggregate)
-- [ ] **GRADE-02**: Student can select a specific quarter from a dropdown to view that quarter's grade distribution
-- [ ] **GRADE-03**: Student can toggle between "Most Recent" and "All Quarters Combined" views
+- [x] **GRADE-01**: Student sees the most recent quarter's grade distribution by default (not all-time aggregate)
+- [x] **GRADE-02**: Student can select a specific quarter from a dropdown to view that quarter's grade distribution
+- [x] **GRADE-03**: Student can toggle between "Most Recent" and "All Quarters Combined" views
 
 ### Standardized Keywords
 
@@ -116,9 +116,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEACH-01 | Phase 9 | Complete |
 | TEACH-02 | Phase 9 | Complete |
 | TEACH-03 | Phase 9 | Complete |
-| GRADE-01 | Phase 10 | Pending |
-| GRADE-02 | Phase 10 | Pending |
-| GRADE-03 | Phase 10 | Pending |
+| GRADE-01 | Phase 10 | Complete |
+| GRADE-02 | Phase 10 | Complete |
+| GRADE-03 | Phase 10 | Complete |
 | KW-01 | Phase 11 | Pending |
 | KW-02 | Phase 11 | Pending |
 | KW-03 | Phase 11 | Pending |
