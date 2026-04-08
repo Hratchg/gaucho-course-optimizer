@@ -142,7 +142,7 @@ v1.2 surfaces more meaningful, actionable information on professor cards so stud
 
 - [x] **Phase 9: Active Teaching** - Compute active teaching status from grade history, expose it in the API, and display badges, quarter history, and a filter on professor cards
 - [x] **Phase 10: Grade Distribution by Quarter** - Enrich the grades API with per-quarter breakdowns, default the chart to the most recent quarter, and add a quarter selector with an all-time toggle (completed 2026-04-08)
-- [ ] **Phase 11: Standardized Keywords** - Define a curated tag vocabulary, map raw NLP output to standard labels with frequency filtering in the ETL pipeline, and display filterable tags with review-count tooltips
+- [x] **Phase 11: Standardized Keywords** - Define a curated tag vocabulary, map raw NLP output to standard labels with frequency filtering in the ETL pipeline, and display filterable tags with review-count tooltips (completed 2026-04-08)
 
 ### v1.2 Phase Details
 
@@ -182,10 +182,10 @@ Plans:
   2. Tags only appear on a professor card if the underlying concept was mentioned in 3 or more reviews for that professor -- low-frequency noise words are absent
   3. Student can hover (or tap on mobile) any tag to see a tooltip showing how many reviews mentioned it (e.g., "Easy Grader -- 7 reviews")
   4. The curated vocabulary mapping and frequency filtering are computed during the ETL pipeline, not at request time -- the API serves pre-computed tags
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 11-01-PLAN.md -- Backend tag vocabulary, mapping function with frequency filtering, schema change, backend tests
-- [ ] 11-02-PLAN.md -- Frontend tag badge display with review-count tooltips, TypeScript types, MSW mock update
+- [x] 11-01-PLAN.md -- Backend tag vocabulary, mapping function with frequency filtering, schema change, backend tests
+- [x] 11-02-PLAN.md -- Frontend tag badge display with review-count tooltips, TypeScript types, MSW mock update
 **UI hint**: yes
 
 ## Progress
@@ -205,4 +205,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 1/1 | Complete    | 2026-04-08 |
-| 11. Standardized Keywords | 0/2 | Not started | - |
+| 11. Standardized Keywords | 2/2 | Complete   | 2026-04-08 |
