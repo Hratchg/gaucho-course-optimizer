@@ -139,7 +139,9 @@ Plans:
   1. Student on the Course Results page sees four toggle checkboxes labeled "Easy Grades", "Great Teaching", "Low Difficulty", and "Good Reviews" instead of numeric sliders
   2. Student can toggle any checkbox on or off and see the professor ranking update immediately in the browser with no loading spinner or API call
   3. Student who enables two checkboxes sees those two factors weighted equally in the ranking, while disabled factors are de-emphasized -- the weighting logic is transparent (e.g., labels or tooltips explain the distribution)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 08-01-PLAN.md — Toggle scoring logic (ToggleWeights type, normalizeToggles, overloaded computeGauchoScore), WeightToggles component, CoursePage integration, old slider cleanup
 **UI hint**: yes
 
 ## Progress
@@ -156,4 +158,4 @@ v1.0 phases (1-4) complete. v1.1 phases execute in numeric order: 5 -> 6 -> 7 ->
 | 5. Branding & Design System | 0/2 | Planned | - |
 | 6. Navigation & Routing | 0/2 | Planned | - |
 | 7. Tutorial Landing Page | 0/1 | Planned | - |
-| 8. Weight Controls Overhaul | 0/TBD | Not started | - |
+| 8. Weight Controls Overhaul | 0/1 | Planned | - |
