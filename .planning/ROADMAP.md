@@ -201,5 +201,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 7. Tutorial Landing Page | 1/1 | Complete | - |
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
-| 10. Grade Distribution by Quarter | 1/1 | Complete   | 2026-04-08 |
+| 10. Grade Distribution by Quarter | 1/1 | Complete    | 2026-04-08 |
 | 11. Standardized Keywords | 0/0 | Not started | - |
