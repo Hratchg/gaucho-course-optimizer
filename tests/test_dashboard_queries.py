@@ -1,4 +1,4 @@
-"""Tests for dashboard/queries.py — comments, min_year filter, department filter."""
+"""Tests for dashboard/queries.py — comments, min_year filter, department filter, active teaching."""
 from datetime import datetime, timezone
 
 from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment
@@ -8,6 +8,8 @@ from dashboard.queries import (
     search_courses,
     get_departments,
 )
+
+CURRENT_YEAR = datetime.now().year
 
 
 def _seed_professor_with_comments(session):
@@ -214,3 +216,99 @@ def test_get_professors_returns_rmp_data(db_session):
     assert p2["rmp_difficulty"] is None
     assert p2["rmp_would_take_again"] is None
     assert p2["avg_sentiment"] is None
+
+
+# ---------------------------------------------------------------------------
+# Active Teaching Tests
+# ---------------------------------------------------------------------------
+
+
+def _seed_prof_and_course(session, prof_name="Active Prof", course_code="CMPSC40"):
+    """Helper: create a professor + course and return both."""
+    prof = Professor(name_nexus=prof_name, department="CMPSC")
+    course = Course(code=course_code, title="Foundations", department="CMPSC")
+    session.add_all([prof, course])
+    session.flush()
+    return prof, course
+
+
+def test_active_teacher_true(db_session):
+    """Professor with 3 distinct (quarter, year) in last 3 years → is_active_teacher=True."""
+    prof, course = _seed_prof_and_course(db_session, "Active3", "AT001")
+    for q, y in [("Fall", CURRENT_YEAR), ("Winter", CURRENT_YEAR - 1), ("Spring", CURRENT_YEAR - 2)]:
+        db_session.add(GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter=q, year=y, avg_gpa=3.5,
+        ))
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    assert result[0]["is_active_teacher"] is True
+    assert len(result[0]["recent_quarters"]) == 3
+
+
+def test_active_teacher_false(db_session):
+    """Professor with 2 distinct (quarter, year) in last 3 years → is_active_teacher=False."""
+    prof, course = _seed_prof_and_course(db_session, "Active2", "AT002")
+    for q, y in [("Fall", CURRENT_YEAR), ("Winter", CURRENT_YEAR - 1)]:
+        db_session.add(GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter=q, year=y, avg_gpa=3.5,
+        ))
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    assert result[0]["is_active_teacher"] is False
+
+
+def test_active_teacher_old_records_excluded(db_session):
+    """Professor with 5 records all older than 3 years → is_active_teacher=False, recent_quarters=[]."""
+    prof, course = _seed_prof_and_course(db_session, "OldProf", "AT003")
+    old_year = CURRENT_YEAR - 4  # outside 3-year window
+    for q in ["Fall", "Winter", "Spring", "Summer", "Fall"]:
+        db_session.add(GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter=q, year=old_year, avg_gpa=3.0,
+        ))
+        old_year -= 1  # keep going further back
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    assert result[0]["is_active_teacher"] is False
+    assert result[0]["recent_quarters"] == []
+
+
+def test_recent_quarters_sorted_most_recent_first(db_session):
+    """recent_quarters sorted descending: most recent year first, then Fall>Summer>Spring>Winter."""
+    prof, course = _seed_prof_and_course(db_session, "SortProf", "AT004")
+    for q, y in [("Winter", 2023), ("Fall", 2024), ("Spring", 2023)]:
+        db_session.add(GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter=q, year=y, avg_gpa=3.5,
+        ))
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    quarters = result[0]["recent_quarters"]
+    assert quarters[0] == "Fall 2024"
+    # Within 2023: Spring (2) > Winter (1)
+    assert quarters[1] == "Spring 2023"
+    assert quarters[2] == "Winter 2023"
+
+
+def test_recent_quarters_format(db_session):
+    """Each entry formatted as 'Quarter Year' e.g. 'Fall 2024'."""
+    prof, course = _seed_prof_and_course(db_session, "FmtProf", "AT005")
+    db_session.add(GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2024, avg_gpa=3.5,
+    ))
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    assert result[0]["recent_quarters"] == ["Fall 2024"]

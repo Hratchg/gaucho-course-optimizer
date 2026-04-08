@@ -29,6 +29,8 @@ class ProfessorRanking(BaseModel):
     match_confidence: float | None = None
     quarters_taught: int
     keywords: list[str] = []
+    is_active_teacher: bool = False
+    recent_quarters: list[str] = []
 
 
 class GradeQuarter(BaseModel):

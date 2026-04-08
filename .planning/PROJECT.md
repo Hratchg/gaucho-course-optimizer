@@ -1,15 +1,13 @@
 # Gaucho Course Optimizer
 
-## Current Milestone: v1.1 UI/UX Overhaul
+## Current Milestone: v1.2 Data Quality & Insights
 
-**Goal:** Transform the app from a functional MVP into a polished, branded experience with proper navigation, a tutorial landing page, and simplified weight controls.
+**Goal:** Surface more meaningful, actionable information on professor cards — active teaching status, recent grade distributions, and curated keyword tags — so students make better-informed decisions.
 
 **Target features:**
-- Deep Teal + Amber branding (primary #0F766E, accent #D97706) with professional typography and cohesive visual identity
-- Navigation system with navbar routing, breadcrumbs, and consistent back-navigation
-- Tutorial landing page explaining Gaucho Score, factor meanings, calculation methodology, and guiding students to search
-- Toggle-based weight controls replacing sliders with student-friendly checkboxes ("Easy Grades", "Great Teaching", "Low Difficulty", "Good Reviews") and auto-distributed weights
-- Overall UI polish — clean flat design, responsive improvements, accessibility enhancements
+- "Actively Teaching" badge on professor cards for professors who taught the searched course 3+ times in the past 3 years
+- Most-recent-quarter grade distribution as default view (instead of all-time aggregate), with option to see historical
+- Standardized keyword vocabulary replacing raw NLP-extracted tags (e.g., "Easy Grader", "Tough Exams", "Engaging Lectures")
 
 ## What This Is
 
@@ -31,16 +29,16 @@ Students can search any UCSB course and instantly see which professor will give 
 - ✓ FastAPI backend (health, course search, professor ranking, grades, comments) — v1.0
 - ✓ React frontend (course search, professor cards, grade charts, GPA trends, weight sliders) — v1.0
 - ✓ Deployed publicly (Vercel frontend, Render backend, Neon PostgreSQL) — v1.0
+- ✓ Deep Teal + Amber branding with Poppins/Open Sans typography — v1.1
+- ✓ Navbar with routing, breadcrumbs, mobile hamburger menu — v1.1
+- ✓ Tutorial landing page with Gaucho Score breakdown — v1.1
+- ✓ Toggle-based weight controls replacing sliders — v1.1
 
 ### Active
 
-- [ ] Deep Teal + Amber color scheme applied across all pages and components
-- [ ] Professional typography system (heading + body font pairing)
-- [ ] Navbar with routing across distinct pages (Home/Tutorial, Search, Course Results)
-- [ ] Breadcrumb navigation for page orientation and back-navigation
-- [ ] Tutorial landing page explaining Gaucho Score, factors, and calculation methodology
-- [ ] Toggle-based weight controls replacing sliders with student-friendly labels and auto-distributed weights
-- [ ] Responsive and accessibility improvements across all views
+- [ ] "Actively Teaching" badge for professors teaching the course 3+ times in past 3 years
+- [ ] Most-recent-quarter grade distribution as default view with historical option
+- [ ] Standardized keyword vocabulary replacing raw NLP-extracted tags
 
 ### Out of Scope
 
@@ -92,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 — Milestone v1.1 started*
+*Last updated: 2026-04-07 — Milestone v1.2 started*

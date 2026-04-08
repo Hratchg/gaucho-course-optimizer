@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment
@@ -27,7 +29,9 @@ def search_courses(session: Session, query: str, department: str | None = None) 
 
 
 def get_professors_for_course(session: Session, course_id: int, min_year: int | None = None) -> list[dict]:
-    """Get all professors who have taught a course, with their stats. 2 queries max."""
+    """Get all professors who have taught a course, with their stats. 3 queries max."""
+
+    cutoff_year = datetime.now().year - 3
 
     # Subquery: latest RMP rating per professor
     latest_rating_sq = (
@@ -50,7 +54,31 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
         .subquery("sentiment")
     )
 
-    # Main query: professors + grade stats + RMP data + sentiment
+    # Subquery: count distinct (quarter, year) pairs in recent years per professor
+    recent_grades_sq = (
+        session.query(
+            GradeDistribution.professor_id,
+            GradeDistribution.quarter,
+            GradeDistribution.year,
+        )
+        .filter(
+            GradeDistribution.course_id == course_id,
+            GradeDistribution.year >= cutoff_year,
+        )
+        .group_by(GradeDistribution.professor_id, GradeDistribution.quarter, GradeDistribution.year)
+        .subquery("recent_distinct")
+    )
+    # Wrap to count the distinct quarter-year pairs per professor
+    active_teaching_sq = (
+        session.query(
+            recent_grades_sq.c.professor_id,
+            func.count().label("distinct_recent_quarters"),
+        )
+        .group_by(recent_grades_sq.c.professor_id)
+        .subquery("active_teaching")
+    )
+
+    # Main query: professors + grade stats + RMP data + sentiment + active teaching
     q = (
         session.query(
             Professor,
@@ -59,16 +87,21 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             func.count(GradeDistribution.id).label("quarters_taught"),
             RmpRating,
             sentiment_sq.c.avg_sentiment,
+            active_teaching_sq.c.distinct_recent_quarters,
         )
         .join(GradeDistribution, GradeDistribution.professor_id == Professor.id)
         .filter(GradeDistribution.course_id == course_id)
         .outerjoin(latest_rating_sq, latest_rating_sq.c.professor_id == Professor.id)
         .outerjoin(RmpRating, RmpRating.id == latest_rating_sq.c.latest_rating_id)
         .outerjoin(sentiment_sq, sentiment_sq.c.rmp_rating_id == RmpRating.id)
+        .outerjoin(active_teaching_sq, active_teaching_sq.c.professor_id == Professor.id)
     )
     if min_year is not None:
         q = q.filter(GradeDistribution.year >= min_year)
-    results = q.group_by(Professor.id, RmpRating.id, sentiment_sq.c.avg_sentiment).all()
+    results = q.group_by(
+        Professor.id, RmpRating.id, sentiment_sq.c.avg_sentiment,
+        active_teaching_sq.c.distinct_recent_quarters,
+    ).all()
 
     # 2nd query: keywords grouped by rating_id (not N+1)
     rating_ids = [row[4].id for row in results if row[4] is not None]
@@ -83,9 +116,37 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             if isinstance(kw, list):
                 keywords_map.setdefault(rating_id, []).extend(kw)
 
+    # 3rd query: recent quarters per professor for this course
+    prof_ids = [row[0].id for row in results]
+    quarters_map: dict[int, list[str]] = {}
+    if prof_ids:
+        quarter_order = {"Fall": 4, "Summer": 3, "Spring": 2, "Winter": 1}
+        quarter_rows = (
+            session.query(
+                GradeDistribution.professor_id,
+                GradeDistribution.quarter,
+                GradeDistribution.year,
+            )
+            .filter(
+                GradeDistribution.course_id == course_id,
+                GradeDistribution.year >= cutoff_year,
+                GradeDistribution.professor_id.in_(prof_ids),
+            )
+            .distinct()
+            .all()
+        )
+        raw_map: dict[int, list[tuple[str, int]]] = {}
+        for pid, q_name, y in quarter_rows:
+            raw_map.setdefault(pid, []).append((q_name, y))
+        for pid in raw_map:
+            raw_map[pid].sort(key=lambda x: (x[1], quarter_order.get(x[0], 0)), reverse=True)
+            quarters_map[pid] = [f"{q_name} {y}" for q_name, y in raw_map[pid]]
+
     professors = []
-    for prof, mean_gpa, std_gpa, quarters_taught, rmp, avg_sentiment in results:
+    for prof, mean_gpa, std_gpa, quarters_taught, rmp, avg_sentiment, active_count in results:
         kw_list = keywords_map.get(rmp.id, []) if rmp else []
+        distinct_recent = active_count if active_count else 0
+        is_active = distinct_recent >= 3
         professors.append({
             "id": prof.id,
             "name": prof.name_rmp or prof.name_nexus or "Unknown",
@@ -100,6 +161,8 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment is not None else None,
             "keywords": list(set(kw_list))[:8],
             "match_confidence": prof.match_confidence,
+            "is_active_teacher": is_active,
+            "recent_quarters": quarters_map.get(prof.id, []),
         })
 
     return professors
