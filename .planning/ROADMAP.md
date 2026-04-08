@@ -182,7 +182,10 @@ Plans:
   2. Tags only appear on a professor card if the underlying concept was mentioned in 3 or more reviews for that professor -- low-frequency noise words are absent
   3. Student can hover (or tap on mobile) any tag to see a tooltip showing how many reviews mentioned it (e.g., "Easy Grader -- 7 reviews")
   4. The curated vocabulary mapping and frequency filtering are computed during the ETL pipeline, not at request time -- the API serves pre-computed tags
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 11-01-PLAN.md -- Backend tag vocabulary, mapping function with frequency filtering, schema change, backend tests
+- [ ] 11-02-PLAN.md -- Frontend tag badge display with review-count tooltips, TypeScript types, MSW mock update
 **UI hint**: yes
 
 ## Progress
@@ -202,4 +205,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 1/1 | Complete    | 2026-04-08 |
-| 11. Standardized Keywords | 0/0 | Not started | - |
+| 11. Standardized Keywords | 0/2 | Not started | - |
