@@ -134,9 +134,9 @@ v1.1 transforms the functional MVP into a polished, branded experience. All chan
 
 ---
 
-## Milestone v1.2: Data Quality & Insights (ACTIVE)
+## Milestone v1.2: Data Quality & Insights (COMPLETED 2026-04-08)
 
-v1.2 surfaces more meaningful, actionable information on professor cards so students make better-informed decisions. The work spans both backend (FastAPI + SQLAlchemy + ETL pipeline) and frontend (React). Three features ship in three phases: first, compute and display active teaching status (backend logic + badge + filter); second, switch grade charts from all-time aggregate to per-quarter views (API enrichment + chart overhaul); third, replace raw NLP-extracted keywords with a curated vocabulary backed by frequency filtering (ETL pipeline changes + new tag display).
+v1.2 surfaced more meaningful, actionable information on professor cards — active teaching badges, per-quarter grade distributions, and curated keyword tags. See [v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md) for full details.
 
 ### v1.2 Phases
 
