@@ -52,7 +52,7 @@ export default function CoursePage() {
   const showColdStart = useColdStartMessage(isLoading)
 
   useEffect(() => {
-    document.title = 'Course Results | Gaucho Course Optimizer'
+    document.title = 'Course Results | CoursePick'
   }, [])
 
   const rankedProfessors = useMemo(() => {

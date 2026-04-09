@@ -24,8 +24,8 @@ describe('CoursePage', () => {
     document.title = ''
   })
 
-  it('sets document.title to "Course Results | Gaucho Course Optimizer"', () => {
+  it('sets document.title to "Course Results | CoursePick"', () => {
     renderWithProviders('123')
-    expect(document.title).toBe('Course Results | Gaucho Course Optimizer')
+    expect(document.title).toBe('Course Results | CoursePick')
   })
 })

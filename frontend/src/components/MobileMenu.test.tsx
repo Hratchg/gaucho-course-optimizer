@@ -26,7 +26,7 @@ describe('MobileMenu', () => {
     expect(button.className).toContain('min-w-[44px]')
   })
 
-  it('clicking hamburger opens Sheet with title "Gaucho Course Optimizer"', async () => {
+  it('clicking hamburger opens Sheet with title "CoursePick"', async () => {
     const user = userEvent.setup()
     renderMobileMenu()
 
@@ -34,7 +34,7 @@ describe('MobileMenu', () => {
     await user.click(button)
 
     await waitFor(() => {
-      expect(screen.getByText('Gaucho Course Optimizer')).toBeInTheDocument()
+      expect(screen.getByText('CoursePick')).toBeInTheDocument()
     })
   })
 

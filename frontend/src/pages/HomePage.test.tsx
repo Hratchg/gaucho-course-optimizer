@@ -13,9 +13,9 @@ function renderHomePage() {
 
 describe('HomePage', () => {
   describe('page metadata', () => {
-    it('sets document.title to "Home | Gaucho Course Optimizer"', () => {
+    it('sets document.title to "Home | CoursePick"', () => {
       renderHomePage()
-      expect(document.title).toBe('Home | Gaucho Course Optimizer')
+      expect(document.title).toBe('Home | CoursePick')
     })
   })
 
@@ -40,11 +40,11 @@ describe('HomePage', () => {
   })
 
   describe('Score Breakdown', () => {
-    it('renders "How Gaucho Score Works" as h2', () => {
+    it('renders "How Prof Score Works" as h2', () => {
       renderHomePage()
       const heading = screen.getByRole('heading', {
         level: 2,
-        name: /how gaucho score works/i,
+        name: /how prof score works/i,
       })
       expect(heading).toBeInTheDocument()
     })
@@ -52,7 +52,7 @@ describe('HomePage', () => {
     it('renders score bar container with role="img" and appropriate aria-label', () => {
       renderHomePage()
       const bar = screen.getByRole('img', {
-        name: /gaucho score breakdown.*four equally weighted factors/i,
+        name: /prof score breakdown.*four equally weighted factors/i,
       })
       expect(bar).toBeInTheDocument()
     })
@@ -102,11 +102,11 @@ describe('HomePage', () => {
   })
 
   describe('Usage Guide', () => {
-    it('renders "How to Use Gaucho Course Optimizer" as h2', () => {
+    it('renders "How to Use CoursePick" as h2', () => {
       renderHomePage()
       const heading = screen.getByRole('heading', {
         level: 2,
-        name: /how to use gaucho course optimizer/i,
+        name: /how to use coursepick/i,
       })
       expect(heading).toBeInTheDocument()
     })

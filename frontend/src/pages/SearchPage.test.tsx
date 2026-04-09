@@ -20,8 +20,8 @@ describe('SearchPage', () => {
     document.title = ''
   })
 
-  it('sets document.title to "Search | Gaucho Course Optimizer"', () => {
+  it('sets document.title to "Search | CoursePick"', () => {
     renderWithProviders(<SearchPage />)
-    expect(document.title).toBe('Search | Gaucho Course Optimizer')
+    expect(document.title).toBe('Search | CoursePick')
   })
 })

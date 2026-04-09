@@ -60,7 +60,7 @@ const steps = [
     number: 2,
     icon: BarChart2,
     title: 'Compare Professors',
-    body: 'See every professor ranked by Gaucho Score with GPA, ratings, and student comments side by side',
+    body: 'See every professor ranked by Prof Score with GPA, ratings, and student comments side by side',
   },
   {
     number: 3,
@@ -72,7 +72,7 @@ const steps = [
 
 export default function HomePage() {
   useEffect(() => {
-    document.title = 'Home | Gaucho Course Optimizer'
+    document.title = 'Home | CoursePick'
   }, [])
 
   return (
@@ -94,7 +94,7 @@ export default function HomePage() {
         {/* Section 2: Score Breakdown */}
         <section className="py-16">
           <h2 className="font-heading font-bold text-[20px] text-center mb-8">
-            How Gaucho Score Works
+            How Prof Score Works
           </h2>
           <p className="text-sm text-muted-foreground text-center mb-6">
             Each score is a 0&ndash;100 composite of four equally weighted
@@ -104,7 +104,7 @@ export default function HomePage() {
           {/* Score bar */}
           <div
             role="img"
-            aria-label="Gaucho Score breakdown: four equally weighted factors"
+            aria-label="Prof Score breakdown: four equally weighted factors"
             className="flex w-full h-10 rounded-lg overflow-hidden ring-1 ring-foreground/10"
           >
             <div
@@ -182,7 +182,7 @@ export default function HomePage() {
         {/* Section 4: Usage Guide */}
         <section className="py-16">
           <h2 className="font-heading font-bold text-[20px] text-center mb-8">
-            How to Use Gaucho Course Optimizer
+            How to Use CoursePick
           </h2>
           <ol className="flex flex-col md:flex-row items-start justify-between gap-8 list-none p-0">
             {steps.map((step, index) => {
