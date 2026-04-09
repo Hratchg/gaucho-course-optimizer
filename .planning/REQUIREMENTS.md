@@ -64,9 +64,52 @@ Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 - [x] **KW-02**: Tags only appear if mentioned in 3+ reviews for that professor (noise filtering)
 - [x] **KW-03**: Student can hover a tag to see how many reviews mentioned it (e.g., "Easy Grader — 7 reviews")
 
+## v2.0 Requirements
+
+Requirements for Visual Redesign & UX Overhaul milestone.
+
+### Design Tokens
+
+- [ ] **DESIGN-01**: All CSS custom properties use Royal Blue (#2563EB) primary, Snow (#FAFBFF) background, white cards, near-black (#111827) text
+- [ ] **DESIGN-02**: Chart colors use a blue-family palette maintaining data readability and 3:1 contrast
+- [ ] **DESIGN-03**: Score badge colors preserved (green/yellow/red) with updated values meeting 4.5:1 contrast on white cards
+
+### Typography
+
+- [ ] **TYPE-01**: Inter replaces Poppins and Open Sans as the sole font family across all text
+- [ ] **TYPE-02**: All font sizes conform to a strict 4-size scale (14px label, 16px body, 20px heading, 28px display)
+
+### Accessibility
+
+- [ ] **A11Y-01**: All text meets WCAG AA contrast ratios (4.5:1 normal, 3:1 large)
+- [ ] **A11Y-02**: All interactive elements have visible focus rings (2-4px)
+- [ ] **A11Y-03**: All icon-only buttons have aria-labels
+- [ ] **A11Y-04**: Full keyboard navigation (tab order matches visual order, Enter/Space activation)
+- [ ] **A11Y-05**: Skip-to-content link on every page
+- [ ] **A11Y-06**: prefers-reduced-motion respected (disables non-essential animations)
+
+### Animations & Interactions
+
+- [ ] **ANIM-01**: Button press feedback (scale 0.97 + subtle shadow change, 150ms)
+- [ ] **ANIM-02**: Card hover elevation (shadow lift, 200ms ease-out)
+- [ ] **ANIM-03**: Page transitions (fade + subtle slide, 200ms)
+- [ ] **ANIM-04**: Staggered list entrance for professor cards (30-50ms per item)
+- [ ] **ANIM-05**: Skeleton loading shimmer replaces static skeleton cards
+
+### Component Overhaul
+
+- [ ] **COMP-01**: Professor cards redesigned with new color system and spacing
+- [ ] **COMP-02**: Navbar updated with Royal Blue background and Inter typography
+- [ ] **COMP-03**: Breadcrumbs styled with new accent colors
+- [ ] **COMP-04**: Course search updated with new input styling and dropdown
+- [ ] **COMP-05**: Grade charts use new blue palette with improved axis styling
+- [ ] **COMP-06**: Mobile menu (Sheet) updated with new design tokens
+- [ ] **COMP-07**: Tutorial landing page redesigned with new visual system
+- [ ] **COMP-08**: All badges (score, active teaching, tags) use new palette
+
 ## Future Requirements
 
-Deferred to future release. Tracked but not in current roadmap.
+Deferred to future release.
 
 ### Advanced Personalization
 
@@ -78,21 +121,17 @@ Deferred to future release. Tracked but not in current roadmap.
 - Professor side-by-side comparison view
 - Data freshness timestamp in footer
 - Recently viewed courses (localStorage)
+- Dark mode toggle
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Dark mode | Adds complexity; single polished theme is sufficient |
-| User accounts / login | Auth not needed for data quality improvements |
+| User accounts / login | Auth not needed for UI redesign |
+| Backend changes | v2.0 is frontend-only |
+| Dark mode toggle | Design tokens prepared but toggle deferred to v2.1 |
 | Comparing professors side-by-side | Different UX paradigm, future milestone |
-| Grade curve predictions | Not enough data to be reliable |
-| Custom tag creation by users | Requires auth system |
 | Review submission | RMP already collects reviews |
-| AI chatbot / natural language query | GauchoClass already does this |
-| Course schedule builder | UCSBPlat already does this |
 
 ## Traceability
 
