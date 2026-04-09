@@ -1,7 +1,5 @@
 # Roadmap: Gaucho Course Optimizer
 
----
-
 ## Milestone v1.0: Foundation to Public App (COMPLETED 2026-04-02)
 
 v1.0 took a working but internal Python ETL pipeline and exposed it as a public-facing web app. The work proceeded in four sequential phases: fix the data layer so the API is fast, build the API so the frontend has a contract, build the frontend so students can actually use it, then deploy so it's public.
@@ -136,7 +134,7 @@ v1.1 transforms the functional MVP into a polished, branded experience. All chan
 
 ## Milestone v1.2: Data Quality & Insights (COMPLETED 2026-04-08)
 
-v1.2 surfaced more meaningful, actionable information on professor cards — active teaching badges, per-quarter grade distributions, and curated keyword tags. See [v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md) for full details.
+v1.2 surfaced more meaningful, actionable information on professor cards -- active teaching badges, per-quarter grade distributions, and curated keyword tags. See [v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md) for full details.
 
 ### v1.2 Phases
 
@@ -188,10 +186,77 @@ Plans:
 - [x] 11-02-PLAN.md -- Frontend tag badge display with review-count tooltips, TypeScript types, MSW mock update
 **UI hint**: yes
 
+---
+
+## Milestone v2.0: Visual Redesign & UX Overhaul
+
+v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White palette, swaps Poppins/Open Sans for Inter, adds WCAG AA accessibility throughout, introduces a micro-animation system, and overhauls every component to use the new tokens. All changes are frontend-only (React + CSS). The work proceeds in four phases: establish design tokens and typography first so every subsequent phase inherits the new visual language, then layer in accessibility patterns as cross-cutting infrastructure, build the animation primitives as reusable utilities, and finally overhaul every component applying all three layers together.
+
+### v2.0 Phases
+
+- [ ] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases
+- [ ] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app
+- [ ] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities
+- [ ] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations
+
+### v2.0 Phase Details
+
+### Phase 12: Design Tokens & Typography
+**Goal**: Every CSS custom property and font reference in the app uses the new Royal Blue + Snow White color system and Inter typography -- the old Deep Teal + Amber palette and Poppins/Open Sans fonts are completely gone
+**Depends on**: Phase 11
+**Requirements**: DESIGN-01, DESIGN-02, DESIGN-03, TYPE-01, TYPE-02
+**Success Criteria** (what must be TRUE):
+  1. Student sees Royal Blue (#2563EB) as the primary color and Snow (#FAFBFF) as the page background across all pages -- no Deep Teal or Amber colors remain anywhere in the UI
+  2. Student sees Inter as the sole font on all text (headings, body, labels, buttons) -- no Poppins or Open Sans font references remain in the codebase
+  3. All text conforms to the 4-size type scale (14px labels, 16px body, 20px headings, 28px display) -- no arbitrary or one-off font sizes exist
+  4. Grade distribution charts use a blue-family color palette where each bar/segment maintains at least 3:1 contrast against its neighbors and the chart background
+  5. Score badges retain their green/yellow/red semantic colors with updated values that meet 4.5:1 contrast ratio against white card backgrounds
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 13: Accessibility
+**Goal**: The app meets WCAG AA accessibility standards -- all text is readable, all interactive elements are keyboard-navigable with visible focus indicators, and users who prefer reduced motion see a calm, animation-free experience
+**Depends on**: Phase 12
+**Requirements**: A11Y-01, A11Y-02, A11Y-03, A11Y-04, A11Y-05, A11Y-06
+**Success Criteria** (what must be TRUE):
+  1. All text in the app meets WCAG AA contrast ratios (4.5:1 for normal text, 3:1 for large text) when inspected against its actual background color -- no contrast failures remain
+  2. Student using keyboard-only navigation can tab through all interactive elements in visual order, sees a visible focus ring (2-4px) on each focused element, and can activate buttons/links with Enter or Space
+  3. Every icon-only button (hamburger menu, close buttons, chart controls) has an aria-label that screen readers announce -- no unlabeled interactive icons exist
+  4. Student pressing Tab immediately after page load can activate a "Skip to content" link that jumps past the navbar to the main content area
+  5. Student with prefers-reduced-motion enabled in their OS sees no non-essential animations -- page transitions, card hover effects, and staggered list entrances are suppressed
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 14: Animations & Interactions
+**Goal**: The app feels responsive and alive through consistent micro-interactions -- buttons give tactile feedback, cards lift on hover, pages transition smoothly, professor lists animate in, and loading states shimmer instead of sitting static
+**Depends on**: Phase 13
+**Requirements**: ANIM-01, ANIM-02, ANIM-03, ANIM-04, ANIM-05
+**Success Criteria** (what must be TRUE):
+  1. Student pressing any button sees it scale down slightly (to 0.97) with a subtle shadow change over 150ms, giving tactile press feedback
+  2. Student hovering over any professor card sees it lift with an elevated shadow over 200ms ease-out -- the card returns to its resting state when the cursor leaves
+  3. Student navigating between pages sees a smooth fade + subtle slide transition (200ms) rather than an instant hard cut between views
+  4. Student viewing a course results page sees professor cards animate in with staggered timing (30-50ms delay between each card) rather than all appearing simultaneously
+  5. Student waiting for API data sees skeleton cards with an animated shimmer effect sweeping across them, replacing the previous static gray skeleton placeholders
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 15: Component Overhaul
+**Goal**: Every user-facing component has been redesigned with the Royal Blue + Snow White tokens, Inter typography, accessibility patterns, and animation system -- the visual refresh is complete and cohesive across the entire app
+**Depends on**: Phase 14
+**Requirements**: COMP-01, COMP-02, COMP-03, COMP-04, COMP-05, COMP-06, COMP-07, COMP-08
+**Success Criteria** (what must be TRUE):
+  1. Student viewing professor cards sees the redesigned layout with Royal Blue accents, Inter typography, updated spacing, and the new animation behaviors (hover lift, staggered entrance) applied
+  2. Student sees the navbar with a Royal Blue background and Inter font, breadcrumbs with new accent colors, and the mobile Sheet menu styled with the new design tokens -- all navigation components are visually consistent
+  3. Student using course search sees updated input styling (Royal Blue focus ring, Inter font) and a restyled dropdown with the new color palette
+  4. Student viewing grade charts sees the blue-family palette with improved axis labels, consistent typography, and proper contrast -- charts feel integrated with the new design system rather than like a foreign element
+  5. Student viewing the tutorial landing page sees the redesigned layout with the new visual system, and all badges (score badges, active teaching badges, keyword tags) use the new palette consistently
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in numeric order: 9 -> 10 -> 11
+v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) complete. v2.0 phases execute in order: 12 -> 13 -> 14 -> 15
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -204,5 +269,9 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases execute in n
 | 7. Tutorial Landing Page | 1/1 | Complete | - |
 | 8. Weight Controls Overhaul | 1/1 | Complete | - |
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
-| 10. Grade Distribution by Quarter | 1/1 | Complete    | 2026-04-08 |
-| 11. Standardized Keywords | 2/2 | Complete    | 2026-04-08 |
+| 10. Grade Distribution by Quarter | 1/1 | Complete | 2026-04-08 |
+| 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
+| 12. Design Tokens & Typography | 0/0 | Not started | - |
+| 13. Accessibility | 0/0 | Not started | - |
+| 14. Animations & Interactions | 0/0 | Not started | - |
+| 15. Component Overhaul | 0/0 | Not started | - |
