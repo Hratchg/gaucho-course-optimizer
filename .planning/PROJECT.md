@@ -1,13 +1,17 @@
 # Gaucho Course Optimizer
 
-## Current Milestone: v1.2 Data Quality & Insights
+## Current Milestone: v2.0 Visual Redesign & UX Overhaul
 
-**Goal:** Surface more meaningful, actionable information on professor cards — active teaching status, recent grade distributions, and curated keyword tags — so students make better-informed decisions.
+**Goal:** Transform CoursePick into a polished, professional-grade student tool with a Royal Blue + Snow White color system, Inter typography, improved accessibility, smooth animations, and mobile-optimized interactions.
 
 **Target features:**
-- "Actively Teaching" badge on professor cards for professors who taught the searched course 3+ times in the past 3 years
-- Most-recent-quarter grade distribution as default view (instead of all-time aggregate), with option to see historical
-- Standardized keyword vocabulary replacing raw NLP-extracted tags (e.g., "Easy Grader", "Tough Exams", "Engaging Lectures")
+- Royal Blue (#2563EB) + Snow White (#FAFBFF) palette replacing Teal+Amber across all components
+- Inter font replacing Poppins/Open Sans for a clean, modern feel
+- Component overhaul: cards, badges, buttons, charts with updated design tokens
+- WCAG AA accessibility: contrast ratios, aria labels, focus states, keyboard navigation
+- Animation system: micro-interactions (150-300ms), smooth transitions, prefers-reduced-motion support
+- Mobile UX: touch targets (44px min), tap feedback, responsive refinements
+- Updated tutorial landing page and navbar with new design system
 
 ## What This Is
 
