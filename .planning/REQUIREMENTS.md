@@ -42,7 +42,7 @@ All v1.1 requirements shipped.
 - [x] **WGHT-01**: User can toggle student-friendly checkboxes ("Easy Grades", "Great Teaching", "Low Difficulty", "Good Reviews") instead of adjusting sliders
 - [x] **WGHT-02**: User sees professors re-ranked instantly based on which toggles are active, with selected factors getting equal emphasis and unselected factors de-emphasized
 
-## v1.2 Requirements
+## v1.2 Requirements (Completed)
 
 Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 
@@ -161,12 +161,37 @@ Which phases cover which requirements. Updated during roadmap creation.
 | KW-01 | Phase 11 | Complete |
 | KW-02 | Phase 11 | Complete |
 | KW-03 | Phase 11 | Complete |
+| DESIGN-01 | Phase 12 | Pending |
+| DESIGN-02 | Phase 12 | Pending |
+| DESIGN-03 | Phase 12 | Pending |
+| TYPE-01 | Phase 12 | Pending |
+| TYPE-02 | Phase 12 | Pending |
+| A11Y-01 | Phase 13 | Pending |
+| A11Y-02 | Phase 13 | Pending |
+| A11Y-03 | Phase 13 | Pending |
+| A11Y-04 | Phase 13 | Pending |
+| A11Y-05 | Phase 13 | Pending |
+| A11Y-06 | Phase 13 | Pending |
+| ANIM-01 | Phase 14 | Pending |
+| ANIM-02 | Phase 14 | Pending |
+| ANIM-03 | Phase 14 | Pending |
+| ANIM-04 | Phase 14 | Pending |
+| ANIM-05 | Phase 14 | Pending |
+| COMP-01 | Phase 15 | Pending |
+| COMP-02 | Phase 15 | Pending |
+| COMP-03 | Phase 15 | Pending |
+| COMP-04 | Phase 15 | Pending |
+| COMP-05 | Phase 15 | Pending |
+| COMP-06 | Phase 15 | Pending |
+| COMP-07 | Phase 15 | Pending |
+| COMP-08 | Phase 15 | Pending |
 
 **Coverage:**
-- v1.2 requirements: 9 total
-- Mapped to phases: 9
+- v1.1 requirements: 14 total, 14 mapped (Complete)
+- v1.2 requirements: 9 total, 9 mapped (Complete)
+- v2.0 requirements: 24 total, 24 mapped (Pending)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-08 -- v1.2 traceability mapped (Phases 9-11)*
+*Last updated: 2026-04-09 -- v2.0 traceability mapped (Phases 12-15)*
