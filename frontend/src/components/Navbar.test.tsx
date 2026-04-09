@@ -4,13 +4,13 @@ import { MemoryRouter } from 'react-router-dom'
 import Navbar from './Navbar'
 
 describe('Navbar', () => {
-  it('renders brand text "Gaucho Course Optimizer"', () => {
+  it('renders brand text "CoursePick"', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Navbar />
       </MemoryRouter>
     )
-    expect(screen.getByText('Gaucho Course Optimizer')).toBeInTheDocument()
+    expect(screen.getByText('CoursePick')).toBeInTheDocument()
   })
 
   it('renders both "Home" and "Search" link text', () => {
@@ -49,7 +49,7 @@ describe('Navbar', () => {
         <Navbar />
       </MemoryRouter>
     )
-    const brandLink = screen.getByText('Gaucho Course Optimizer').closest('a')
+    const brandLink = screen.getByText('CoursePick').closest('a')
     expect(brandLink).toHaveAttribute('href', '/')
   })
 })

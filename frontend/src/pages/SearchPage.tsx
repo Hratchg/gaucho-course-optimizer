@@ -3,7 +3,7 @@ import CourseSearch from '@/components/CourseSearch'
 
 export default function SearchPage() {
   useEffect(() => {
-    document.title = 'Search | Gaucho Course Optimizer'
+    document.title = 'Search | CoursePick'
   }, [])
 
   return (

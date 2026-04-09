@@ -28,7 +28,7 @@ export default function MobileMenu() {
       <SheetContent side="right" aria-describedby={undefined}>
         <SheetHeader>
           <SheetTitle className="font-heading text-base font-bold">
-            Gaucho Course Optimizer
+            CoursePick
           </SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col mt-4">

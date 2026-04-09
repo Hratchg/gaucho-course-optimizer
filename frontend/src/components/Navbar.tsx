@@ -11,7 +11,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 h-14 bg-primary">
       <nav className="flex items-center justify-between px-4 md:px-6 h-full max-w-7xl mx-auto">
         <Link to="/" className="font-heading font-bold text-xl text-accent">
-          Gaucho Course Optimizer
+          CoursePick
         </Link>
 
         <div className="flex items-center gap-4">
