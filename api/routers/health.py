@@ -4,7 +4,7 @@ from api.schemas import HealthResponse
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
 def health_check() -> dict:
     """Health check — returns immediately with no database query.
 
