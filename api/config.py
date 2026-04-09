@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     )
     database_url: str = "postgresql://gco:gco@localhost:5432/gco"
     rmp_auth_token: str = ""
-    allowed_origins: str = "http://localhost:5173,http://localhost:3000"
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000,https://coursepick.app,https://www.coursepick.app,https://gaucho-course-optimizer.vercel.app"
 
     def get_origins(self) -> list[str]:
         """Parse comma-separated allowed_origins into a list."""
