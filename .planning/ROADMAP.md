@@ -211,7 +211,9 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
   3. All text conforms to the 4-size type scale (14px labels, 16px body, 20px headings, 28px display) -- no arbitrary or one-off font sizes exist
   4. Grade distribution charts use a blue-family color palette where each bar/segment maintains at least 3:1 contrast against its neighbors and the chart background
   5. Score badges retain their green/yellow/red semantic colors with updated values that meet 4.5:1 contrast ratio against white card backgrounds
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 12-01-PLAN.md -- Swap fonts to Inter, replace all CSS tokens with Royal Blue + Snow White palette, update chart colors and score badges
 **UI hint**: yes
 
 ### Phase 13: Accessibility
@@ -271,7 +273,7 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 1/1 | Complete | 2026-04-08 |
 | 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
-| 12. Design Tokens & Typography | 0/0 | Not started | - |
+| 12. Design Tokens & Typography | 0/1 | In progress | - |
 | 13. Accessibility | 0/0 | Not started | - |
 | 14. Animations & Interactions | 0/0 | Not started | - |
 | 15. Component Overhaul | 0/0 | Not started | - |
