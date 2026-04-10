@@ -18,9 +18,9 @@ interface ProfessorCardProps {
 }
 
 function scoreColorClass(score: number): string {
-  if (score >= 70) return 'bg-green-500 text-white hover:bg-green-500'
-  if (score >= 50) return 'bg-yellow-500 text-white hover:bg-yellow-500'
-  return 'bg-red-500 text-white hover:bg-red-500'
+  if (score >= 70) return 'bg-green-600 text-white hover:bg-green-600'
+  if (score >= 50) return 'bg-yellow-600 text-white hover:bg-yellow-600'
+  return 'bg-red-600 text-white hover:bg-red-600'
 }
 
 function ExpandedCharts({ professorId, courseId }: { professorId: number; courseId: number }) {

@@ -65,21 +65,21 @@ describe('ProfessorCard', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     const badge = screen.getByText('75')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-green-500')
+    expect(badge.className).toContain('bg-green-600')
   })
 
   it('displays score in a badge with yellow color for score 50-69', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={55} courseId={1} />)
     const badge = screen.getByText('55')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-yellow-500')
+    expect(badge.className).toContain('bg-yellow-600')
   })
 
   it('displays score in a badge with red color for score < 50', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={35} courseId={1} />)
     const badge = screen.getByText('35')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-red-500')
+    expect(badge.className).toContain('bg-red-600')
   })
 
   it('toggles "Show details" / "Hide details" on click', async () => {
