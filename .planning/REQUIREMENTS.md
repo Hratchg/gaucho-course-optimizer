@@ -90,11 +90,11 @@ Requirements for Visual Redesign & UX Overhaul milestone.
 
 ### Animations & Interactions
 
-- [ ] **ANIM-01**: Button press feedback (scale 0.97 + subtle shadow change, 150ms)
-- [ ] **ANIM-02**: Card hover elevation (shadow lift, 200ms ease-out)
-- [ ] **ANIM-03**: Page transitions (fade + subtle slide, 200ms)
-- [ ] **ANIM-04**: Staggered list entrance for professor cards (30-50ms per item)
-- [ ] **ANIM-05**: Skeleton loading shimmer replaces static skeleton cards
+- [x] **ANIM-01**: Button press feedback (scale 0.97 + subtle shadow change, 150ms)
+- [x] **ANIM-02**: Card hover elevation (shadow lift, 200ms ease-out)
+- [x] **ANIM-03**: Page transitions (fade + subtle slide, 200ms)
+- [x] **ANIM-04**: Staggered list entrance for professor cards (30-50ms per item)
+- [x] **ANIM-05**: Skeleton loading shimmer replaces static skeleton cards
 
 ### Component Overhaul
 
@@ -172,11 +172,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | A11Y-04 | Phase 13 | Complete |
 | A11Y-05 | Phase 13 | Complete |
 | A11Y-06 | Phase 13 | Complete |
-| ANIM-01 | Phase 14 | Pending |
-| ANIM-02 | Phase 14 | Pending |
-| ANIM-03 | Phase 14 | Pending |
-| ANIM-04 | Phase 14 | Pending |
-| ANIM-05 | Phase 14 | Pending |
+| ANIM-01 | Phase 14 | Complete |
+| ANIM-02 | Phase 14 | Complete |
+| ANIM-03 | Phase 14 | Complete |
+| ANIM-04 | Phase 14 | Complete |
+| ANIM-05 | Phase 14 | Complete |
 | COMP-01 | Phase 15 | Pending |
 | COMP-02 | Phase 15 | Pending |
 | COMP-03 | Phase 15 | Pending |
