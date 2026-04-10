@@ -113,14 +113,14 @@ Requirements for Live Schedule Integration milestone.
 
 ### UCSB API Client
 
-- [ ] **API-10**: Backend can query UCSB Academic Curriculums API with registered API key for any quarter's class schedule
-- [ ] **API-11**: Backend can query UCSB Quarter Calendar API to get current quarter, registration pass dates, and finals schedule
+- [x] **API-10**: Backend can query UCSB Academic Curriculums API with registered API key for any quarter's class schedule
+- [x] **API-11**: Backend can query UCSB Quarter Calendar API to get current quarter, registration pass dates, and finals schedule
 
 ### Schedule Data Pipeline
 
-- [ ] **SCHED-01**: Backend fetches and stores next-quarter class sections with instructor names, times, locations, and enrollment counts
-- [ ] **SCHED-02**: Instructor names from UCSB API ("CONRAD P T" format) are matched to existing professor records via fuzzy last-name + initial matching
-- [ ] **SCHED-03**: Schedule data refreshes automatically (nightly APScheduler job) to keep enrollment counts and section status current
+- [x] **SCHED-01**: Backend fetches and stores next-quarter class sections with instructor names, times, locations, and enrollment counts
+- [x] **SCHED-02**: Instructor names from UCSB API ("CONRAD P T" format) are matched to existing professor records via fuzzy last-name + initial matching
+- [x] **SCHED-03**: Schedule data refreshes automatically (nightly APScheduler job) to keep enrollment counts and section status current
 
 ### Professor Schedule Display
 
@@ -211,11 +211,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-06 | Phase 15 | Complete |
 | COMP-07 | Phase 15 | Complete |
 | COMP-08 | Phase 15 | Complete |
-| API-10 | Phase 16 | Pending |
-| API-11 | Phase 16 | Pending |
-| SCHED-01 | Phase 16 | Pending |
-| SCHED-02 | Phase 16 | Pending |
-| SCHED-03 | Phase 16 | Pending |
+| API-10 | Phase 16 | Complete |
+| API-11 | Phase 16 | Complete |
+| SCHED-01 | Phase 16 | Complete |
+| SCHED-02 | Phase 16 | Complete |
+| SCHED-03 | Phase 16 | Complete |
 | DISP-01 | Phase 17 | Pending |
 | DISP-02 | Phase 17 | Pending |
 | DISP-03 | Phase 17 | Pending |
