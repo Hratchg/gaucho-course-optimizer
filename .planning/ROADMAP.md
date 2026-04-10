@@ -195,7 +195,7 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
 ### v2.0 Phases
 
 - [x] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases (completed 2026-04-10)
-- [ ] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app
+- [x] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app (completed 2026-04-10)
 - [ ] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities
 - [ ] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations
 
@@ -226,9 +226,9 @@ Plans:
   3. Every icon-only button (hamburger menu, close buttons, chart controls) has an aria-label that screen readers announce -- no unlabeled interactive icons exist
   4. Student pressing Tab immediately after page load can activate a "Skip to content" link that jumps past the navbar to the main content area
   5. Student with prefers-reduced-motion enabled in their OS sees no non-essential animations -- page transitions, card hover effects, and staggered list entrances are suppressed
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 13-01-PLAN.md -- Skip-to-content link, global focus ring styles, reduced-motion support, aria-labels and keyboard nav audit across all components
+- [x] 13-01-PLAN.md -- Skip-to-content link, global focus ring styles, reduced-motion support, aria-labels and keyboard nav audit across all components
 **UI hint**: yes
 
 ### Phase 14: Animations & Interactions
@@ -276,6 +276,6 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 10. Grade Distribution by Quarter | 1/1 | Complete | 2026-04-08 |
 | 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
 | 12. Design Tokens & Typography | 1/1 | Complete    | 2026-04-10 |
-| 13. Accessibility | 0/1 | Not started | - |
+| 13. Accessibility | 1/1 | Complete   | 2026-04-10 |
 | 14. Animations & Interactions | 0/0 | Not started | - |
 | 15. Component Overhaul | 0/0 | Not started | - |

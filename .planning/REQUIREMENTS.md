@@ -81,12 +81,12 @@ Requirements for Visual Redesign & UX Overhaul milestone.
 
 ### Accessibility
 
-- [ ] **A11Y-01**: All text meets WCAG AA contrast ratios (4.5:1 normal, 3:1 large)
-- [ ] **A11Y-02**: All interactive elements have visible focus rings (2-4px)
-- [ ] **A11Y-03**: All icon-only buttons have aria-labels
-- [ ] **A11Y-04**: Full keyboard navigation (tab order matches visual order, Enter/Space activation)
-- [ ] **A11Y-05**: Skip-to-content link on every page
-- [ ] **A11Y-06**: prefers-reduced-motion respected (disables non-essential animations)
+- [x] **A11Y-01**: All text meets WCAG AA contrast ratios (4.5:1 normal, 3:1 large)
+- [x] **A11Y-02**: All interactive elements have visible focus rings (2-4px)
+- [x] **A11Y-03**: All icon-only buttons have aria-labels
+- [x] **A11Y-04**: Full keyboard navigation (tab order matches visual order, Enter/Space activation)
+- [x] **A11Y-05**: Skip-to-content link on every page
+- [x] **A11Y-06**: prefers-reduced-motion respected (disables non-essential animations)
 
 ### Animations & Interactions
 
@@ -166,12 +166,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DESIGN-03 | Phase 12 | Complete |
 | TYPE-01 | Phase 12 | Complete |
 | TYPE-02 | Phase 12 | Complete |
-| A11Y-01 | Phase 13 | Pending |
-| A11Y-02 | Phase 13 | Pending |
-| A11Y-03 | Phase 13 | Pending |
-| A11Y-04 | Phase 13 | Pending |
-| A11Y-05 | Phase 13 | Pending |
-| A11Y-06 | Phase 13 | Pending |
+| A11Y-01 | Phase 13 | Complete |
+| A11Y-02 | Phase 13 | Complete |
+| A11Y-03 | Phase 13 | Complete |
+| A11Y-04 | Phase 13 | Complete |
+| A11Y-05 | Phase 13 | Complete |
+| A11Y-06 | Phase 13 | Complete |
 | ANIM-01 | Phase 14 | Pending |
 | ANIM-02 | Phase 14 | Pending |
 | ANIM-03 | Phase 14 | Pending |
