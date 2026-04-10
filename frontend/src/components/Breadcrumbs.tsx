@@ -15,7 +15,7 @@ export default function Breadcrumbs() {
   if (!items) return null
 
   return (
-    <nav aria-label="Breadcrumb" className="bg-muted/50 border-b border-border px-4 md:px-6 py-2">
+    <nav aria-label="Breadcrumb" className="bg-primary/5 border-b border-primary/20 px-4 md:px-6 py-2">
       <ol className="flex items-center gap-1 text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1
@@ -28,7 +28,7 @@ export default function Breadcrumbs() {
                 </li>
               )}
               {isLast ? (
-                <li aria-current="page" className="text-accent font-medium">
+                <li aria-current="page" className="text-primary font-semibold">
                   {item.label}
                 </li>
               ) : (

@@ -70,11 +70,11 @@ describe('Breadcrumbs', () => {
     expect(separators.length).toBe(2)
   })
 
-  it('applies text-accent font-medium classes to active breadcrumb', () => {
+  it('applies text-primary font-semibold classes to active breadcrumb', () => {
     renderAtPath('/search')
     const activeCrumb = screen.getByText('Search')
-    expect(activeCrumb.className).toContain('text-accent')
-    expect(activeCrumb.className).toContain('font-medium')
+    expect(activeCrumb.className).toContain('text-primary')
+    expect(activeCrumb.className).toContain('font-semibold')
   })
 
   it('applies text-muted-foreground class to inactive breadcrumb links', () => {
