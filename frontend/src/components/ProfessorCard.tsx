@@ -1,9 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, MapPin, Users } from 'lucide-react'
 import { useState } from 'react'
-import type { ProfessorRanking } from '@/types/api'
+import type { ProfessorRanking, ScheduledSection } from '@/types/api'
 import { GradeChart } from './GradeChart'
 import { GpaTrendChart } from './GpaTrendChart'
 import { SentimentBadge } from './SentimentBadge'
@@ -22,6 +22,68 @@ function scoreColorClass(score: number): string {
   if (score >= 70) return 'bg-green-600 text-white hover:bg-green-600'
   if (score >= 50) return 'bg-yellow-600 text-white hover:bg-yellow-600'
   return 'bg-red-600 text-white hover:bg-red-600'
+}
+
+function formatTime(time: string | null): string {
+  if (!time) return ''
+  // Convert "14:00" to "2:00 PM"
+  const [h, m] = time.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 || 12
+  return `${hour12}:${m.toString().padStart(2, '0')} ${period}`
+}
+
+function SectionDetails({ sections }: { sections: ScheduledSection[] }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  if (sections.length === 0) return null
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger
+        aria-label={`${isOpen ? 'Hide' : 'Show'} section details`}
+        className="focusable rounded-sm mt-2 flex min-h-[44px] items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
+      >
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        View {sections.length === 1 ? 'Section' : `${sections.length} Sections`}
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-2 space-y-2">
+          {sections.map((section) => (
+            <div
+              key={section.enroll_code}
+              className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm"
+            >
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {section.days && section.begin_time && section.end_time && (
+                  <span className="flex items-center gap-1 text-foreground">
+                    <Clock className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                    {section.days} {formatTime(section.begin_time)}-{formatTime(section.end_time)}
+                  </span>
+                )}
+                {section.building && section.room && (
+                  <span className="flex items-center gap-1 text-foreground">
+                    <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                    {section.building} {section.room}
+                  </span>
+                )}
+                {section.enrolled != null && section.max_enroll != null && (
+                  <span className="flex items-center gap-1 text-foreground">
+                    <Users className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                    {section.enrolled}/{section.max_enroll} enrolled
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Enroll Code: {section.enroll_code}
+                {section.quarter_name && ` \u2022 ${section.quarter_name}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
 }
 
 function ExpandedCharts({ professorId, courseId }: { professorId: number; courseId: number }) {
@@ -116,11 +178,19 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
     >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
             {professor.is_active_teacher && (
               <Badge className="bg-primary text-primary-foreground hover:bg-primary text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
                 Actively Teaching
+              </Badge>
+            )}
+            {professor.teaching_next_quarter && (
+              <Badge
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10 text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
+              >
+                Teaching Next Quarter
               </Badge>
             )}
           </div>
@@ -147,6 +217,9 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
               </Badge>
             ))}
           </div>
+        )}
+        {professor.teaching_next_quarter && professor.scheduled_sections.length > 0 && (
+          <SectionDetails sections={professor.scheduled_sections} />
         )}
         {professor.recent_quarters.length > 0 && (
           <QuartersList quarters={professor.recent_quarters} />
