@@ -188,7 +188,7 @@ Plans:
 
 ---
 
-## Milestone v2.0: Visual Redesign & UX Overhaul
+## Milestone v2.0: Visual Redesign & UX Overhaul (COMPLETED 2026-04-10)
 
 v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White palette, swaps Poppins/Open Sans for Inter, adds WCAG AA accessibility throughout, introduces a micro-animation system, and overhauls every component to use the new tokens. All changes are frontend-only (React + CSS). The work proceeds in four phases: establish design tokens and typography first so every subsequent phase inherits the new visual language, then layer in accessibility patterns as cross-cutting infrastructure, build the animation primitives as reusable utilities, and finally overhaul every component applying all three layers together.
 
@@ -197,7 +197,7 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
 - [x] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases (completed 2026-04-10)
 - [x] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app (completed 2026-04-10)
 - [x] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities (completed 2026-04-10)
-- [ ] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations
+- [x] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations (completed 2026-04-10)
 
 ### v2.0 Phase Details
 
@@ -257,7 +257,10 @@ Plans:
   3. Student using course search sees updated input styling (Royal Blue focus ring, Inter font) and a restyled dropdown with the new color palette
   4. Student viewing grade charts sees the blue-family palette with improved axis labels, consistent typography, and proper contrast -- charts feel integrated with the new design system rather than like a foreign element
   5. Student viewing the tutorial landing page sees the redesigned layout with the new visual system, and all badges (score badges, active teaching badges, keyword tags) use the new palette consistently
-**Plans**: TBD
+**Plans**: 1/1 plans complete
+Plans:
+- [x] 15-01-PLAN.md -- Redesign all navigation, cards, charts, badges, and tutorial page with Royal Blue tokens, Inter typography, and animation utilities
+**Status**: Complete (2026-04-10)
 **UI hint**: yes
 
 ## Progress
@@ -281,4 +284,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 12. Design Tokens & Typography | 1/1 | Complete    | 2026-04-10 |
 | 13. Accessibility | 1/1 | Complete    | 2026-04-10 |
 | 14. Animations & Interactions | 1/1 | Complete    | 2026-04-10 |
-| 15. Component Overhaul | 0/0 | Not started | - |
+| 15. Component Overhaul | 1/1 | Complete    | 2026-04-10 |
