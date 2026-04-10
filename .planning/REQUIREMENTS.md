@@ -70,14 +70,14 @@ Requirements for Visual Redesign & UX Overhaul milestone.
 
 ### Design Tokens
 
-- [ ] **DESIGN-01**: All CSS custom properties use Royal Blue (#2563EB) primary, Snow (#FAFBFF) background, white cards, near-black (#111827) text
-- [ ] **DESIGN-02**: Chart colors use a blue-family palette maintaining data readability and 3:1 contrast
-- [ ] **DESIGN-03**: Score badge colors preserved (green/yellow/red) with updated values meeting 4.5:1 contrast on white cards
+- [x] **DESIGN-01**: All CSS custom properties use Royal Blue (#2563EB) primary, Snow (#FAFBFF) background, white cards, near-black (#111827) text
+- [x] **DESIGN-02**: Chart colors use a blue-family palette maintaining data readability and 3:1 contrast
+- [x] **DESIGN-03**: Score badge colors preserved (green/yellow/red) with updated values meeting 4.5:1 contrast on white cards
 
 ### Typography
 
-- [ ] **TYPE-01**: Inter replaces Poppins and Open Sans as the sole font family across all text
-- [ ] **TYPE-02**: All font sizes conform to a strict 4-size scale (14px label, 16px body, 20px heading, 28px display)
+- [x] **TYPE-01**: Inter replaces Poppins and Open Sans as the sole font family across all text
+- [x] **TYPE-02**: All font sizes conform to a strict 4-size scale (14px label, 16px body, 20px heading, 28px display)
 
 ### Accessibility
 
@@ -161,11 +161,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | KW-01 | Phase 11 | Complete |
 | KW-02 | Phase 11 | Complete |
 | KW-03 | Phase 11 | Complete |
-| DESIGN-01 | Phase 12 | Pending |
-| DESIGN-02 | Phase 12 | Pending |
-| DESIGN-03 | Phase 12 | Pending |
-| TYPE-01 | Phase 12 | Pending |
-| TYPE-02 | Phase 12 | Pending |
+| DESIGN-01 | Phase 12 | Complete |
+| DESIGN-02 | Phase 12 | Complete |
+| DESIGN-03 | Phase 12 | Complete |
+| TYPE-01 | Phase 12 | Complete |
+| TYPE-02 | Phase 12 | Complete |
 | A11Y-01 | Phase 13 | Pending |
 | A11Y-02 | Phase 13 | Pending |
 | A11Y-03 | Phase 13 | Pending |
