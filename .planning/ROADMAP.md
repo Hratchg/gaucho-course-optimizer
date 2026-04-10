@@ -326,5 +326,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 13. Accessibility | 1/1 | Complete | 2026-04-10 |
 | 14. Animations & Interactions | 1/1 | Complete | 2026-04-10 |
 | 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
-| 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete | 2026-04-10 |
+| 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete    | 2026-04-10 |
 | 17. Schedule Display & Registration Context | 0/? | Not started | - |
