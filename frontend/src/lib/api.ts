@@ -1,4 +1,4 @@
-import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult } from '@/types/api'
+import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult, QuarterInfo } from '@/types/api'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -23,5 +23,11 @@ export async function fetchGrades(professorId: number, courseId: number): Promis
 export async function fetchComments(professorId: number, limit: number = 5): Promise<CommentResult[]> {
   const res = await fetch(`${API_URL}/professors/${professorId}/comments?limit=${limit}`)
   if (!res.ok) throw new Error(`Comments fetch failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchQuarterInfo(): Promise<QuarterInfo> {
+  const res = await fetch(`${API_URL}/quarters/current`)
+  if (!res.ok) throw new Error(`Quarter info fetch failed: ${res.status}`)
   return res.json()
 }

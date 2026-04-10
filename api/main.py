@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routers import health, courses, professors
+from api.routers import health, courses, professors, quarters
 from api.config import settings
 
 app = FastAPI(
@@ -19,3 +19,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(courses.router, prefix="/courses", tags=["courses"])
 app.include_router(professors.router, prefix="/professors", tags=["professors"])
+app.include_router(quarters.router, prefix="/quarters", tags=["quarters"])
