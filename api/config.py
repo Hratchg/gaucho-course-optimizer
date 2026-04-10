@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     )
     database_url: str = "postgresql://gco:gco@localhost:5432/gco"
     rmp_auth_token: str = ""
+    ucsb_api_key: str = ""
     allowed_origins: str = "http://localhost:5173,http://localhost:3000,https://coursepick.app,https://www.coursepick.app,https://gaucho-course-optimizer.vercel.app"
 
     def get_origins(self) -> list[str]:
