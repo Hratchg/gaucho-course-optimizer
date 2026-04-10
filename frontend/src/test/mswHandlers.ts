@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult } from '@/types/api'
+import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult, QuarterInfo } from '@/types/api'
 
 const mockCourses: CourseResult[] = [
   { id: 1, code: 'CMPSC 8', title: 'Intro to CS', department: 'CMPSC' },
@@ -31,6 +31,22 @@ const mockProfessors: ProfessorRanking[] = [
     ],
     is_active_teacher: true,
     recent_quarters: ['Fall 2024', 'Winter 2024', 'Spring 2024'],
+    teaching_next_quarter: true,
+    scheduled_sections: [
+      {
+        quarter_code: '20262',
+        quarter_name: 'Spring 2026',
+        enroll_code: '12345',
+        instructor_name_raw: 'SMITH A',
+        days: 'MWF',
+        begin_time: '10:00',
+        end_time: '10:50',
+        building: 'Phelps',
+        room: '1260',
+        enrolled: 42,
+        max_enroll: 120,
+      },
+    ],
   },
   {
     id: 102,
@@ -55,6 +71,8 @@ const mockProfessors: ProfessorRanking[] = [
     ],
     is_active_teacher: false,
     recent_quarters: ['Winter 2023'],
+    teaching_next_quarter: false,
+    scheduled_sections: [],
   },
 ]
 
@@ -94,6 +112,18 @@ const mockComments: CommentResult[] = [
   },
 ]
 
+const mockQuarterInfo: QuarterInfo = {
+  quarter_code: '20262',
+  quarter_name: 'Spring 2026',
+  next_quarter_code: '20263',
+  next_quarter_name: 'Summer 2026',
+  pass1_begin: '2026-05-01T09:00:00',
+  pass2_begin: '2026-05-08T09:00:00',
+  pass3_begin: '2026-05-15T09:00:00',
+  first_day_of_classes: '2026-06-22',
+  last_day_of_classes: '2026-07-31',
+}
+
 export const handlers = [
   http.get('http://localhost:8001/courses/search', () => {
     return HttpResponse.json(mockCourses)
@@ -109,5 +139,9 @@ export const handlers = [
 
   http.get('http://localhost:8001/professors/:id/comments', () => {
     return HttpResponse.json(mockComments)
+  }),
+
+  http.get('http://localhost:8001/quarters/current', () => {
+    return HttpResponse.json(mockQuarterInfo)
   }),
 ]

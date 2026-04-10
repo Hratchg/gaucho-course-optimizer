@@ -10,6 +10,32 @@ export interface ProfessorTag {
   count: number
 }
 
+export interface ScheduledSection {
+  quarter_code: string
+  quarter_name: string | null
+  enroll_code: string
+  instructor_name_raw: string | null
+  days: string | null
+  begin_time: string | null
+  end_time: string | null
+  building: string | null
+  room: string | null
+  enrolled: number | null
+  max_enroll: number | null
+}
+
+export interface QuarterInfo {
+  quarter_code: string
+  quarter_name: string
+  next_quarter_code: string
+  next_quarter_name: string
+  pass1_begin: string | null
+  pass2_begin: string | null
+  pass3_begin: string | null
+  first_day_of_classes: string | null
+  last_day_of_classes: string | null
+}
+
 export interface ProfessorRanking {
   id: number
   name: string
@@ -31,6 +57,8 @@ export interface ProfessorRanking {
   tags: ProfessorTag[]
   is_active_teacher: boolean
   recent_quarters: string[]
+  teaching_next_quarter: boolean
+  scheduled_sections: ScheduledSection[]
 }
 
 export interface GradeQuarter {
