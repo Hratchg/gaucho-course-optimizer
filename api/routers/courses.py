@@ -5,13 +5,14 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db
 from api.schemas import CourseResult, ProfessorRanking
-from dashboard.queries import get_professors_for_course, search_courses
+from dashboard.queries import get_professors_for_course, get_scheduled_sections, search_courses
 from etl.scoring import (
     compute_gaucho_score,
     normalize_difficulty,
     normalize_gpa,
     normalize_quality,
 )
+from ucsb_api.client import get_next_quarter_code
 
 router = APIRouter()
 
@@ -53,6 +54,26 @@ def get_professors(
     if not profs:
         raise HTTPException(status_code=404, detail="Course not found or no professors on record")
 
+    # Fetch schedule data for all professors in one query
+    prof_ids = [p["id"] for p in profs]
+    # Determine next quarter code: try to derive from current date
+    # Quarter codes: YYYYQ where Q: 1=Winter, 2=Spring, 3=Summer, 4=Fall
+    import datetime as _dt
+    now = _dt.date.today()
+    month = now.month
+    year = now.year
+    if month <= 3:
+        current_qcode = f"{year}1"  # Winter
+    elif month <= 6:
+        current_qcode = f"{year}2"  # Spring
+    elif month <= 8:
+        current_qcode = f"{year}3"  # Summer
+    else:
+        current_qcode = f"{year}4"  # Fall
+    next_qcode = get_next_quarter_code(current_qcode)
+
+    schedule_map = get_scheduled_sections(db, course_id, prof_ids, quarter_code=next_qcode)
+
     results = []
     for p in profs:
         # None-safe factor computation — fall back to 0.5 (neutral) when data is missing
@@ -65,6 +86,8 @@ def get_professors(
         sent_f = (p["avg_sentiment"] + 1) / 2 if p["avg_sentiment"] is not None else 0.5
 
         score = compute_gaucho_score(gpa_f, qual_f, diff_f, sent_f)
+
+        prof_sections = schedule_map.get(p["id"], [])
 
         results.append({
             "id": p["id"],
@@ -87,6 +110,8 @@ def get_professors(
             "tags": p.get("tags", []),
             "is_active_teacher": p.get("is_active_teacher", False),
             "recent_quarters": p.get("recent_quarters", []),
+            "teaching_next_quarter": len(prof_sections) > 0,
+            "scheduled_sections": prof_sections,
         })
 
     return sorted(results, key=lambda x: x["gaucho_score"], reverse=True)
