@@ -271,7 +271,7 @@ v2.1 connects CoursePick to UCSB's official course schedule API so students see 
 
 ### v2.1 Phases
 
-- [ ] **Phase 16: UCSB API Client & Schedule Pipeline** - Build the backend API client for UCSB Academic Curriculums and Quarter Calendar endpoints, create the schedule data pipeline with instructor name matching and nightly refresh
+- [x] **Phase 16: UCSB API Client & Schedule Pipeline** - Build the backend API client for UCSB Academic Curriculums and Quarter Calendar endpoints, create the schedule data pipeline with instructor name matching and nightly refresh
 - [ ] **Phase 17: Schedule Display & Registration Context** - Display "Teaching Next Quarter" badges with expandable section details, add quarter filtering, and show a registration countdown banner with pass time awareness
 
 ### v2.1 Phase Details
@@ -286,7 +286,10 @@ v2.1 connects CoursePick to UCSB's official course schedule API so students see 
   3. After a pipeline run, the database contains next-quarter section records with instructor, time, location, and enrollment data -- and instructor names in UCSB format ("CONRAD P T") are matched to existing professor records via fuzzy last-name + initial matching, with unmatched instructors logged for review
   4. An APScheduler nightly job automatically refreshes schedule data so enrollment counts and section status stay current without manual intervention
   5. Developer can run `pytest` and see schedule pipeline tests pass with mocked UCSB API responses -- no real API calls during testing
-**Plans**: TBD
+**Plans**: 1/1 complete
+Plans:
+- [x] 16-01-PLAN.md -- UCSB API client, schedule sync pipeline, ScheduledSection model, name matcher, nightly APScheduler job
+**Status**: Complete (2026-04-10)
 
 ### Phase 17: Schedule Display & Registration Context
 **Goal**: Students can see at a glance which professors are teaching next quarter, drill into section details (times, rooms, seats), filter by quarter, and know when registration opens -- all powered by the live schedule data from Phase 16
@@ -323,5 +326,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 13. Accessibility | 1/1 | Complete | 2026-04-10 |
 | 14. Animations & Interactions | 1/1 | Complete | 2026-04-10 |
 | 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
-| 16. UCSB API Client & Schedule Pipeline | 0/? | Not started | - |
+| 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete | 2026-04-10 |
 | 17. Schedule Display & Registration Context | 0/? | Not started | - |
