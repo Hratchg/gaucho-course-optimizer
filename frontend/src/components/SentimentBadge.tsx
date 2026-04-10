@@ -12,13 +12,13 @@ export function SentimentBadge({ score }: SentimentBadgeProps) {
 
   if (score >= 0.2) {
     label = 'Positive'
-    className = 'bg-green-100 text-green-800 hover:bg-green-100'
+    className = 'bg-green-100 text-green-800 hover:bg-green-100 rounded-full'
   } else if (score <= -0.2) {
     label = 'Negative'
-    className = 'bg-red-100 text-red-800 hover:bg-red-100'
+    className = 'bg-red-100 text-red-800 hover:bg-red-100 rounded-full'
   } else {
     label = 'Neutral'
-    className = 'bg-orange-100 text-orange-800 hover:bg-orange-100'
+    className = 'bg-blue-100 text-blue-800 hover:bg-blue-100 rounded-full'
   }
 
   return <Badge variant="secondary" className={className}>{label}</Badge>

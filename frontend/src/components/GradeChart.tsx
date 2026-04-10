@@ -53,11 +53,11 @@ export function GradeChart({ quarters, selectedQuarter }: GradeChartProps) {
       role="img"
       aria-label={`Bar chart showing grade distribution: ${title}`}
     >
-      <h4 className="mb-2 text-sm font-semibold">{title}</h4>
+      <h4 className="mb-2 text-sm font-semibold text-primary">{title}</h4>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-          <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
+          <XAxis dataKey="grade" tick={{ fontSize: 12, fontFamily: 'Inter Variable, sans-serif' }} />
+          <YAxis tick={{ fontSize: 12, fontFamily: 'Inter Variable, sans-serif' }} />
           <Tooltip />
           <Bar dataKey="count" fill="#2563EB" />
         </BarChart>

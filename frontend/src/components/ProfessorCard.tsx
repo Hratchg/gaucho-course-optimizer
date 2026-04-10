@@ -96,7 +96,7 @@ function QuartersList({ quarters }: { quarters: string[] }) {
       <CollapsibleContent>
         <div className="mt-1 flex flex-wrap gap-1">
           {quarters.map((q) => (
-            <Badge key={q} variant="outline" className="text-xs">
+            <Badge key={q} variant="outline" className="text-xs border-primary/30">
               {q}
             </Badge>
           ))}
@@ -111,10 +111,10 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
 
   return (
     <Card
-      className="mb-6 card-hover stagger-in"
+      className="mb-6 card-hover stagger-in border-l-4 border-primary/30"
       style={{ '--stagger-delay': `${index * 40}ms` } as React.CSSProperties}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
@@ -140,7 +140,7 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
               <Badge
                 key={tag.name}
                 variant="secondary"
-                className="text-xs"
+                className="text-xs bg-primary/10 text-primary hover:bg-primary/15"
                 title={`${tag.name} \u2014 ${tag.count} reviews`}
               >
                 {tag.name}
@@ -154,7 +154,7 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger
             aria-label={`${isOpen ? 'Hide' : 'Show'} professor details`}
-            className="focusable rounded-sm mt-3 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="focusable rounded-sm mt-3 flex min-h-[44px] items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
           >
             {isOpen ? (
               <><ChevronUp className="h-4 w-4" /> Hide details</>
