@@ -80,8 +80,8 @@ export default function HomePage() {
       {/* Content container */}
       <div className="max-w-4xl mx-auto px-4">
         {/* Section 1: Hero */}
-        <section className="py-16 text-center">
-          <h1 className="font-heading font-bold text-[28px] leading-tight mb-4">
+        <section className="py-16 text-center border-b border-primary/10">
+          <h1 className="font-heading font-bold text-[28px] leading-tight mb-4 text-primary">
             Find the Best Professor for Any UCSB Course
           </h1>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
@@ -105,10 +105,10 @@ export default function HomePage() {
           <div
             role="img"
             aria-label="Prof Score breakdown: four equally weighted factors"
-            className="flex w-full h-10 rounded-lg overflow-hidden ring-1 ring-foreground/10"
+            className="flex w-full h-10 rounded-full overflow-hidden ring-1 ring-foreground/10"
           >
             <div
-              className="flex-1 bg-primary"
+              className="flex-1 bg-primary rounded-l-full"
               aria-label="GPA: 25%"
             />
             <div
@@ -116,27 +116,27 @@ export default function HomePage() {
               aria-label="Quality: 25%"
             />
             <div
-              className="flex-1 bg-[oklch(0.75_0.10_180)]"
+              className="flex-1 bg-[oklch(0.707_0.165_254.624)]"
               aria-label="Difficulty: 25%"
             />
             <div
-              className="flex-1 bg-[oklch(0.8549_0.1251_181.07)]"
+              className="flex-1 bg-[oklch(0.809_0.105_251.813)] rounded-r-full"
               aria-label="Sentiment: 25%"
             />
           </div>
 
           {/* Labels row */}
           <div className="flex justify-between mt-2">
-            <span className="text-[14px] text-muted-foreground text-center flex-1">
+            <span className="text-[14px] font-medium text-muted-foreground text-center flex-1">
               GPA &middot; 25%
             </span>
-            <span className="text-[14px] text-muted-foreground text-center flex-1">
+            <span className="text-[14px] font-medium text-muted-foreground text-center flex-1">
               Quality &middot; 25%
             </span>
-            <span className="text-[14px] text-muted-foreground text-center flex-1">
+            <span className="text-[14px] font-medium text-muted-foreground text-center flex-1">
               Difficulty &middot; 25%
             </span>
-            <span className="text-[14px] text-muted-foreground text-center flex-1">
+            <span className="text-[14px] font-medium text-muted-foreground text-center flex-1">
               Sentiment &middot; 25%
             </span>
           </div>
@@ -156,7 +156,7 @@ export default function HomePage() {
             {factors.map((factor) => {
               const Icon = factor.icon
               return (
-                <Card key={factor.name}>
+                <Card key={factor.name} className="card-hover border-l-4 border-primary/30">
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <Icon size={24} className="text-primary" />
@@ -194,21 +194,23 @@ export default function HomePage() {
                 >
                   {/* Connector line (desktop only, before steps 2 and 3) */}
                   {index > 0 && (
-                    <div className="hidden md:block w-full h-px bg-border -mt-5 mb-5" />
+                    <div className="hidden md:block w-full h-px bg-primary/20 -mt-5 mb-5" />
                   )}
-                  <div
-                    className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-heading font-bold text-base"
-                    aria-hidden="true"
-                  >
-                    {step.number}
+                  <div className="bg-card rounded-xl p-6 shadow-sm w-full flex flex-col items-center">
+                    <div
+                      className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-heading font-bold text-base"
+                      aria-hidden="true"
+                    >
+                      {step.number}
+                    </div>
+                    <Icon size={20} className="text-primary mt-2" />
+                    <p className="font-heading font-medium text-base mt-3">
+                      {step.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {step.body}
+                    </p>
                   </div>
-                  <Icon size={20} className="text-primary mt-2" />
-                  <p className="font-heading font-medium text-base mt-3">
-                    {step.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {step.body}
-                  </p>
                 </li>
               )
             })}
@@ -228,7 +230,7 @@ export default function HomePage() {
           <Link to="/search">
             <Button
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground min-h-[44px] px-6"
+              className="btn-press bg-white text-primary hover:bg-white/90 font-semibold min-h-[44px] px-6"
             >
               Start Searching
             </Button>
