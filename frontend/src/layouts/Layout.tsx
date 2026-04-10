@@ -1,8 +1,10 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import Breadcrumbs from '@/components/Breadcrumbs'
 
 export default function Layout() {
+  const location = useLocation()
+
   return (
     <div className="min-h-screen flex flex-col">
       <a
@@ -14,7 +16,9 @@ export default function Layout() {
       <Navbar />
       <Breadcrumbs />
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-        <Outlet />
+        <div key={location.pathname} className="page-enter">
+          <Outlet />
+        </div>
       </main>
     </div>
   )
