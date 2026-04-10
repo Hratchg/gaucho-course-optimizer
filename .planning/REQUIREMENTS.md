@@ -98,14 +98,14 @@ Requirements for Visual Redesign & UX Overhaul milestone.
 
 ### Component Overhaul
 
-- [ ] **COMP-01**: Professor cards redesigned with new color system and spacing
-- [ ] **COMP-02**: Navbar updated with Royal Blue background and Inter typography
-- [ ] **COMP-03**: Breadcrumbs styled with new accent colors
-- [ ] **COMP-04**: Course search updated with new input styling and dropdown
-- [ ] **COMP-05**: Grade charts use new blue palette with improved axis styling
-- [ ] **COMP-06**: Mobile menu (Sheet) updated with new design tokens
-- [ ] **COMP-07**: Tutorial landing page redesigned with new visual system
-- [ ] **COMP-08**: All badges (score, active teaching, tags) use new palette
+- [x] **COMP-01**: Professor cards redesigned with new color system and spacing
+- [x] **COMP-02**: Navbar updated with Royal Blue background and Inter typography
+- [x] **COMP-03**: Breadcrumbs styled with new accent colors
+- [x] **COMP-04**: Course search updated with new input styling and dropdown
+- [x] **COMP-05**: Grade charts use new blue palette with improved axis styling
+- [x] **COMP-06**: Mobile menu (Sheet) updated with new design tokens
+- [x] **COMP-07**: Tutorial landing page redesigned with new visual system
+- [x] **COMP-08**: All badges (score, active teaching, tags) use new palette
 
 ## Future Requirements
 
@@ -177,19 +177,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANIM-03 | Phase 14 | Complete |
 | ANIM-04 | Phase 14 | Complete |
 | ANIM-05 | Phase 14 | Complete |
-| COMP-01 | Phase 15 | Pending |
-| COMP-02 | Phase 15 | Pending |
-| COMP-03 | Phase 15 | Pending |
-| COMP-04 | Phase 15 | Pending |
-| COMP-05 | Phase 15 | Pending |
-| COMP-06 | Phase 15 | Pending |
-| COMP-07 | Phase 15 | Pending |
-| COMP-08 | Phase 15 | Pending |
+| COMP-01 | Phase 15 | Complete |
+| COMP-02 | Phase 15 | Complete |
+| COMP-03 | Phase 15 | Complete |
+| COMP-04 | Phase 15 | Complete |
+| COMP-05 | Phase 15 | Complete |
+| COMP-06 | Phase 15 | Complete |
+| COMP-07 | Phase 15 | Complete |
+| COMP-08 | Phase 15 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 14 total, 14 mapped (Complete)
 - v1.2 requirements: 9 total, 9 mapped (Complete)
-- v2.0 requirements: 24 total, 24 mapped (Pending)
+- v2.0 requirements: 24 total, 24 mapped (Complete)
 - Unmapped: 0
 
 ---
