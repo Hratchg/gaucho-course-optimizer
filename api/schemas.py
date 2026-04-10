@@ -36,6 +36,8 @@ class ProfessorRanking(BaseModel):
     tags: list[ProfessorTag] = []
     is_active_teacher: bool = False
     recent_quarters: list[str] = []
+    teaching_next_quarter: bool = False
+    scheduled_sections: list["ScheduledSectionResponse"] = []
 
 
 class GradeQuarter(BaseModel):

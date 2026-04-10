@@ -1,13 +1,109 @@
+from collections import Counter
 from datetime import datetime
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
-from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment
+from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment, ScheduledSection
 
 MONTH_NAMES = [
     "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ]
+
+# ---------------------------------------------------------------------------
+# Tag Vocabulary — maps raw keyword substrings (lowercase) to curated tags
+# ---------------------------------------------------------------------------
+# Categories: Grading, Teaching, Workload, Exams, Personality, Logistics, Other
+
+TAG_VOCABULARY: dict[str, str] = {
+    # Grading
+    "easy": "Easy Grader",
+    "lenient": "Easy Grader",
+    "generous": "Easy Grader",
+    "tough grad": "Tough Grader",
+    "strict grad": "Tough Grader",
+    "hard grad": "Tough Grader",
+    # Teaching
+    "engaging": "Engaging",
+    "interesting": "Engaging",
+    "fun": "Engaging",
+    "entertaining": "Engaging",
+    "boring": "Dry Lectures",
+    "dry": "Dry Lectures",
+    "dull": "Dry Lectures",
+    "monotone": "Dry Lectures",
+    "clear": "Clear Explanations",
+    "explains well": "Clear Explanations",
+    "understandable": "Clear Explanations",
+    # Workload
+    "heavy": "Heavy Workload",
+    "lot of work": "Heavy Workload",
+    "tons of homework": "Heavy Workload",
+    "too much": "Heavy Workload",
+    "light": "Light Workload",
+    "easy workload": "Light Workload",
+    "manageable": "Light Workload",
+    "not much work": "Light Workload",
+    # Exams
+    "hard exam": "Tough Exams",
+    "tough exam": "Tough Exams",
+    "difficult test": "Tough Exams",
+    "tricky": "Tough Exams",
+    "fair exam": "Fair Tests",
+    "fair test": "Fair Tests",
+    "reasonable exam": "Fair Tests",
+    # Personality
+    "helpful": "Helpful",
+    "available": "Helpful",
+    "office hours": "Helpful",
+    "approachable": "Helpful",
+    "caring": "Caring",
+    "kind": "Caring",
+    "understanding": "Caring",
+    "supportive": "Caring",
+    "intimidating": "Intimidating",
+    "scary": "Intimidating",
+    "mean": "Intimidating",
+    "rude": "Intimidating",
+    # Logistics
+    "attendance": "Attendance Mandatory",
+    "mandatory": "Attendance Mandatory",
+    "roll call": "Attendance Mandatory",
+    "extra credit": "Extra Credit",
+    "bonus": "Extra Credit",
+    # Other
+    "take again": "Would Take Again",
+    "recommend": "Would Take Again",
+}
+
+
+def map_keywords_to_tags(
+    raw_keywords: list[str], min_count: int = 3
+) -> list[dict]:
+    """Map a flat list of raw keywords to curated tags with frequency filtering.
+
+    Each entry in *raw_keywords* represents one keyword from one comment.
+    Per-comment deduplication (so one comment with both "easy" and "lenient"
+    only counts once for "Easy Grader") must be done **before** calling this
+    function -- see get_professors_for_course().
+
+    Returns at most 6 tags sorted by count descending, each with count >= min_count.
+    """
+    tag_counts: Counter[str] = Counter()
+    for kw in raw_keywords:
+        kw_lower = kw.lower()
+        for substring, tag_name in TAG_VOCABULARY.items():
+            if substring in kw_lower:
+                tag_counts[tag_name] += 1
+                break  # first match wins per keyword
+
+    # Filter by threshold, sort descending, cap at 6
+    filtered = [
+        {"name": name, "count": count}
+        for name, count in tag_counts.most_common()
+        if count >= min_count
+    ]
+    return filtered[:6]
 
 
 def get_departments(session: Session) -> list[str]:
@@ -104,8 +200,10 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
     ).all()
 
     # 2nd query: keywords grouped by rating_id (not N+1)
+    # Collect per-comment keyword lists so we can deduplicate tags within a comment.
     rating_ids = [row[4].id for row in results if row[4] is not None]
-    keywords_map = {}
+    # Map: rating_id -> list of per-comment keyword lists
+    comments_kw_map: dict[int, list[list[str]]] = {}
     if rating_ids:
         keyword_rows = (
             session.query(RmpComment.rmp_rating_id, RmpComment.keywords)
@@ -114,7 +212,7 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
         )
         for rating_id, kw in keyword_rows:
             if isinstance(kw, list):
-                keywords_map.setdefault(rating_id, []).extend(kw)
+                comments_kw_map.setdefault(rating_id, []).append(kw)
 
     # 3rd query: recent quarters per professor for this course
     prof_ids = [row[0].id for row in results]
@@ -144,7 +242,25 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
 
     professors = []
     for prof, mean_gpa, std_gpa, quarters_taught, rmp, avg_sentiment, active_count in results:
-        kw_list = keywords_map.get(rmp.id, []) if rmp else []
+        # Per-comment deduplication: for each comment's keyword list, map to tags
+        # and deduplicate so one comment only counts once per tag.
+        comment_kw_lists = comments_kw_map.get(rmp.id, []) if rmp else []
+        deduped_keywords: list[str] = []
+        for comment_keywords in comment_kw_lists:
+            # Map this comment's raw keywords to tag names, deduplicate within comment
+            mapped_tags: set[str] = set()
+            for kw in comment_keywords:
+                kw_lower = kw.lower()
+                for substring, tag_name in TAG_VOCABULARY.items():
+                    if substring in kw_lower:
+                        mapped_tags.add(tag_name)
+                        break
+            # Each unique tag from this comment contributes one "vote"
+            # We re-use the tag name as the keyword so map_keywords_to_tags can count
+            deduped_keywords.extend(mapped_tags)
+
+        tags = map_keywords_to_tags(deduped_keywords, min_count=3)
+
         distinct_recent = active_count if active_count else 0
         is_active = distinct_recent >= 3
         professors.append({
@@ -159,7 +275,7 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             "rmp_would_take_again": rmp.would_take_again_pct if rmp else None,
             "rmp_num_ratings": rmp.num_ratings if rmp else None,
             "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment is not None else None,
-            "keywords": list(set(kw_list))[:8],
+            "tags": tags,
             "match_confidence": prof.match_confidence,
             "is_active_teacher": is_active,
             "recent_quarters": quarters_map.get(prof.id, []),
@@ -213,3 +329,63 @@ def get_comments_for_professor(session: Session, professor_id: int, limit: int =
             "created_at": formatted_date,
         })
     return results
+
+
+def get_scheduled_sections(
+    session: Session,
+    course_id: int,
+    professor_ids: list[int],
+    quarter_code: str | None = None,
+) -> dict[int, list[dict]]:
+    """Get scheduled sections grouped by professor_id.
+
+    Parameters
+    ----------
+    session : Session
+        SQLAlchemy session.
+    course_id : int
+        The course to look up sections for.
+    professor_ids : list[int]
+        Professor IDs to filter by.
+    quarter_code : str, optional
+        If provided, filter to a specific quarter. Otherwise returns all.
+
+    Returns
+    -------
+    dict[int, list[dict]]
+        Mapping from professor_id to list of section dicts.
+    """
+    if not professor_ids:
+        return {}
+
+    q = (
+        session.query(ScheduledSection)
+        .filter(
+            ScheduledSection.course_id == course_id,
+            ScheduledSection.professor_id.in_(professor_ids),
+            ScheduledSection.section_cancelled == False,
+        )
+    )
+    if quarter_code:
+        q = q.filter(ScheduledSection.quarter_code == quarter_code)
+
+    sections = q.order_by(ScheduledSection.quarter_code.desc(), ScheduledSection.enroll_code).all()
+
+    result: dict[int, list[dict]] = {}
+    for s in sections:
+        entry = {
+            "quarter_code": s.quarter_code,
+            "quarter_name": s.quarter_name,
+            "enroll_code": s.enroll_code,
+            "instructor_name_raw": s.instructor_name_raw,
+            "days": s.days,
+            "begin_time": s.begin_time,
+            "end_time": s.end_time,
+            "building": s.building,
+            "room": s.room,
+            "enrolled": s.enrolled,
+            "max_enroll": s.max_enroll,
+        }
+        result.setdefault(s.professor_id, []).append(entry)
+
+    return result
