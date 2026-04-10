@@ -38,10 +38,10 @@ export default function MobileMenu() {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `py-3 px-4 text-base font-sans min-h-[44px] flex items-center ${
+                  `py-3 px-4 text-base font-sans min-h-[44px] flex items-center rounded-md transition-colors ${
                     isActive
-                      ? 'font-bold text-primary'
-                      : 'text-foreground hover:text-primary'
+                      ? 'font-bold text-primary border-l-4 border-primary bg-primary/5'
+                      : 'text-foreground hover:text-primary hover:bg-primary/5'
                   }`
                 }
               >

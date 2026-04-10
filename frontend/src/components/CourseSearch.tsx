@@ -17,7 +17,7 @@ export default function CourseSearch() {
   const navigate = useNavigate()
 
   return (
-    <Command className="rounded-lg border shadow-md" shouldFilter={false} label="Search courses">
+    <Command className="rounded-lg border border-primary/20 shadow-md ring-primary" shouldFilter={false} label="Search courses">
       <CommandInput
         placeholder="Search courses by name or code (e.g., CS 16, Physics)"
         value={query}
@@ -41,6 +41,7 @@ export default function CourseSearch() {
                   key={course.id}
                   value={`${course.code} ${course.title ?? ''}`}
                   onSelect={() => navigate(`/courses/${course.id}`, { state: { courseCode: course.code } })}
+                  className="hover:bg-primary/10"
                 >
                   <span className="font-semibold">{course.code}</span>
                   {course.title && (
