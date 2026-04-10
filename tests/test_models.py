@@ -1,9 +1,9 @@
-from db.models import Base, Professor, Course, GradeDistribution, RmpRating, RmpComment, GauchoScore
+from db.models import Base, Professor, Course, GradeDistribution, RmpRating, RmpComment, GauchoScore, ScheduledSection
 
 
 def test_all_tables_defined():
     table_names = {t.name for t in Base.metadata.sorted_tables}
-    expected = {"professors", "courses", "grade_distributions", "rmp_ratings", "rmp_comments", "gaucho_scores"}
+    expected = {"professors", "courses", "grade_distributions", "rmp_ratings", "rmp_comments", "gaucho_scores", "scheduled_sections"}
     assert expected == table_names
 
 
