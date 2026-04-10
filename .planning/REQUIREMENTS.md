@@ -107,6 +107,32 @@ Requirements for Visual Redesign & UX Overhaul milestone.
 - [x] **COMP-07**: Tutorial landing page redesigned with new visual system
 - [x] **COMP-08**: All badges (score, active teaching, tags) use new palette
 
+## v2.1 Requirements
+
+Requirements for Live Schedule Integration milestone.
+
+### UCSB API Client
+
+- [ ] **API-10**: Backend can query UCSB Academic Curriculums API with registered API key for any quarter's class schedule
+- [ ] **API-11**: Backend can query UCSB Quarter Calendar API to get current quarter, registration pass dates, and finals schedule
+
+### Schedule Data Pipeline
+
+- [ ] **SCHED-01**: Backend fetches and stores next-quarter class sections with instructor names, times, locations, and enrollment counts
+- [ ] **SCHED-02**: Instructor names from UCSB API ("CONRAD P T" format) are matched to existing professor records via fuzzy last-name + initial matching
+- [ ] **SCHED-03**: Schedule data refreshes automatically (nightly APScheduler job) to keep enrollment counts and section status current
+
+### Professor Schedule Display
+
+- [ ] **DISP-01**: Student sees a "Teaching Next Quarter" badge on professor cards when that professor is scheduled for the searched course next quarter
+- [ ] **DISP-02**: Student can expand the badge to see section details: day/time, building/room, and seats remaining
+- [ ] **DISP-03**: Student can filter professors by quarter: "Next Quarter", "Current Quarter", or "All"
+
+### Registration Context
+
+- [ ] **REG-01**: Student sees a registration countdown banner when pass times are approaching (e.g., "Pass 1 opens in 3 days")
+- [ ] **REG-02**: Banner shows the current quarter name and links to GOLD for registration
+
 ## Future Requirements
 
 Deferred to future release.
