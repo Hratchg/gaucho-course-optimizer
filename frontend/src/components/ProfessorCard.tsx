@@ -85,7 +85,10 @@ function QuartersList({ quarters }: { quarters: string[] }) {
   const [isOpen, setIsOpen] = useState(false)
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="mt-2 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <CollapsibleTrigger
+        aria-label={`${isOpen ? 'Hide' : 'Show'} quarters taught`}
+        className="focusable rounded-sm mt-2 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         Quarters Taught ({quarters.length})
       </CollapsibleTrigger>
@@ -145,7 +148,10 @@ export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps
           <QuartersList quarters={professor.recent_quarters} />
         )}
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="mt-3 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <CollapsibleTrigger
+            aria-label={`${isOpen ? 'Hide' : 'Show'} professor details`}
+            className="focusable rounded-sm mt-3 flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
             {isOpen ? (
               <><ChevronUp className="h-4 w-4" /> Hide details</>
             ) : (

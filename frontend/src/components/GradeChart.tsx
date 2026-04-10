@@ -49,7 +49,10 @@ export function GradeChart({ quarters, selectedQuarter }: GradeChartProps) {
   const title = getTitle(quarters, selectedQuarter)
 
   return (
-    <div>
+    <figure
+      role="img"
+      aria-label={`Bar chart showing grade distribution: ${title}`}
+    >
       <h4 className="mb-2 text-sm font-semibold">{title}</h4>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
@@ -59,6 +62,6 @@ export function GradeChart({ quarters, selectedQuarter }: GradeChartProps) {
           <Bar dataKey="count" fill="#2563EB" />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   )
 }

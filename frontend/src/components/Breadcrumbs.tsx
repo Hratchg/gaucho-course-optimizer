@@ -35,7 +35,7 @@ export default function Breadcrumbs() {
                 <li>
                   <Link
                     to={item.to!}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="focusable rounded-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {item.label}
                   </Link>

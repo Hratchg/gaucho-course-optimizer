@@ -122,7 +122,7 @@ export default function CoursePage() {
         </aside>
 
         {/* Main content: professor cards */}
-        <main className="min-w-0 flex-1">
+        <section className="min-w-0 flex-1" aria-label="Professor rankings">
           {error ? (
             <div className="py-12 text-center">
               <p className="font-semibold">
@@ -164,7 +164,7 @@ export default function CoursePage() {
             ))}
             </>
           )}
-        </main>
+        </section>
       </div>
     </div>
   )
