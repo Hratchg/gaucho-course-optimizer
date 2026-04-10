@@ -5,9 +5,15 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
+      <a
+        href="#main-content"
+        className="skip-to-content"
+      >
+        Skip to content
+      </a>
       <Navbar />
       <Breadcrumbs />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
     </div>
