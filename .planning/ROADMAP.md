@@ -194,7 +194,7 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
 
 ### v2.0 Phases
 
-- [ ] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases
+- [x] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases (completed 2026-04-10)
 - [ ] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app
 - [ ] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities
 - [ ] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations
@@ -213,7 +213,7 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
   5. Score badges retain their green/yellow/red semantic colors with updated values that meet 4.5:1 contrast ratio against white card backgrounds
 **Plans**: 1 plan
 Plans:
-- [ ] 12-01-PLAN.md -- Swap fonts to Inter, replace all CSS tokens with Royal Blue + Snow White palette, update chart colors and score badges
+- [x] 12-01-PLAN.md -- Swap fonts to Inter, replace all CSS tokens with Royal Blue + Snow White palette, update chart colors and score badges
 **UI hint**: yes
 
 ### Phase 13: Accessibility
@@ -273,7 +273,7 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 1/1 | Complete | 2026-04-08 |
 | 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
-| 12. Design Tokens & Typography | 0/1 | In progress | - |
+| 12. Design Tokens & Typography | 1/1 | Complete   | 2026-04-10 |
 | 13. Accessibility | 0/0 | Not started | - |
 | 14. Animations & Interactions | 0/0 | Not started | - |
 | 15. Component Overhaul | 0/0 | Not started | - |
