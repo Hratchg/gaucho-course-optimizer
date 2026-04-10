@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Live Schedule Integration
 status: planning
-stopped_at: Defining requirements
-last_updated: "2026-04-10T02:00:00.000Z"
-last_activity: 2026-04-10
+stopped_at: Roadmap created for v2.1 (Phases 16-17)
+last_updated: "2026-04-07T00:00:00.000Z"
+last_activity: 2026-04-07
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,40 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Phase 15 — component-overhaul
+**Current focus:** Phase 16 -- UCSB API Client & Schedule Pipeline
 
 ## Current Position
 
-Phase: 15
+Phase: 16 of 17 (UCSB API Client & Schedule Pipeline)
 Plan: Not started
-Status: v2.0 milestone complete
-Last activity: 2026-04-10
+Status: Ready to plan
+Last activity: 2026-04-07 -- Roadmap created for v2.1 milestone (Phases 16-17)
 
-Progress: [██████████] 100% (4/4 v2.0 phases complete)
+Progress: [░░░░░░░░░░] 0% (0/2 v2.1 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 33 (v1.0: 18, v1.1: 6, v1.2: 5)
+- Total plans completed: 37 (v1.0: 18, v1.1: 6, v1.2: 5, v2.0: 4, v2.1: 0)
 - Average duration: varies
 - Total execution time: varies
 
-**By Phase (v1.2 recent):**
+**By Phase (v2.0 recent):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 9. Active Teaching | 2 | - | - |
-| 10. Grade Distribution | 1 | - | - |
-| 11. Standardized Keywords | 2 | - | - |
-| Phase 12 P01 | 5min | 2 tasks | 7 files |
-| 12 | 1 | - | - |
-| Phase 13-accessibility P01 | 3min | 2 tasks | 9 files |
-| 13 | 1 | - | - |
-| Phase 14-animations P01 | 3min | 2 tasks | 6 files |
-| 14 | 1 | - | - |
-| Phase 15-component-overhaul P01 | 9min | 3 tasks | 12 files |
-| 15 | 1 | - | - |
+| 12. Design Tokens & Typography | 1 | 5min | 5min |
+| 13. Accessibility | 1 | 3min | 3min |
+| 14. Animations & Interactions | 1 | 3min | 3min |
+| 15. Component Overhaul | 1 | 9min | 9min |
 
 ## Accumulated Context
 
@@ -63,22 +56,12 @@ Progress: [██████████] 100% (4/4 v2.0 phases complete)
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- v2.0 is frontend-only -- no backend/API changes needed
-- Royal Blue (#2563EB) + Snow White (#FAFBFF) replaces Deep Teal + Amber
-- Inter replaces Poppins/Open Sans as sole font family
-- 4-phase structure: tokens first, then a11y, then animations, then component overhaul
-- Accessibility layer (Phase 13) before animations (Phase 14) so reduced-motion support is in place before animations are added
-- [Phase 12]: All CSS custom properties use oklch color space with blue-family hue ~262-265
-- [Phase 12]: Dark mode uses blue-tinted values (non-zero chroma) instead of achromatic grays
-- [Phase 12]: Inter Variable is sole font for both --font-heading and --font-sans tokens
-- [Phase 13-accessibility]: Used .focusable CSS class for custom interactive elements; shadcn components retain their own built-in focus-visible styles
-- [Phase 13-accessibility]: prefers-reduced-motion uses 0.01ms (not 0s) to prevent animation-end event listener issues
-- [Phase 14-animations]: Pure CSS animations only -- no framer-motion or JS animation libraries
-- [Phase 14-animations]: 40ms stagger delay per card via CSS custom property --stagger-delay
-- [Phase 14-animations]: Page transitions via location.pathname key triggering CSS page-enter animation re-mount
-- [Phase 15-component-overhaul]: SentimentBadge neutral color changed from orange to blue-family (bg-blue-100/text-blue-800)
-- [Phase 15-component-overhaul]: CTA button uses white-on-Royal-Blue instead of accent color for stronger contrast
-- [Phase 15-component-overhaul]: border-l-4 border-primary/30 accent stripe pattern on professor cards and factor cards
+- v2.1 is full-stack: Python/FastAPI/SQLAlchemy backend + React/TypeScript frontend
+- UCSB API auth via "ucsb-api-key" header with env var UCSB_API_KEY
+- Instructor name format: "CONRAD P T" (uppercase, last name first) -- needs fuzzy matching
+- Quarter code format: YYYYQ where Q: 1=Winter, 2=Spring, 3=Summer, 4=Fall
+- CourseId format: 13-char padded "CMPSC     130A"
+- Phase 16 (backend) must complete before Phase 17 (frontend) -- data dependency
 
 ### Pending Todos
 
@@ -90,6 +73,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-10T01:09:30Z
-Stopped at: Completed 15-01-PLAN.md
+Last session: 2026-04-07
+Stopped at: Roadmap created for v2.1 (Phases 16-17), ready to plan Phase 16
 Resume file: None

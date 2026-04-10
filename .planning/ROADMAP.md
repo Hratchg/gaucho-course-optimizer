@@ -263,10 +263,48 @@ Plans:
 **Status**: Complete (2026-04-10)
 **UI hint**: yes
 
+---
+
+## Milestone v2.1: Live Schedule Integration
+
+v2.1 connects CoursePick to UCSB's official course schedule API so students see which professors are actually teaching next quarter, with real section times, enrollment counts, and availability. The work proceeds in two phases: first build the backend foundation (API client, data pipeline, instructor matching, automated refresh) so the frontend has reliable schedule data to consume, then build the frontend display layer (teaching badges, section details, quarter filtering, registration countdown) on top of the populated data.
+
+### v2.1 Phases
+
+- [ ] **Phase 16: UCSB API Client & Schedule Pipeline** - Build the backend API client for UCSB Academic Curriculums and Quarter Calendar endpoints, create the schedule data pipeline with instructor name matching and nightly refresh
+- [ ] **Phase 17: Schedule Display & Registration Context** - Display "Teaching Next Quarter" badges with expandable section details, add quarter filtering, and show a registration countdown banner with pass time awareness
+
+### v2.1 Phase Details
+
+### Phase 16: UCSB API Client & Schedule Pipeline
+**Goal**: The backend can fetch, store, and keep current next-quarter class schedules from the UCSB API, with instructor names reliably matched to existing professor records -- the schedule data is ready for frontend consumption
+**Depends on**: Phase 15
+**Requirements**: API-10, API-11, SCHED-01, SCHED-02, SCHED-03
+**Success Criteria** (what must be TRUE):
+  1. Developer can call the UCSB Academic Curriculums API client with a quarter code (e.g., "20262" for Spring 2026) and course ID (e.g., "CMPSC     130A") and receive parsed class sections with instructor names, meeting times, locations, and enrollment counts
+  2. Developer can call the UCSB Quarter Calendar API client and receive the current quarter name, next quarter code, registration pass dates, and finals schedule dates
+  3. After a pipeline run, the database contains next-quarter section records with instructor, time, location, and enrollment data -- and instructor names in UCSB format ("CONRAD P T") are matched to existing professor records via fuzzy last-name + initial matching, with unmatched instructors logged for review
+  4. An APScheduler nightly job automatically refreshes schedule data so enrollment counts and section status stay current without manual intervention
+  5. Developer can run `pytest` and see schedule pipeline tests pass with mocked UCSB API responses -- no real API calls during testing
+**Plans**: TBD
+
+### Phase 17: Schedule Display & Registration Context
+**Goal**: Students can see at a glance which professors are teaching next quarter, drill into section details (times, rooms, seats), filter by quarter, and know when registration opens -- all powered by the live schedule data from Phase 16
+**Depends on**: Phase 16
+**Requirements**: DISP-01, DISP-02, DISP-03, REG-01, REG-02
+**Success Criteria** (what must be TRUE):
+  1. Student searching a course sees a "Teaching Next Quarter" badge on professor cards for any professor scheduled to teach the course next quarter -- professors not in the next-quarter schedule have no badge
+  2. Student can expand the "Teaching Next Quarter" badge to see section details including day/time (e.g., "MWF 10:00-10:50"), building/room (e.g., "Phelps 1260"), and seats remaining (e.g., "42/120 enrolled")
+  3. Student can filter the professor list by quarter -- "Next Quarter" shows only professors in the upcoming schedule, "Current Quarter" shows the current term, and "All" shows every professor with grade history
+  4. Student sees a registration countdown banner at the top of the course results page when pass times are approaching (e.g., "Pass 1 opens in 3 days") -- the banner is absent when registration is not imminent
+  5. The registration banner displays the current quarter name and includes a direct link to GOLD (UCSB's registration system) so the student can register immediately
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) complete. v2.0 phases execute in order: 12 -> 13 -> 14 -> 15
+v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) complete. v2.0 phases (12-15) complete. v2.1 phases execute in order: 16 -> 17
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -281,7 +319,9 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 9. Active Teaching | 2/2 | Complete | 2026-04-08 |
 | 10. Grade Distribution by Quarter | 1/1 | Complete | 2026-04-08 |
 | 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
-| 12. Design Tokens & Typography | 1/1 | Complete    | 2026-04-10 |
-| 13. Accessibility | 1/1 | Complete    | 2026-04-10 |
-| 14. Animations & Interactions | 1/1 | Complete    | 2026-04-10 |
-| 15. Component Overhaul | 1/1 | Complete    | 2026-04-10 |
+| 12. Design Tokens & Typography | 1/1 | Complete | 2026-04-10 |
+| 13. Accessibility | 1/1 | Complete | 2026-04-10 |
+| 14. Animations & Interactions | 1/1 | Complete | 2026-04-10 |
+| 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
+| 16. UCSB API Client & Schedule Pipeline | 0/? | Not started | - |
+| 17. Schedule Display & Registration Context | 0/? | Not started | - |
