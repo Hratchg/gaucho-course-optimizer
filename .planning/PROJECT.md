@@ -1,15 +1,15 @@
 # Gaucho Course Optimizer
 
-## Current Milestone: v2.0 Visual Redesign & UX Overhaul
+## Current Milestone: v2.1 Live Schedule Integration
 
-**Goal:** Transform CoursePick into a polished, professional-grade student tool with a Royal Blue + Snow White color system, Inter typography, improved accessibility, smooth animations, and mobile-optimized interactions.
+**Goal:** Connect CoursePick to UCSB's official course schedule API so students see which professors are actually teaching next quarter, with real section times, enrollment counts, and availability.
 
 **Target features:**
-- Royal Blue (#2563EB) + Snow White (#FAFBFF) palette replacing Teal+Amber across all components
-- Inter font replacing Poppins/Open Sans for a clean, modern feel
-- Component overhaul: cards, badges, buttons, charts with updated design tokens
-- WCAG AA accessibility: contrast ratios, aria labels, focus states, keyboard navigation
-- Animation system: micro-interactions (150-300ms), smooth transitions, prefers-reduced-motion support
+- Backend ETL job fetching next-quarter class schedules from UCSB Academic Curriculums API
+- "Teaching Next Quarter" badge with section details (time, location, seats remaining)
+- Quarter selector for filtering professors by current/next/all quarters
+- Registration countdown banner using UCSB Quarter Calendar API
+- Name matching: UCSB API "LASTNAME F M" format → existing professor records via fuzzy matching
 - Mobile UX: touch targets (44px min), tap feedback, responsive refinements
 - Updated tutorial landing page and navbar with new design system
 
