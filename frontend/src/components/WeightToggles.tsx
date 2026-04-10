@@ -34,7 +34,7 @@ export function WeightToggles({ weights, onWeightsChange }: WeightTogglesProps) 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Customize Ranking</h2>
+      <h2 className="text-lg font-semibold text-primary">Customize Ranking</h2>
       <div className="space-y-3">
         {TOGGLE_CONFIG.map(({ key, label }) => (
           <div
