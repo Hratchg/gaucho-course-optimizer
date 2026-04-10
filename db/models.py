@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime, JSON, UniqueConstraint, Boolean
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -20,6 +20,7 @@ class Professor(Base):
     grades = relationship("GradeDistribution", back_populates="professor")
     rmp_ratings = relationship("RmpRating", back_populates="professor")
     scores = relationship("GauchoScore", back_populates="professor")
+    scheduled_sections = relationship("ScheduledSection", back_populates="professor")
 
 
 class Course(Base):
@@ -32,6 +33,7 @@ class Course(Base):
 
     grades = relationship("GradeDistribution", back_populates="course")
     scores = relationship("GauchoScore", back_populates="course")
+    scheduled_sections = relationship("ScheduledSection", back_populates="course")
 
 
 class GradeDistribution(Base):
@@ -104,3 +106,30 @@ class GauchoScore(Base):
 
     professor = relationship("Professor", back_populates="scores")
     course = relationship("Course", back_populates="scores")
+
+
+class ScheduledSection(Base):
+    __tablename__ = "scheduled_sections"
+    __table_args__ = (
+        UniqueConstraint("quarter_code", "enroll_code", name="uq_scheduled_section_quarter_enroll"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)
+    quarter_code = Column(Text, nullable=False)  # e.g. "20262"
+    quarter_name = Column(Text, nullable=True)    # e.g. "Spring 2026"
+    enroll_code = Column(Text, nullable=False)     # UCSB enrollment code
+    instructor_name_raw = Column(Text, nullable=True)  # e.g. "CONRAD P T" — preserved for debugging
+    days = Column(Text, nullable=True)             # e.g. "T R"
+    begin_time = Column(Text, nullable=True)       # e.g. "14:00"
+    end_time = Column(Text, nullable=True)         # e.g. "15:15"
+    building = Column(Text, nullable=True)
+    room = Column(Text, nullable=True)
+    enrolled = Column(Integer, nullable=True)
+    max_enroll = Column(Integer, nullable=True)
+    section_cancelled = Column(Boolean, default=False)
+    fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    professor = relationship("Professor", back_populates="scheduled_sections")
+    course = relationship("Course", back_populates="scheduled_sections")

@@ -65,5 +65,20 @@ class CommentResult(BaseModel):
     created_at: str | None = None
 
 
+class ScheduledSectionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    quarter_code: str
+    quarter_name: str | None = None
+    enroll_code: str
+    instructor_name_raw: str | None = None
+    days: str | None = None
+    begin_time: str | None = None
+    end_time: str | None = None
+    building: str | None = None
+    room: str | None = None
+    enrolled: int | None = None
+    max_enroll: int | None = None
+
+
 class HealthResponse(BaseModel):
     status: str
