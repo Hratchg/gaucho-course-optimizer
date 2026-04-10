@@ -196,7 +196,7 @@ v2.0 replaces the Deep Teal + Amber design system with a Royal Blue + Snow White
 
 - [x] **Phase 12: Design Tokens & Typography** - Replace color palette with Royal Blue + Snow White, swap to Inter font, and establish the type scale as foundation for all subsequent phases (completed 2026-04-10)
 - [x] **Phase 13: Accessibility** - Add WCAG AA contrast, focus rings, aria-labels, keyboard navigation, skip-to-content, and reduced-motion support across the app (completed 2026-04-10)
-- [ ] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities
+- [x] **Phase 14: Animations & Interactions** - Build micro-interaction primitives (button press, card hover, page transitions, staggered lists, skeleton shimmer) as reusable utilities (completed 2026-04-10)
 - [ ] **Phase 15: Component Overhaul** - Redesign every user-facing component (cards, navbar, breadcrumbs, search, charts, mobile menu, tutorial, badges) using new tokens, a11y patterns, and animations
 
 ### v2.0 Phase Details
@@ -241,7 +241,10 @@ Plans:
   3. Student navigating between pages sees a smooth fade + subtle slide transition (200ms) rather than an instant hard cut between views
   4. Student viewing a course results page sees professor cards animate in with staggered timing (30-50ms delay between each card) rather than all appearing simultaneously
   5. Student waiting for API data sees skeleton cards with an animated shimmer effect sweeping across them, replacing the previous static gray skeleton placeholders
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [x] 14-01-PLAN.md -- CSS animation utilities (shimmer, stagger, page transitions, card hover, button press) + component integration
+**Status**: Complete (2026-04-10)
 **UI hint**: yes
 
 ### Phase 15: Component Overhaul
@@ -277,5 +280,5 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 11. Standardized Keywords | 2/2 | Complete | 2026-04-08 |
 | 12. Design Tokens & Typography | 1/1 | Complete    | 2026-04-10 |
 | 13. Accessibility | 1/1 | Complete    | 2026-04-10 |
-| 14. Animations & Interactions | 0/0 | Not started | - |
+| 14. Animations & Interactions | 1/1 | Complete    | 2026-04-10 |
 | 15. Component Overhaul | 0/0 | Not started | - |
