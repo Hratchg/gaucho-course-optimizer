@@ -64,7 +64,7 @@ Requirements for Data Quality & Insights milestone. Each maps to roadmap phases.
 - [x] **KW-02**: Tags only appear if mentioned in 3+ reviews for that professor (noise filtering)
 - [x] **KW-03**: Student can hover a tag to see how many reviews mentioned it (e.g., "Easy Grader — 7 reviews")
 
-## v2.0 Requirements
+## v2.0 Requirements (Completed)
 
 Requirements for Visual Redesign & UX Overhaul milestone.
 
@@ -211,13 +211,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-06 | Phase 15 | Complete |
 | COMP-07 | Phase 15 | Complete |
 | COMP-08 | Phase 15 | Complete |
+| API-10 | Phase 16 | Pending |
+| API-11 | Phase 16 | Pending |
+| SCHED-01 | Phase 16 | Pending |
+| SCHED-02 | Phase 16 | Pending |
+| SCHED-03 | Phase 16 | Pending |
+| DISP-01 | Phase 17 | Pending |
+| DISP-02 | Phase 17 | Pending |
+| DISP-03 | Phase 17 | Pending |
+| REG-01 | Phase 17 | Pending |
+| REG-02 | Phase 17 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 14 total, 14 mapped (Complete)
 - v1.2 requirements: 9 total, 9 mapped (Complete)
 - v2.0 requirements: 24 total, 24 mapped (Complete)
+- v2.1 requirements: 10 total, 10 mapped (Pending)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-09 -- v2.0 traceability mapped (Phases 12-15)*
+*Last updated: 2026-04-07 -- v2.1 traceability mapped (Phases 16-17)*
