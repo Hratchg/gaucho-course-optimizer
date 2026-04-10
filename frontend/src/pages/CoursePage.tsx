@@ -154,12 +154,13 @@ export default function CoursePage() {
                 No professors have taught this course recently. Showing all professors.
               </div>
             )}
-            {rankedProfessors.map((prof) => (
+            {rankedProfessors.map((prof, index) => (
               <ProfessorCard
                 key={prof.id}
                 professor={prof}
                 score={prof.computedScore}
                 courseId={numericCourseId}
+                index={index}
               />
             ))}
             </>

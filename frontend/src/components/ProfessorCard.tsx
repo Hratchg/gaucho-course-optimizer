@@ -15,6 +15,7 @@ interface ProfessorCardProps {
   professor: ProfessorRanking
   score: number
   courseId: number
+  index?: number
 }
 
 function scoreColorClass(score: number): string {
@@ -105,11 +106,14 @@ function QuartersList({ quarters }: { quarters: string[] }) {
   )
 }
 
-export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps) {
+export function ProfessorCard({ professor, score, courseId, index = 0 }: ProfessorCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <Card className="mb-6">
+    <Card
+      className="mb-6 card-hover stagger-in"
+      style={{ '--stagger-delay': `${index * 40}ms` } as React.CSSProperties}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
