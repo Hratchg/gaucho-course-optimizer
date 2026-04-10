@@ -17,7 +17,7 @@ export default function CourseSearch() {
   const navigate = useNavigate()
 
   return (
-    <Command className="rounded-lg border shadow-md" shouldFilter={false}>
+    <Command className="rounded-lg border shadow-md" shouldFilter={false} label="Search courses">
       <CommandInput
         placeholder="Search courses by name or code (e.g., CS 16, Physics)"
         value={query}

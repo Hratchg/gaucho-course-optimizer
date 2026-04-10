@@ -20,7 +20,7 @@ export default function MobileMenu() {
       <SheetTrigger asChild>
         <button
           aria-label="Open navigation menu"
-          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-primary-foreground"
+          className="focusable p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-primary-foreground"
         >
           <Menu className="h-5 w-5" />
         </button>
