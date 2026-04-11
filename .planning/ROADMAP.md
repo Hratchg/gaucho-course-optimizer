@@ -272,7 +272,7 @@ v2.1 connects CoursePick to UCSB's official course schedule API so students see 
 ### v2.1 Phases
 
 - [x] **Phase 16: UCSB API Client & Schedule Pipeline** - Build the backend API client for UCSB Academic Curriculums and Quarter Calendar endpoints, create the schedule data pipeline with instructor name matching and nightly refresh
-- [ ] **Phase 17: Schedule Display & Registration Context** - Display "Teaching Next Quarter" badges with expandable section details, add quarter filtering, and show a registration countdown banner with pass time awareness
+- [x] **Phase 17: Schedule Display & Registration Context** - Display "Teaching Next Quarter" badges with expandable section details, add quarter filtering, and show a registration countdown banner with pass time awareness (completed 2026-04-11)
 
 ### v2.1 Phase Details
 
@@ -327,4 +327,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 14. Animations & Interactions | 1/1 | Complete | 2026-04-10 |
 | 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
 | 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete    | 2026-04-10 |
-| 17. Schedule Display & Registration Context | 0/? | Not started | - |
+| 17. Schedule Display & Registration Context | 1/1 | Complete    | 2026-04-11 |
