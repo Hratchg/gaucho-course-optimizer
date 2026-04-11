@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 def _normalize_course_id(raw_course_id: str) -> str:
-    """Normalize a padded UCSB course ID like ``"CMPSC     130A"`` to ``"CMPSC 130A"``.
+    """Normalize a padded UCSB course ID like ``"CMPSC     130A"`` to ``"CMPSC130A"``.
 
-    Collapses internal whitespace to a single space.
+    Removes all whitespace to match the DB format (e.g., "CMPSC130A").
     """
-    return " ".join(raw_course_id.split())
+    return raw_course_id.replace(" ", "")
 
 
 def _extract_section_data(section: dict[str, Any]) -> dict[str, Any]:
