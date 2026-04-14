@@ -72,7 +72,17 @@ def get_professors(
         current_qcode = f"{year}4"  # Fall
     next_qcode = get_next_quarter_code(current_qcode)
 
-    schedule_map = get_scheduled_sections(db, course_id, prof_ids, quarter_code=next_qcode)
+    # Query both current and next quarter so students see data regardless of
+    # where we are in the academic calendar (e.g. mid-Spring still shows Spring).
+    schedule_map_current = get_scheduled_sections(db, course_id, prof_ids, quarter_code=current_qcode)
+    schedule_map_next = get_scheduled_sections(db, course_id, prof_ids, quarter_code=next_qcode)
+
+    # Merge: prefer next quarter, fall back to current quarter
+    schedule_map: dict[int, list[dict]] = {}
+    all_prof_ids = set(schedule_map_current) | set(schedule_map_next)
+    for pid in all_prof_ids:
+        sections = schedule_map_next.get(pid, []) or schedule_map_current.get(pid, [])
+        schedule_map[pid] = sections
 
     results = []
     for p in profs:
