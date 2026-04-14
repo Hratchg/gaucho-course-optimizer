@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import Breadcrumbs from '@/components/Breadcrumbs'
+import { RegistrationBanner } from '@/components/RegistrationBanner'
 
 export default function Layout() {
   const location = useLocation()
@@ -14,6 +15,7 @@ export default function Layout() {
         Skip to content
       </a>
       <Navbar />
+      <RegistrationBanner />
       <Breadcrumbs />
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <div key={location.pathname} className="page-enter">
