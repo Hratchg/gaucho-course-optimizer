@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Foundation to Public App
+milestone: v2.2
+milestone_name: Schedule Data Completeness
 status: executing
-stopped_at: Phase 16 plan 01 complete, ready for Phase 17
-last_updated: "2026-04-11T18:20:21.133Z"
-last_activity: 2026-04-11
+stopped_at: Phase 18 implementation in progress
+last_updated: "2026-04-14"
+last_activity: 2026-04-14
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 18
-  completed_plans: 12
-  percent: 67
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 1
+  completed_plans: 0
+  percent: 50
 ---
 
 # Project State
@@ -21,54 +21,38 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Phase 17 — schedule-display-registration
+**Current focus:** Phase 18 — Auto-Create Professors & Course Sections Panel
 
 ## Current Position
 
-Phase: 17
-Plan: Not started
-Status: Executing Phase 17
-Last activity: 2026-04-11
+Phase: 18
+Plan: 18-01 in progress
+Status: Executing Phase 18
+Last activity: 2026-04-14
 
-Progress: [#####░░░░░] 50% (1/2 v2.1 phases complete)
+Progress: [█████░░░░░] 50% (implementation in progress)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 40 (v1.0: 18, v1.1: 6, v1.2: 5, v2.0: 4, v2.1: 1)
+- Total plans completed: 41 (v1.0: 18, v1.1: 6, v1.2: 5, v2.0: 4, v2.1: 2)
 - Average duration: varies
 - Total execution time: varies
-
-**By Phase (v2.0 recent):**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 12. Design Tokens & Typography | 1 | 5min | 5min |
-| 13. Accessibility | 1 | 3min | 3min |
-| 14. Animations & Interactions | 1 | 3min | 3min |
-| 15. Component Overhaul | 1 | 9min | 9min |
-| 16. UCSB API & Schedule Pipeline | 1 | 14min | 14min |
-| 16 | 1 | - | - |
-| 17 | 1 | - | - |
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- v2.1 is full-stack: Python/FastAPI/SQLAlchemy backend + React/TypeScript frontend
-- UCSB API auth via "ucsb-api-key" header with env var UCSB_API_KEY
-- Instructor name format: "CONRAD P T" (uppercase, last name first) -- needs fuzzy matching
-- Quarter code format: YYYYQ where Q: 1=Winter, 2=Spring, 3=Summer, 4=Fall
-- CourseId format: 13-char padded "CMPSC     130A"
-- Phase 16 (backend) must complete before Phase 17 (frontend) -- data dependency
-- UCSB API client uses requests library with 15s timeout and pagination
-- Instructor name matching: exact last+initial (1.0), fuzzy last+initial (0.8+), last-only fallback
-- Nightly schedule refresh at 1:30 AM via APScheduler CronTrigger
-- ScheduledSection upserts by (quarter_code, enroll_code) unique constraint
+- Auto-create professor records for unmatched UCSB instructors during schedule sync
+- Nightly sync now covers both current AND next quarter (not just next)
+- GitHub Actions cron job replaces APScheduler for production schedule sync (Render has no persistent scheduler process)
+- Course-level sections panel shows only sections with named instructor + meeting time
+- Auto-created professors start empty but self-enrich through existing RMP scrape and grade ingestion pipelines
+- Shared auto_create_cache across departments prevents duplicate professor creation within a sync run
+- Frontend rebranded to CoursePick (coursepick.app), backend on Render, frontend on Vercel
 
 ### Pending Todos
 
@@ -80,6 +64,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-10
-Stopped at: Phase 16 plan 01 complete, ready for Phase 17
+Last session: 2026-04-14
+Stopped at: Phase 18 implementation in progress
 Resume file: None

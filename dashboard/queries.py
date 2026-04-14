@@ -389,3 +389,47 @@ def get_scheduled_sections(
         result.setdefault(s.professor_id, []).append(entry)
 
     return result
+
+
+def get_all_course_sections(
+    session: Session,
+    course_id: int,
+    quarter_codes: list[str],
+) -> list[dict]:
+    """Get all scheduled sections for a course, filtered to named instructors with meeting times.
+
+    Returns a flat list of section dicts sorted by quarter (desc) then enroll code.
+    """
+    sections = (
+        session.query(ScheduledSection)
+        .filter(
+            ScheduledSection.course_id == course_id,
+            ScheduledSection.quarter_code.in_(quarter_codes),
+            ScheduledSection.section_cancelled == False,
+            ScheduledSection.instructor_name_raw.isnot(None),
+            ScheduledSection.instructor_name_raw != "",
+        )
+        .filter(
+            # Must have at least days or begin_time
+            (ScheduledSection.days.isnot(None)) | (ScheduledSection.begin_time.isnot(None))
+        )
+        .order_by(ScheduledSection.quarter_code.desc(), ScheduledSection.enroll_code)
+        .all()
+    )
+
+    return [
+        {
+            "quarter_code": s.quarter_code,
+            "quarter_name": s.quarter_name,
+            "enroll_code": s.enroll_code,
+            "instructor_name_raw": s.instructor_name_raw,
+            "days": s.days,
+            "begin_time": s.begin_time,
+            "end_time": s.end_time,
+            "building": s.building,
+            "room": s.room,
+            "enrolled": s.enrolled,
+            "max_enroll": s.max_enroll,
+        }
+        for s in sections
+    ]
