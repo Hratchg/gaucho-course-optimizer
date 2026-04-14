@@ -85,15 +85,18 @@ def nightly_schedule_refresh():
         departments = get_departments(session)
         total_stats = {"inserted": 0, "updated": 0, "matched": 0, "unmatched": 0}
 
-        for dept in departments:
-            try:
-                stats = sync_department_sections(
-                    session, next_qcode, dept, client=client
-                )
-                for key in total_stats:
-                    total_stats[key] += stats[key]
-            except Exception as e:
-                logger.error(f"Failed to sync department {dept}: {e}")
+        # Sync both current and next quarter so students always see data
+        for qcode in [current_qcode, next_qcode]:
+            logger.info(f"Syncing quarter {qcode}...")
+            for dept in departments:
+                try:
+                    stats = sync_department_sections(
+                        session, qcode, dept, client=client
+                    )
+                    for key in total_stats:
+                        total_stats[key] += stats[key]
+                except Exception as e:
+                    logger.error(f"Failed to sync department {dept} for {qcode}: {e}")
 
         logger.info(f"Schedule refresh complete: {total_stats}")
     except Exception as e:
