@@ -31,6 +31,7 @@ const mockProfessor: ProfessorRanking = {
     { name: 'Helpful', count: 5 },
   ],
   is_active_teacher: false, recent_quarters: [],
+  teaching_next_quarter: false, scheduled_sections: [],
 }
 
 describe('ProfessorCard', () => {
