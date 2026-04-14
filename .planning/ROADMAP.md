@@ -304,10 +304,37 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+---
+
+## Milestone v2.2: Schedule Data Completeness
+
+v2.2 fixes a critical data coverage gap where unmatched UCSB instructors (TAs, new lecturers, adjuncts) had their schedule sections silently dropped because no professor record existed. Now every instructor gets a professor record auto-created during sync, and a new course-level sections panel shows ALL scheduled sections regardless of match status.
+
+### v2.2 Phases
+
+- [ ] **Phase 18: Auto-Create Professors & Course Sections Panel** - Auto-create professor records for unmatched UCSB instructors during schedule sync, add a course-level sections API endpoint, and display all scheduled sections in a collapsible panel on the course page
+
+### v2.2 Phase Details
+
+### Phase 18: Auto-Create Professors & Course Sections Panel
+**Goal**: Every UCSB instructor appearing in the schedule has a professor record (enabling future RMP/grade enrichment), and students see a complete list of all scheduled sections for any course — not just sections matching existing professors
+**Depends on**: Phase 17
+**Requirements**: SCHED-04, SCHED-05, SCHED-06
+**Success Criteria** (what must be TRUE):
+  1. After a schedule sync run, every instructor name from the UCSB API has a corresponding professor record in the database — no sections have NULL professor_id
+  2. Auto-created professors have department set and name_nexus populated from the UCSB raw name, ready for future RMP/grade matching
+  3. Student viewing any course page sees a "Scheduled Sections" collapsible panel showing ALL sections with named instructors and meeting times, grouped by quarter
+  4. The GET /courses/{id}/sections endpoint returns sections filtered to named instructors with meeting times for current + next quarter
+  5. Existing RMP scrape and grade ingestion pipelines can naturally enrich auto-created professor records over time without code changes
+**Plans**: 1/1 in progress
+Plans:
+- [ ] 18-01 -- Auto-create professors in schedule_sync, new sections endpoint + query, CourseSections frontend panel
+**Status**: In Progress (2026-04-14)
+
 ## Progress
 
 **Execution Order:**
-v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) complete. v2.0 phases (12-15) complete. v2.1 phases execute in order: 16 -> 17
+v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) complete. v2.0 phases (12-15) complete. v2.1 phases (16-17) complete. v2.2 phase 18 in progress.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -328,3 +355,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
 | 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete    | 2026-04-10 |
 | 17. Schedule Display & Registration Context | 1/1 | Complete    | 2026-04-11 |
+| 18. Auto-Create Professors & Course Sections Panel | 0/1 | In Progress | - |

@@ -6,6 +6,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 import { WeightToggles } from '@/components/WeightToggles'
 import { computeGauchoScore, DEFAULT_TOGGLE_WEIGHTS } from '@/lib/scoring'
 import type { ToggleWeights } from '@/lib/scoring'
+import { CourseSections } from '@/components/CourseSections'
 import { useColdStartMessage } from '@/hooks/useElapsedTime'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -179,8 +180,9 @@ export default function CoursePage() {
           </div>
         </aside>
 
-        {/* Main content: professor cards */}
+        {/* Main content: sections + professor cards */}
         <section className="min-w-0 flex-1" aria-label="Professor rankings">
+          <CourseSections courseId={numericCourseId} />
           {error ? (
             <div className="py-12 text-center">
               <p className="font-semibold">

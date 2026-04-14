@@ -78,6 +78,34 @@ def _build_professor_lookup(session: Session) -> list[dict]:
     ]
 
 
+def _auto_create_professor(
+    session: Session,
+    raw_name: str,
+    department: str,
+    cache: dict[str, int],
+) -> int:
+    """Create a minimal professor record for an unmatched UCSB instructor.
+
+    Uses a per-run cache (keyed by raw_name) to avoid creating duplicates
+    within the same sync session.
+
+    Returns the professor ID.
+    """
+    cache_key = raw_name.strip().upper()
+    if cache_key in cache:
+        return cache[cache_key]
+
+    prof = Professor(
+        name_nexus=raw_name.strip(),
+        department=department,
+    )
+    session.add(prof)
+    session.flush()  # assign ID without committing
+    cache[cache_key] = prof.id
+    logger.info("Auto-created professor record for %s (id=%d, dept=%s)", raw_name, prof.id, department)
+    return prof.id
+
+
 def _find_course_by_code(session: Session, normalized_code: str) -> Course | None:
     """Look up a course by its normalized code."""
     return session.query(Course).filter(Course.code == normalized_code).first()
@@ -216,16 +244,25 @@ def sync_department_sections(
     department: str,
     *,
     client: UCSBApiClient | None = None,
+    auto_create_cache: dict[str, int] | None = None,
 ) -> dict[str, int]:
     """Fetch and store sections for all courses in a department.
 
     Used by the nightly bulk refresh job.
+
+    Parameters
+    ----------
+    auto_create_cache : dict, optional
+        Shared cache for auto-created professor records across departments.
+        If None, a local cache is created for this call.
     """
     if client is None:
         client = UCSBApiClient()
+    if auto_create_cache is None:
+        auto_create_cache = {}
 
     quarter_name = quarter_code_to_name(quarter_code)
-    total_stats = {"inserted": 0, "updated": 0, "matched": 0, "unmatched": 0}
+    total_stats = {"inserted": 0, "updated": 0, "matched": 0, "unmatched": 0, "auto_created": 0}
 
     try:
         raw_sections = client.fetch_department_classes(quarter_code, department)
@@ -263,7 +300,14 @@ def sync_department_sections(
                     professor_id = match.professor_id
                     total_stats["matched"] += 1
                 else:
-                    total_stats["unmatched"] += 1
+                    # Auto-create a professor record so future data can attach
+                    professor_id = _auto_create_professor(
+                        session,
+                        section_data["instructor_name_raw"],
+                        department,
+                        auto_create_cache,
+                    )
+                    total_stats["auto_created"] += 1
 
         # Upsert
         existing = (
@@ -314,12 +358,12 @@ def sync_department_sections(
 
     session.commit()
     logger.info(
-        "Synced department %s in %s: %d inserted, %d updated, %d matched, %d unmatched",
+        "Synced department %s in %s: %d inserted, %d updated, %d matched, %d auto-created",
         department,
         quarter_code,
         total_stats["inserted"],
         total_stats["updated"],
         total_stats["matched"],
-        total_stats["unmatched"],
+        total_stats["auto_created"],
     )
     return total_stats

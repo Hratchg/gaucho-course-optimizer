@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db
-from api.schemas import CourseResult, ProfessorRanking
-from dashboard.queries import get_professors_for_course, get_scheduled_sections, search_courses
+from api.schemas import CourseResult, ProfessorRanking, ScheduledSectionResponse
+from dashboard.queries import get_all_course_sections, get_professors_for_course, get_scheduled_sections, search_courses
 from etl.scoring import (
     compute_gaucho_score,
     normalize_difficulty,
@@ -125,3 +125,32 @@ def get_professors(
         })
 
     return sorted(results, key=lambda x: x["gaucho_score"], reverse=True)
+
+
+@router.get("/{course_id}/sections", response_model=list[ScheduledSectionResponse])
+def get_course_sections(
+    course_id: int,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    """Return all scheduled sections for a course (current + next quarter).
+
+    Filtered to sections with a named instructor and meeting time.
+    """
+    import datetime as _dt
+    now = _dt.date.today()
+    month = now.month
+    year = now.year
+    if month <= 3:
+        current_qcode = f"{year}1"
+    elif month <= 6:
+        current_qcode = f"{year}2"
+    elif month <= 8:
+        current_qcode = f"{year}3"
+    else:
+        current_qcode = f"{year}4"
+    next_qcode = get_next_quarter_code(current_qcode)
+
+    sections = get_all_course_sections(db, course_id, [current_qcode, next_qcode])
+    if not sections:
+        return []
+    return sections
