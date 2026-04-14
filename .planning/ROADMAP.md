@@ -312,7 +312,7 @@ v2.2 fixes a critical data coverage gap where unmatched UCSB instructors (TAs, n
 
 ### v2.2 Phases
 
-- [ ] **Phase 18: Auto-Create Professors & Course Sections Panel** - Auto-create professor records for unmatched UCSB instructors during schedule sync, add a course-level sections API endpoint, and display all scheduled sections in a collapsible panel on the course page
+- [x] **Phase 18: Auto-Create Professors & Course Sections Panel** - Auto-create professor records for unmatched UCSB instructors during schedule sync, add a course-level sections API endpoint, and display all scheduled sections in a collapsible panel on the course page (completed 2026-04-14)
 
 ### v2.2 Phase Details
 
@@ -328,8 +328,8 @@ v2.2 fixes a critical data coverage gap where unmatched UCSB instructors (TAs, n
   5. Existing RMP scrape and grade ingestion pipelines can naturally enrich auto-created professor records over time without code changes
 **Plans**: 1/1 in progress
 Plans:
-- [ ] 18-01 -- Auto-create professors in schedule_sync, new sections endpoint + query, CourseSections frontend panel
-**Status**: In Progress (2026-04-14)
+- [x] 18-01 -- Auto-create professors in schedule_sync, new sections endpoint + query, CourseSections frontend panel
+**Status**: Complete (2026-04-14)
 
 ## Progress
 
@@ -355,4 +355,4 @@ v1.0 phases (1-4) complete. v1.1 phases (5-8) complete. v1.2 phases (9-11) compl
 | 15. Component Overhaul | 1/1 | Complete | 2026-04-10 |
 | 16. UCSB API Client & Schedule Pipeline | 1/1 | Complete    | 2026-04-10 |
 | 17. Schedule Display & Registration Context | 1/1 | Complete    | 2026-04-11 |
-| 18. Auto-Create Professors & Course Sections Panel | 0/1 | In Progress | - |
+| 18. Auto-Create Professors & Course Sections Panel | 1/1 | Complete | 2026-04-14 |
