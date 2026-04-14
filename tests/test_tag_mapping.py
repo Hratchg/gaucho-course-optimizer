@@ -88,9 +88,12 @@ class TestMapKeywordsToTags:
         """Matching is case-insensitive: 'Easy' and 'easy' both map to 'Easy Grader'."""
         from dashboard.queries import map_keywords_to_tags
 
+        # 3 entries with different cases all map to "Easy Grader" -> count=3 meets threshold
         raw = ["Easy", "easy", "EASY"]
         result = map_keywords_to_tags(raw)
-        assert result == []  # count=3 meets threshold
+        assert len(result) == 1
+        assert result[0]["name"] == "Easy Grader"
+        assert result[0]["count"] == 3
 
         raw = ["Easy", "easy", "EASY", "easy"]
         result = map_keywords_to_tags(raw)
