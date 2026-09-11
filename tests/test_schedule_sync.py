@@ -24,7 +24,7 @@ from ucsb_api.schedule_sync import (
 @pytest.fixture
 def sample_course(db_session):
     """Create a sample CMPSC 130A course."""
-    course = Course(code="CMPSC 130A", title="Data Structures and Algorithms I", department="CMPSC")
+    course = Course(code="CMPSC130A", title="Data Structures and Algorithms I", department="CMPSC")
     db_session.add(course)
     db_session.flush()
     return course
@@ -93,9 +93,9 @@ MOCK_API_SECTIONS = [
 # ---------------------------------------------------------------------------
 
 def test_normalize_course_id():
-    assert _normalize_course_id("CMPSC     130A") == "CMPSC 130A"
-    assert _normalize_course_id("MATH    3B") == "MATH 3B"
-    assert _normalize_course_id("CMPSC 130A") == "CMPSC 130A"
+    assert _normalize_course_id("CMPSC     130A") == "CMPSC130A"
+    assert _normalize_course_id("MATH    3B") == "MATH3B"
+    assert _normalize_course_id("CMPSC130A") == "CMPSC130A"
 
 
 def test_extract_section_data():
@@ -169,7 +169,7 @@ def test_sync_course_sections_inserts(db_session, sample_course, sample_professo
     mock_client = _make_mock_client(MOCK_API_SECTIONS)
 
     stats = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
 
     assert stats["inserted"] == 2
@@ -203,13 +203,13 @@ def test_sync_course_sections_updates(db_session, sample_course, sample_professo
 
     # First sync — inserts
     stats1 = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats1["inserted"] == 2
 
     # Second sync — should update, not duplicate
     stats2 = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats2["updated"] == 2
     assert stats2["inserted"] == 0
@@ -259,7 +259,7 @@ def test_sync_course_unmatched_instructor(db_session, sample_course):
     mock_client = _make_mock_client(unmatched_sections)
 
     stats = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats["unmatched"] == 2
     assert stats["matched"] == 0
@@ -279,3 +279,49 @@ def test_sync_department_sections(db_session, sample_course, sample_professors):
 
     assert stats["inserted"] == 2
     assert stats["matched"] == 2
+
+
+def test_sync_department_reuses_auto_created_professor(db_session):
+    """An instructor auto-created on one sync must be matched, not re-created, on the next.
+
+    Regression test: auto-created rows store the raw UCSB name ("GURVEN M D") and the
+    matcher read that as First-Last, so every nightly run created a fresh duplicate
+    professor for every unmatched instructor.
+    """
+    course = Course(code="CMPSC130A", title="Data Structures", department="CMPSC")
+    db_session.add(course)
+    db_session.flush()
+    sections = [
+        {
+            "courseId": "CMPSC     130A",
+            "title": "Data Structures",
+            "classSections": [
+                {
+                    "enrollCode": "99903",
+                    "courseCancelled": None,
+                    "instructors": [{"instructor": "ZZZZNEWPROF M D", "functionCode": "Teaching and in charge"}],
+                    "timeLocations": [],
+                    "enrolledTotal": 0,
+                    "maxEnroll": 30,
+                },
+            ],
+        }
+    ]
+    mock_client = _make_mock_client(sections)
+
+    first = sync_department_sections(
+        db_session, "20262", "CMPSC", client=mock_client, auto_create_cache={}
+    )
+    assert first["auto_created"] == 1
+
+    # Next night: fresh per-run cache, same instructor
+    second = sync_department_sections(
+        db_session, "20262", "CMPSC", client=mock_client, auto_create_cache={}
+    )
+    assert second["auto_created"] == 0
+    assert second["matched"] == 1
+
+    profs = db_session.query(Professor).filter(Professor.name_nexus == "ZZZZNEWPROF M D").all()
+    assert len(profs) == 1
+    section = db_session.query(ScheduledSection).filter_by(enroll_code="99903").one()
+    assert section.professor_id == profs[0].id
