@@ -18,7 +18,13 @@ def test_allowed_origins_strips_whitespace():
 
 def test_allowed_origins_default_when_not_set():
     s = Settings(_env_file=None)
-    assert s.get_origins() == ["http://localhost:5173", "http://localhost:3000"]
+    assert s.get_origins() == [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://coursepick.app",
+        "https://www.coursepick.app",
+        "https://gaucho-course-optimizer.vercel.app",
+    ]
 
 
 def test_allowed_origins_filters_empty_segments():
