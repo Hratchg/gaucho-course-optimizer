@@ -273,6 +273,21 @@ def test_extract_first_initial_last_first():
     assert _extract_professor_first_initial("Conrad, Phill") == "P"
 
 
+def test_extract_last_name_uppercase_last_first():
+    """Nexus / UCSB-style names are uppercase, last name first, then initials."""
+    assert _extract_professor_last_name("GURVEN M D") == "gurven"
+    assert _extract_professor_last_name("HUANG L") == "huang"
+    assert _extract_professor_last_name("CHANG SHIYU") == "chang"
+    assert _extract_professor_last_name("VAN DER BERG J") == "van"
+
+
+def test_extract_first_initial_uppercase_last_first():
+    assert _extract_professor_first_initial("GURVEN M D") == "M"
+    assert _extract_professor_first_initial("HUANG L") == "L"
+    assert _extract_professor_first_initial("CHANG SHIYU") == "S"
+    assert _extract_professor_first_initial("VAN DER BERG J") == "J"
+
+
 # ---------------------------------------------------------------------------
 # Name matcher — matching tests
 # ---------------------------------------------------------------------------
@@ -332,3 +347,30 @@ def test_match_staff_returns_none():
     parsed = parse_ucsb_instructor("STAFF")
     result = match_instructor_to_professor(parsed, PROFESSORS)
     assert result is None
+
+
+def test_match_auto_created_ucsb_name():
+    """A professor auto-created from a UCSB name must match that same name on later syncs."""
+    professors = [{"id": 6, "name_rmp": None, "name_nexus": "GURVEN M D"}]
+    parsed = parse_ucsb_instructor("GURVEN M D")
+    result = match_instructor_to_professor(parsed, professors)
+    assert result is not None
+    assert result.professor_id == 6
+    assert result.confidence == 1.0
+    assert result.match_method == "exact"
+
+
+def test_match_nexus_initial_only_name():
+    """Nexus grade-data names like "HUANG L" match the UCSB form of the same name."""
+    professors = [{"id": 7, "name_rmp": None, "name_nexus": "HUANG L"}]
+    parsed = parse_ucsb_instructor("HUANG L")
+    result = match_instructor_to_professor(parsed, professors)
+    assert result is not None
+    assert result.professor_id == 7
+
+
+def test_match_uppercase_name_distinguishes_initial():
+    """GURVEN M D must not match a stored GURVEN K."""
+    professors = [{"id": 8, "name_rmp": None, "name_nexus": "GURVEN K"}]
+    parsed = parse_ucsb_instructor("GURVEN M D")
+    assert match_instructor_to_professor(parsed, professors) is None

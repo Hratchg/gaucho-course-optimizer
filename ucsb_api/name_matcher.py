@@ -58,12 +58,33 @@ def parse_ucsb_instructor(raw_name: str) -> ParsedInstructor | None:
     return ParsedInstructor(raw=raw_name, last_name=last_name, initials=initials)
 
 
+def _split_uppercase_last_first(name: str) -> tuple[str, str | None]:
+    """Split an uppercase last-name-first name into (last name, first initial).
+
+    Both the Daily Nexus grade data ("HUANG L", "CHANG SHIYU") and the UCSB API
+    ("GURVEN M D" — also what auto-created professors store) write names this
+    way, whereas RMP names are mixed case ("Phill Conrad").
+    """
+    parts = name.split()
+    last = parts[0].lower()
+    rest = parts[1:]
+    # Prefer a standalone initial so "VAN DER BERG J" pairs with the UCSB parse
+    initials = [p for p in rest if len(p) == 1 and p.isalpha()]
+    if initials:
+        return last, initials[0].upper()
+    if rest:
+        first_alpha = next((c for c in rest[0] if c.isalpha()), None)
+        return last, first_alpha.upper() if first_alpha else None
+    return last, None
+
+
 def _extract_professor_last_name(professor_name: str) -> str:
     """Extract last name from a professor's stored name.
 
     Handles formats like:
       - "Phill Conrad" -> "conrad"
       - "Conrad, Phill" -> "conrad"
+      - "GURVEN M D" / "CHANG SHIYU" -> "gurven" / "chang" (uppercase = last first)
       - "John Smith Jr." -> "smith" (best effort)
     """
     if not professor_name:
@@ -74,6 +95,10 @@ def _extract_professor_last_name(professor_name: str) -> str:
     # Handle "Last, First" format
     if "," in name:
         return name.split(",")[0].strip().lower()
+
+    # Uppercase names come from Nexus / the UCSB API and are last-name-first
+    if name.isupper():
+        return _split_uppercase_last_first(name)[0]
 
     # Handle "First Last" format — take the last word
     parts = name.split()
@@ -102,6 +127,10 @@ def _extract_professor_first_initial(professor_name: str) -> str | None:
             first = parts[1].strip()
             return first[0].upper() if first else None
         return None
+
+    # Uppercase names come from Nexus / the UCSB API and are last-name-first
+    if name.isupper():
+        return _split_uppercase_last_first(name)[1]
 
     # Handle "First Last" format
     parts = name.split()

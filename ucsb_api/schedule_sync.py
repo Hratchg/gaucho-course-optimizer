@@ -70,8 +70,12 @@ def _extract_section_data(section: dict[str, Any]) -> dict[str, Any]:
 
 
 def _build_professor_lookup(session: Session) -> list[dict]:
-    """Load all professors into a list of dicts for the name matcher."""
-    profs = session.query(Professor).all()
+    """Load all professors into a list of dicts for the name matcher.
+
+    Oldest first, so an exact match lands on the canonical row rather than a
+    later duplicate.
+    """
+    profs = session.query(Professor).order_by(Professor.id).all()
     return [
         {"id": p.id, "name_rmp": p.name_rmp, "name_nexus": p.name_nexus}
         for p in profs

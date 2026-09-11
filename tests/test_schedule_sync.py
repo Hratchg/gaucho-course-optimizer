@@ -279,3 +279,49 @@ def test_sync_department_sections(db_session, sample_course, sample_professors):
 
     assert stats["inserted"] == 2
     assert stats["matched"] == 2
+
+
+def test_sync_department_reuses_auto_created_professor(db_session):
+    """An instructor auto-created on one sync must be matched, not re-created, on the next.
+
+    Regression test: auto-created rows store the raw UCSB name ("GURVEN M D") and the
+    matcher read that as First-Last, so every nightly run created a fresh duplicate
+    professor for every unmatched instructor.
+    """
+    course = Course(code="CMPSC130A", title="Data Structures", department="CMPSC")
+    db_session.add(course)
+    db_session.flush()
+    sections = [
+        {
+            "courseId": "CMPSC     130A",
+            "title": "Data Structures",
+            "classSections": [
+                {
+                    "enrollCode": "99903",
+                    "courseCancelled": None,
+                    "instructors": [{"instructor": "ZZZZNEWPROF M D", "functionCode": "Teaching and in charge"}],
+                    "timeLocations": [],
+                    "enrolledTotal": 0,
+                    "maxEnroll": 30,
+                },
+            ],
+        }
+    ]
+    mock_client = _make_mock_client(sections)
+
+    first = sync_department_sections(
+        db_session, "20262", "CMPSC", client=mock_client, auto_create_cache={}
+    )
+    assert first["auto_created"] == 1
+
+    # Next night: fresh per-run cache, same instructor
+    second = sync_department_sections(
+        db_session, "20262", "CMPSC", client=mock_client, auto_create_cache={}
+    )
+    assert second["auto_created"] == 0
+    assert second["matched"] == 1
+
+    profs = db_session.query(Professor).filter(Professor.name_nexus == "ZZZZNEWPROF M D").all()
+    assert len(profs) == 1
+    section = db_session.query(ScheduledSection).filter_by(enroll_code="99903").one()
+    assert section.professor_id == profs[0].id
