@@ -24,7 +24,7 @@ from ucsb_api.schedule_sync import (
 @pytest.fixture
 def sample_course(db_session):
     """Create a sample CMPSC 130A course."""
-    course = Course(code="CMPSC 130A", title="Data Structures and Algorithms I", department="CMPSC")
+    course = Course(code="CMPSC130A", title="Data Structures and Algorithms I", department="CMPSC")
     db_session.add(course)
     db_session.flush()
     return course
@@ -93,9 +93,9 @@ MOCK_API_SECTIONS = [
 # ---------------------------------------------------------------------------
 
 def test_normalize_course_id():
-    assert _normalize_course_id("CMPSC     130A") == "CMPSC 130A"
-    assert _normalize_course_id("MATH    3B") == "MATH 3B"
-    assert _normalize_course_id("CMPSC 130A") == "CMPSC 130A"
+    assert _normalize_course_id("CMPSC     130A") == "CMPSC130A"
+    assert _normalize_course_id("MATH    3B") == "MATH3B"
+    assert _normalize_course_id("CMPSC130A") == "CMPSC130A"
 
 
 def test_extract_section_data():
@@ -169,7 +169,7 @@ def test_sync_course_sections_inserts(db_session, sample_course, sample_professo
     mock_client = _make_mock_client(MOCK_API_SECTIONS)
 
     stats = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
 
     assert stats["inserted"] == 2
@@ -203,13 +203,13 @@ def test_sync_course_sections_updates(db_session, sample_course, sample_professo
 
     # First sync — inserts
     stats1 = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats1["inserted"] == 2
 
     # Second sync — should update, not duplicate
     stats2 = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats2["updated"] == 2
     assert stats2["inserted"] == 0
@@ -259,7 +259,7 @@ def test_sync_course_unmatched_instructor(db_session, sample_course):
     mock_client = _make_mock_client(unmatched_sections)
 
     stats = sync_course_sections(
-        db_session, "20262", "CMPSC 130A", client=mock_client
+        db_session, "20262", "CMPSC130A", client=mock_client
     )
     assert stats["unmatched"] == 2
     assert stats["matched"] == 0
