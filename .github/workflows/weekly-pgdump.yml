@@ -30,7 +30,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           pg_dump --version
-          pg_dump "$DATABASE_URL" > data/gco_dump.sql
+          # Same flags as scripts/export_db.sh so the dump restores via scripts/import_db.sh
+          pg_dump --clean --if-exists --no-owner --no-acl "$DATABASE_URL" > data/gco_dump.sql
           echo "Dump size: $(du -h data/gco_dump.sql | cut -f1)"
           echo "Row check:"
           psql "$DATABASE_URL" -c "SELECT COUNT(*) AS gaucho_score_count FROM gaucho_scores;"
