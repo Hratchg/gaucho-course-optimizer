@@ -16,15 +16,20 @@ jobs:
       - name: Install PostgreSQL 17 client
         # Neon runs PostgreSQL 17. Ubuntu 24.04's `postgresql-client` is 16, and
         # pg_dump refuses to dump a server newer than itself, so pull 17 from PGDG.
+        # The runner image also carries a local PostgreSQL 16 cluster, which makes
+        # Debian's pg_wrapper resolve `pg_dump` to 16 even with 17 installed, so
+        # put the 17 binaries first on PATH for the steps that follow.
         run: |
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Dump Neon database
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          pg_dump --version
           pg_dump "$DATABASE_URL" > data/gco_dump.sql
           echo "Dump size: $(du -h data/gco_dump.sql | cut -f1)"
           echo "Row check:"
