@@ -56,7 +56,12 @@ def quarterly_grade_update():
 
 
 def nightly_schedule_refresh():
-    """Nightly job: fetch next-quarter schedule from UCSB API for all departments."""
+    """Nightly job: fetch next-quarter schedule from UCSB API for all departments.
+
+    Raises if the refresh could not run or any department failed for a reason
+    other than the UCSB API, so the GitHub Actions job goes red instead of
+    logging and exiting 0. Under APScheduler the exception is just logged.
+    """
     logger.info("Starting nightly schedule refresh...")
     from db.connection import get_session
     from dashboard.queries import get_departments
@@ -64,6 +69,7 @@ def nightly_schedule_refresh():
     from ucsb_api.schedule_sync import sync_department_sections
 
     session = get_session()
+    failed: list[str] = []  # "DEPT/quarter" for each sync that raised
     try:
         client = UCSBApiClient()
 
@@ -98,13 +104,24 @@ def nightly_schedule_refresh():
                     for key in total_stats:
                         total_stats[key] += stats.get(key, 0)
                 except Exception as e:
+                    # UCSB API errors are handled inside sync_department_sections,
+                    # so anything landing here is a DB error or a bug: keep going
+                    # for the other departments, but fail the run at the end.
                     logger.error(f"Failed to sync department {dept} for {qcode}: {e}")
+                    session.rollback()
+                    failed.append(f"{dept}/{qcode}")
 
         logger.info(f"Schedule refresh complete: {total_stats}")
     except Exception as e:
         logger.error(f"Schedule refresh failed: {e}")
+        raise
     finally:
         session.close()
+
+    if failed:
+        raise RuntimeError(
+            f"Schedule refresh failed for {len(failed)} department sync(s): {', '.join(failed)}"
+        )
 
 
 def create_scheduler(start: bool = True) -> BlockingScheduler:
