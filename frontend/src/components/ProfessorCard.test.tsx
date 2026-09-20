@@ -21,7 +21,7 @@ function renderWithClient(ui: React.ReactElement) {
 const mockProfessor: ProfessorRanking = {
   id: 1, name: 'Dr. Test Professor', department: 'CMPSC',
   gaucho_score: 75, gpa_factor: 0.8, quality_factor: 0.7,
-  difficulty_factor: 0.6, sentiment_factor: 0.5,
+  difficulty_factor: 0.6, sentiment_factor: 0.5, has_rmp: true,
   rmp_quality: 4.2, rmp_difficulty: 3.1, rmp_would_take_again: 85,
   rmp_num_ratings: 50, mean_gpa: 3.45, std_gpa: 0.3,
   avg_sentiment: 0.4, match_confidence: 0.95,

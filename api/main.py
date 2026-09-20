@@ -4,8 +4,11 @@ import uuid
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from api.rate_limit import limiter
 from api.routers import health, courses, professors, quarters
 from api.config import settings
 
@@ -16,6 +19,8 @@ app = FastAPI(
     description="REST API exposing UCSB professor rankings by Gaucho Score",
     version="1.0.0",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 async def catch_unhandled_errors(request: Request, call_next):
@@ -56,7 +61,16 @@ app.add_middleware(
     allow_origins=settings.get_origins(),
     allow_methods=["GET"],
     allow_headers=["*"],
+    expose_headers=["X-Total-Count", "Retry-After"],
 )
+
+
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.method == "GET" and request.url.path.startswith("/courses"):
+        response.headers.setdefault("Cache-Control", "public, max-age=60")
+    return response
 
 app.include_router(health.router)
 app.include_router(courses.router, prefix="/courses", tags=["courses"])

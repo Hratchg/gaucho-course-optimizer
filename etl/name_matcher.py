@@ -1,6 +1,8 @@
 import re
 from thefuzz import fuzz
 
+from etl.name_utils import truncated_name_match
+
 TITLE_PATTERNS = re.compile(r"\b(dr|prof|professor|mr|ms|mrs|phd|md)\b\.?", re.IGNORECASE)
 
 
@@ -67,6 +69,8 @@ def match_names(
 
         for rmp_raw, norm_rmp in normalized_rmp:
             score = match_confidence(norm_nexus, norm_rmp)
+            if score < auto_threshold and truncated_name_match(nexus_name, rmp_raw):
+                score = 90
             if score > best_score:
                 best_score = score
                 best_rmp_raw = rmp_raw

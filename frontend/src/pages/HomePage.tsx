@@ -97,8 +97,9 @@ export default function HomePage() {
             How Gaucho Score Works
           </h2>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Each Gaucho Score is a 0&ndash;100 composite of four equally weighted
-            factors. Weights are adjustable on the results page.
+            Each Gaucho Score is a 0&ndash;100 composite of the factors we have
+            for that professor. Missing RateMyProfessors data is omitted, not
+            counted as average. Weights are adjustable on the results page.
           </p>
 
           {/* Score bar */}

@@ -41,10 +41,11 @@ export interface ProfessorRanking {
   name: string
   department: string | null
   gaucho_score: number
-  gpa_factor: number
-  quality_factor: number
-  difficulty_factor: number
-  sentiment_factor: number
+  gpa_factor: number | null
+  quality_factor: number | null
+  difficulty_factor: number | null
+  sentiment_factor: number | null
+  has_rmp: boolean
   rmp_quality: number | null
   rmp_difficulty: number | null
   rmp_would_take_again: number | null
@@ -59,6 +60,12 @@ export interface ProfessorRanking {
   recent_quarters: string[]
   teaching_next_quarter: boolean
   scheduled_sections: ScheduledSection[]
+}
+
+export interface DataFreshness {
+  latest_grade_year: number | null
+  latest_grade_quarter: string | null
+  schedule_fetched_at: string | null
 }
 
 export interface GradeQuarter {

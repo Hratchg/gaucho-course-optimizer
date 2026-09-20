@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db
+from api.rate_limit import limiter
 from api.schemas import CourseResult, ProfessorRanking, ScheduledSectionResponse
-from dashboard.queries import get_all_course_sections, get_professors_for_course, get_scheduled_sections, search_courses
+from db.queries import get_all_course_sections, get_professors_for_course, get_scheduled_sections, search_courses
 from etl.scoring import (
     bayesian_adjust,
     compute_gaucho_score,
@@ -24,7 +25,9 @@ router = APIRouter()
 
 
 @router.get("/search", response_model=list[CourseResult])
+@limiter.limit("60/minute")
 def search(
+    request: Request,
     q: Annotated[
         str,
         Query(
@@ -41,8 +44,13 @@ def search(
 
 
 @router.get("/{course_id}/professors", response_model=list[ProfessorRanking])
+@limiter.limit("60/minute")
 def get_professors(
+    request: Request,
     course_id: int,
+    response: Response,
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
     db: Session = Depends(get_db),
 ) -> list[dict]:
     """Return professors for a course ranked by Gaucho Score, with raw factor values. (API-02)
@@ -50,6 +58,7 @@ def get_professors(
     Scores are computed fresh per-request from raw GPA/RMP/sentiment data.
     Raw factors (gpa_factor, quality_factor, difficulty_factor, sentiment_factor) are
     included so the React frontend can rerank with custom weights client-side.
+    Missing RateMyProfessors fields stay null and are omitted from the score.
     """
     profs = get_professors_for_course(db, course_id)
     if not profs:
@@ -73,24 +82,19 @@ def get_professors(
 
     results = []
     for p in profs:
-        # None-safe factor computation — fall back to 0.5 (neutral) when data is missing
-        gpa_f = normalize_gpa(p["mean_gpa"]) if p["mean_gpa"] is not None else 0.5
+        gpa_f = normalize_gpa(p["mean_gpa"]) if p["mean_gpa"] is not None else None
+        has_rmp = p["rmp_quality"] is not None
 
-        # Bayesian-adjust quality toward a 3.0 prior when the sample is small
-        # (BUG-5). Without this, a 5.0 from 5 ratings outranks a 4.0 from 251.
         if p["rmp_quality"] is not None and p["rmp_num_ratings"]:
             adj_qual = bayesian_adjust(p["rmp_quality"], p["rmp_num_ratings"], 3.0)
             qual_f = normalize_quality(adj_qual)
         elif p["rmp_quality"] is not None:
             qual_f = normalize_quality(p["rmp_quality"])
         else:
-            qual_f = 0.5
+            qual_f = None
 
-        diff_f = normalize_difficulty(p["rmp_difficulty"]) if p["rmp_difficulty"] is not None else 0.5
-
-        # avg_sentiment is a VADER score in [-1, 1]. Map to [0, 1] before scoring.
-        # Example: avg_sentiment=0.0 (neutral) → sent_f=0.5, not 0.0.
-        sent_f = (p["avg_sentiment"] + 1) / 2 if p["avg_sentiment"] is not None else 0.5
+        diff_f = normalize_difficulty(p["rmp_difficulty"]) if p["rmp_difficulty"] is not None else None
+        sent_f = (p["avg_sentiment"] + 1) / 2 if p["avg_sentiment"] is not None else None
 
         score = compute_gaucho_score(gpa_f, qual_f, diff_f, sent_f)
 
@@ -105,6 +109,7 @@ def get_professors(
             "quality_factor": qual_f,
             "difficulty_factor": diff_f,
             "sentiment_factor": sent_f,
+            "has_rmp": has_rmp,
             "rmp_quality": p["rmp_quality"],
             "rmp_difficulty": p["rmp_difficulty"],
             "rmp_would_take_again": p["rmp_would_take_again"],
@@ -121,7 +126,9 @@ def get_professors(
             "scheduled_sections": prof_sections,
         })
 
-    return sorted(results, key=lambda x: x["gaucho_score"], reverse=True)
+    ranked = sorted(results, key=lambda x: x["gaucho_score"], reverse=True)
+    response.headers["X-Total-Count"] = str(len(ranked))
+    return ranked[offset:offset + limit]
 
 
 @router.get("/{course_id}/sections", response_model=list[ScheduledSectionResponse])

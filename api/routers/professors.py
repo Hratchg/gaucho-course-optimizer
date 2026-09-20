@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db
 from api.schemas import CommentResult, GradeQuarter
-from dashboard.queries import get_comments_for_professor, get_grade_history
+from db.queries import get_comments_for_professor, get_grade_history
 
 router = APIRouter()
 

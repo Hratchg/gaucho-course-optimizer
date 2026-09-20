@@ -64,10 +64,10 @@ def nightly_schedule_refresh():
     """
     logger.info("Starting nightly schedule refresh...")
     from db.connection import get_session
-    from dashboard.queries import get_departments
+    from db.queries import get_departments
     from ucsb_api.client import UCSBApiClient
     from ucsb_api.quarters import current_and_next_quarter_codes
-    from ucsb_api.schedule_sync import sync_department_sections
+    from ucsb_api.schedule_sync import backfill_missing_titles, sync_department_sections
 
     session = get_session()
     failed: list[str] = []  # "DEPT/quarter" for each sync that raised
@@ -98,6 +98,8 @@ def nightly_schedule_refresh():
                     session.rollback()
                     failed.append(f"{dept}/{qcode}")
 
+        title_stats = backfill_missing_titles(session, current_qcode, client=client)
+        logger.info(f"Title backfill: {title_stats}")
         logger.info(f"Schedule refresh complete: {total_stats}")
     except Exception as e:
         logger.error(f"Schedule refresh failed: {e}")

@@ -23,6 +23,9 @@ export default function Navbar() {
             <NavLink to="/search" className={linkClass}>
               Search
             </NavLink>
+            <NavLink to="/methodology" className={linkClass}>
+              Methodology
+            </NavLink>
           </div>
 
           {/* Mobile hamburger menu */}

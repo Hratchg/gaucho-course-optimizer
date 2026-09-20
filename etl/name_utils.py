@@ -36,6 +36,77 @@ def parse_nexus_name(name: str) -> dict:
     return {"last": last, "first": first, "is_initial": is_initial}
 
 
+def _common_prefix_len(left: str, right: str) -> int:
+    length = 0
+    for a, b in zip(left, right):
+        if a != b:
+            break
+        length += 1
+    return length
+
+
+def _covers_fragments(fragments: list[str], tokens: list[str]) -> bool:
+    """True when each fragment lines up with a distinct token.
+
+    The first fragment must be a real prefix (min 4 chars). Later hyphen
+    fragments may only share a 3-character prefix because the Nexus dump
+    cuts names at ~13 characters mid-token (``CASTELLA-CABE`` vs
+    ``Castellanos Cabrera``).
+    """
+    used: set[int] = set()
+    for index, frag in enumerate(fragments):
+        need = 4 if index == 0 else 3
+        if len(frag) < need:
+            return False
+        found = None
+        for i, tok in enumerate(tokens):
+            if i in used:
+                continue
+            if tok.startswith(frag) or _common_prefix_len(frag, tok) >= need:
+                found = i
+                break
+        if found is None:
+            return False
+        used.add(found)
+    return True
+
+
+def truncated_name_match(nexus_name: str, rmp_name: str) -> bool:
+    """True when a truncated Nexus name is a prefix of the RMP name tokens.
+
+    Handles hyphenated surname fragments that the Nexus dump cuts off
+    (``CASTELLA-CABE`` vs ``Ana Castellanos Cabrera``) and first/last
+    pairs where the given name is also truncated (``ALONSO RODRIG`` vs
+    ``Maria Alonso Rodriguez``). Single-token last-only names are rejected
+    so ``WANG`` does not match ``Wangari``.
+    """
+    parsed = parse_nexus_name(nexus_name)
+    if parsed["is_initial"]:
+        return False
+
+    last_parts = [p for p in parsed["last"].replace("-", " ").split() if p]
+    first_parts = [
+        p for p in parsed["first"].replace("-", " ").split() if p and len(p) > 1
+    ]
+    rmp_tokens = [
+        t.lower().strip(".,")
+        for t in (rmp_name or "").replace("-", " ").split()
+        if t.strip()
+    ]
+    if not last_parts or not rmp_tokens:
+        return False
+
+    if len(last_parts) >= 2:
+        return _covers_fragments(last_parts, rmp_tokens)
+
+    if first_parts:
+        return _covers_fragments(last_parts, rmp_tokens) and _covers_fragments(
+            first_parts, rmp_tokens
+        )
+
+    return False
+
+
 def is_initial_only(name: str) -> bool:
     """Check if a Nexus name has only an initial for the first name."""
     parsed = parse_nexus_name(name)

@@ -20,10 +20,11 @@ class ProfessorRanking(BaseModel):
     name: str
     department: str | None = None
     gaucho_score: float
-    gpa_factor: float
-    quality_factor: float
-    difficulty_factor: float
-    sentiment_factor: float
+    gpa_factor: float | None = None
+    quality_factor: float | None = None
+    difficulty_factor: float | None = None
+    sentiment_factor: float | None = None
+    has_rmp: bool = False
     rmp_quality: float | None = None
     rmp_difficulty: float | None = None
     rmp_would_take_again: float | None = None
@@ -84,3 +85,9 @@ class ScheduledSectionResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class DataFreshness(BaseModel):
+    latest_grade_year: int | None = None
+    latest_grade_quarter: str | None = None
+    schedule_fetched_at: str | None = None

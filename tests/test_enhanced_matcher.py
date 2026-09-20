@@ -170,6 +170,20 @@ class TestPass2:
         assert stats["matched"] == 1
         assert nexus.rmp_id is not None
 
+    def test_truncated_hyphenated_surname(self, db_session):
+        course = _make_course(db_session, code="SPANTRUNC")
+        nexus = _make_nexus_prof(db_session, "CASTELLA-CABE", dept="SPAN", course=course)
+        rmp = _make_rmp_prof(db_session, "Ana", "Castellanos Cabrera", dept="Spanish")
+        nexus.department = "SPAN"
+        db_session.flush()
+
+        stats = _pass2_fullname_fuzzy(db_session, min_year=2023)
+        assert stats["matched"] == 1
+        db_session.refresh(nexus)
+        assert nexus.rmp_id is not None
+        assert nexus.name_rmp == "Ana Castellanos Cabrera"
+        assert nexus.match_confidence >= 85
+
 
 class TestPass4:
     def test_merges_duplicates(self, db_session):

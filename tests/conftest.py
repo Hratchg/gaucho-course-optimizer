@@ -12,6 +12,7 @@ except ImportError:
     pass  # python-dotenv not installed; rely on environment
 
 os.environ.setdefault("DATABASE_URL", "postgresql://gco:gco@localhost:5432/gco_test")
+os.environ.setdefault("RATE_LIMIT_ENABLED", "0")
 
 from db.models import Base
 from db.connection import get_engine

@@ -181,11 +181,11 @@ def test_sentiment_factor_vader_normalization(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Test 7: rmp_quality=None → quality_factor=0.5 (None-safe fallback)
+# Test 7: rmp_quality=None → quality_factor is omitted, not scored as 0.5
 # ---------------------------------------------------------------------------
 
-def test_quality_factor_none_safe_fallback(monkeypatch):
-    profs = [_make_prof(rmp_quality=None)]
+def test_quality_factor_none_is_not_neutral(monkeypatch):
+    profs = [_make_prof(rmp_quality=None, rmp_difficulty=None, avg_sentiment=None)]
     monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, course_id: profs)
 
     mock_db = MagicMock()
@@ -198,9 +198,31 @@ def test_quality_factor_none_safe_fallback(monkeypatch):
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == 1
-        assert data[0]["quality_factor"] == pytest.approx(0.5), (
-            f"Expected quality_factor=0.5 for rmp_quality=None, got {data[0]['quality_factor']}"
-        )
+        assert data[0]["quality_factor"] is None
+        assert data[0]["has_rmp"] is False
+        # GPA 3.5 / 4.0 = 0.875 → 87.5 when RMP factors are omitted
+        assert data[0]["gaucho_score"] == pytest.approx(87.5)
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_professors_are_paginated(monkeypatch):
+    profs = [
+        _make_prof(id=1, name="A", mean_gpa=4.0),
+        _make_prof(id=2, name="B", mean_gpa=3.0),
+        _make_prof(id=3, name="C", mean_gpa=2.0),
+    ]
+    monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, course_id: profs)
+    mock_db = MagicMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    client = TestClient(app)
+    try:
+        resp = client.get("/courses/1/professors?limit=2&offset=0")
+        assert resp.status_code == 200
+        assert resp.headers["X-Total-Count"] == "3"
+        assert len(resp.json()) == 2
+        page_two = client.get("/courses/1/professors?limit=2&offset=2")
+        assert len(page_two.json()) == 1
     finally:
         app.dependency_overrides.clear()
 
@@ -305,6 +327,7 @@ PROFESSOR_RESPONSE_KEYS = {
     "recent_quarters",
     "teaching_next_quarter",
     "scheduled_sections",
+    "has_rmp",
 }
 
 

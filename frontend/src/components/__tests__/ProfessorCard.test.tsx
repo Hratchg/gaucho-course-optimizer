@@ -42,6 +42,7 @@ function makeProfessor(overrides: Partial<ProfessorRanking> = {}): ProfessorRank
     quality_factor: 0.7,
     difficulty_factor: 0.6,
     sentiment_factor: 0.65,
+    has_rmp: true,
     rmp_quality: 4.0,
     rmp_difficulty: 2.5,
     rmp_would_take_again: 80,

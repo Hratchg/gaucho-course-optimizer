@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from db.models import Course, Professor, ScheduledSection
@@ -22,6 +22,17 @@ from ucsb_api.name_matcher import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _apply_course_title(course: Course, title: str | None) -> bool:
+    """Persist a UCSB catalog title onto a course that is still untitled."""
+    cleaned = (title or "").strip()
+    if not cleaned:
+        return False
+    if course.title and course.title.strip():
+        return False
+    course.title = cleaned
+    return True
 
 
 def _normalize_course_id(raw_course_id: str) -> str:
@@ -162,6 +173,8 @@ def sync_course_sections(
         logger.info("No sections found for %s in %s", course_code, quarter_code)
         return stats
 
+    _apply_course_title(course, raw_sections[0].get("_title"))
+
     # Load professors for name matching
     professors = _build_professor_lookup(session)
     now = datetime.now(timezone.utc)
@@ -294,6 +307,8 @@ def sync_department_sections(
             # Course not in our DB — skip (we only track courses with grade data)
             continue
 
+        _apply_course_title(course, raw_section.get("_title"))
+
         # Match instructor
         professor_id = None
         if section_data["instructor_name_raw"]:
@@ -371,3 +386,47 @@ def sync_department_sections(
         total_stats["auto_created"],
     )
     return total_stats
+
+
+def backfill_missing_titles(
+    session: Session,
+    quarter_code: str,
+    *,
+    client: UCSBApiClient | None = None,
+) -> dict[str, int]:
+    """Fill null course titles from a UCSB department class listing."""
+    from collections import defaultdict
+
+    if client is None:
+        client = UCSBApiClient()
+
+    untitled = (
+        session.query(Course)
+        .filter(or_(Course.title.is_(None), Course.title == ""))
+        .all()
+    )
+    stats = {"courses": len(untitled), "updated": 0, "departments": 0}
+    if not untitled:
+        return stats
+
+    by_dept: dict[str, list[Course]] = defaultdict(list)
+    by_code = {course.code: course for course in untitled}
+    for course in untitled:
+        if course.department:
+            by_dept[course.department].append(course)
+
+    for dept in by_dept:
+        stats["departments"] += 1
+        try:
+            raw_sections = client.fetch_department_classes(quarter_code, dept)
+        except Exception as exc:
+            logger.error("Title backfill failed for %s: %s", dept, exc)
+            continue
+        for raw in raw_sections:
+            normalized = _normalize_course_id(raw.get("_courseId", ""))
+            course = by_code.get(normalized)
+            if course and _apply_course_title(course, raw.get("_title")):
+                stats["updated"] += 1
+
+    session.commit()
+    return stats

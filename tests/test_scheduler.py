@@ -20,7 +20,11 @@ def refresh_deps(mocker):
     session = MagicMock()
     mocker.patch("db.connection.get_session", return_value=session)
     mocker.patch("ucsb_api.client.UCSBApiClient")
-    mocker.patch("dashboard.queries.get_departments", return_value=["ANTH", "CMPSC"])
+    mocker.patch("db.queries.get_departments", return_value=["ANTH", "CMPSC"])
+    mocker.patch(
+        "ucsb_api.schedule_sync.backfill_missing_titles",
+        return_value={"courses": 0, "updated": 0, "departments": 0},
+    )
     sync = mocker.patch("ucsb_api.schedule_sync.sync_department_sections", return_value=STATS)
     return session, sync
 
@@ -28,7 +32,7 @@ def refresh_deps(mocker):
 def test_nightly_refresh_raises_when_db_unavailable(refresh_deps, mocker):
     """A refused connection must fail the job, not log and exit 0."""
     session, _ = refresh_deps
-    mocker.patch("dashboard.queries.get_departments", side_effect=RuntimeError("data transfer quota"))
+    mocker.patch("db.queries.get_departments", side_effect=RuntimeError("data transfer quota"))
     with pytest.raises(RuntimeError, match="data transfer quota"):
         nightly_schedule_refresh()
     session.close.assert_called_once()

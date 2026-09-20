@@ -10,7 +10,13 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 
 from db.models import Professor, GradeDistribution
-from etl.name_utils import parse_nexus_name, is_initial_only, initial_matches, find_duplicate_pairs
+from etl.name_utils import (
+    parse_nexus_name,
+    is_initial_only,
+    initial_matches,
+    find_duplicate_pairs,
+    truncated_name_match,
+)
 from etl.department_mapper import departments_match
 from etl.name_matcher import normalize_nexus_name, normalize_rmp_name, match_confidence
 
@@ -116,16 +122,17 @@ def _pass1_initial_match(
     stats = {"matched": 0, "ambiguous": 0, "no_candidate": 0, "dept_mismatch": 0}
     consumed = consumed_rmp_ids if consumed_rmp_ids is not None else set()
 
-    # Index RMP professors by lowercase last name
+    # Index RMP professors by every surname token (not the given name) so
+    # multi-word names like "Van Der Berg" are findable as van, der, or berg.
     rmp_by_last: dict[str, list[Professor]] = defaultdict(list)
     for rmp in rmp_profs:
         if rmp.id in consumed:
             continue
         if rmp.name_rmp:
-            parts = rmp.name_rmp.strip().split()
-            if parts:
-                last = parts[-1].lower()
-                rmp_by_last[last].append(rmp)
+            parts = [p.lower().strip(".,") for p in rmp.name_rmp.replace("-", " ").split() if p.strip()]
+            surname_tokens = parts[1:] if len(parts) > 1 else parts
+            for part in surname_tokens:
+                rmp_by_last[part].append(rmp)
 
     for prof in unmatched:
         if not is_initial_only(prof.name_nexus):
@@ -208,6 +215,8 @@ def _pass2_fullname_fuzzy(
                 continue
             norm_rmp = normalize_rmp_name(rmp.name_rmp)
             score = match_confidence(norm_nexus, norm_rmp)
+            if score < 85 and truncated_name_match(prof.name_nexus or "", rmp.name_rmp):
+                score = 90
             if score > best_score:
                 best_score = score
                 best_rmp = rmp
@@ -247,14 +256,14 @@ def _pass3_dept_disambiguation(
     unmatched = _get_unmatched_nexus(session, min_year)
     rmp_profs = [r for r in _get_unlinked_rmp(session) if r.id not in consumed]
 
-    # Index RMP by last name
+    # Index RMP by every surname token (not the given name).
     rmp_by_last: dict[str, list[Professor]] = defaultdict(list)
     for rmp in rmp_profs:
         if rmp.name_rmp:
-            parts = rmp.name_rmp.strip().split()
-            if parts:
-                last = parts[-1].lower()
-                rmp_by_last[last].append(rmp)
+            parts = [p.lower().strip(".,") for p in rmp.name_rmp.replace("-", " ").split() if p.strip()]
+            surname_tokens = parts[1:] if len(parts) > 1 else parts
+            for part in surname_tokens:
+                rmp_by_last[part].append(rmp)
 
     for prof in unmatched:
         if not is_initial_only(prof.name_nexus):

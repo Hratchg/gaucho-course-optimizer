@@ -1,0 +1,20 @@
+name: Production readiness ping
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /ready
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/ready.json -w '%{http_code}' \
+            --max-time 30 \
+            https://gaucho-course-optimizer.onrender.com/ready)
+          echo "status=${code}"
+          cat /tmp/ready.json
+          test "${code}" = "200"

@@ -14,6 +14,7 @@ from ucsb_api.schedule_sync import (
     _extract_section_data,
     sync_course_sections,
     sync_department_sections,
+    backfill_missing_titles,
 )
 
 
@@ -325,3 +326,28 @@ def test_sync_department_reuses_auto_created_professor(db_session):
     assert len(profs) == 1
     section = db_session.query(ScheduledSection).filter_by(enroll_code="99903").one()
     assert section.professor_id == profs[0].id
+
+
+def test_sync_course_fills_missing_title(db_session):
+    course = Course(code="CMPSC130A", title=None, department="CMPSC")
+    db_session.add(course)
+    db_session.flush()
+    mock_client = _make_mock_client(MOCK_API_SECTIONS)
+
+    sync_course_sections(db_session, "20262", "CMPSC130A", client=mock_client)
+
+    db_session.refresh(course)
+    assert course.title == "Data Structures and Algorithms I"
+
+
+def test_backfill_missing_titles(db_session):
+    course = Course(code="CMPSC130A", title=None, department="CMPSC")
+    db_session.add(course)
+    db_session.flush()
+    mock_client = _make_mock_client(MOCK_API_SECTIONS)
+
+    stats = backfill_missing_titles(db_session, "20262", client=mock_client)
+
+    assert stats["updated"] == 1
+    db_session.refresh(course)
+    assert course.title == "Data Structures and Algorithms I"

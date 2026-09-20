@@ -26,22 +26,38 @@ def bayesian_adjust(value: float, count: int, prior: float, min_count: int = 5) 
 
 
 def compute_gaucho_score(
-    gpa_factor: float,
-    quality_factor: float,
-    difficulty_factor: float,
-    sentiment_factor: float,
+    gpa_factor: float | None,
+    quality_factor: float | None,
+    difficulty_factor: float | None,
+    sentiment_factor: float | None,
     weights: dict[str, float] | None = None,
 ) -> float:
-    """Compute Gaucho Value Score (0-100) from normalized factors and weights."""
+    """Compute Gaucho Value Score (0-100) from available normalized factors.
+
+    Missing factors (None) are omitted and the remaining weights are
+    renormalized. A missing RateMyProfessors match is therefore scored from
+    GPA alone instead of being treated as a 0.5 (average) rating.
+    """
     if weights is None:
         weights = {"gpa": 0.25, "quality": 0.25, "difficulty": 0.25, "sentiment": 0.25}
 
-    raw = (
-        gpa_factor * weights.get("gpa", 0.25)
-        + quality_factor * weights.get("quality", 0.25)
-        + difficulty_factor * weights.get("difficulty", 0.25)
-        + sentiment_factor * weights.get("sentiment", 0.25)
-    )
+    values = {
+        "gpa": gpa_factor,
+        "quality": quality_factor,
+        "difficulty": difficulty_factor,
+        "sentiment": sentiment_factor,
+    }
+    usable = {
+        key: value
+        for key, value in values.items()
+        if value is not None and weights.get(key, 0) > 0
+    }
+    if not usable:
+        return 0.0
+    weight_sum = sum(weights.get(key, 0) for key in usable)
+    if weight_sum == 0:
+        return 0.0
+    raw = sum(usable[key] * (weights[key] / weight_sum) for key in usable)
     return round(max(0.0, min(100.0, raw * 100)), 2)
 
 
@@ -131,10 +147,10 @@ def compute_all_scores(
             stats["skipped"] += 1
             continue
 
-        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa is not None else 0.5
-        qual_f = normalize_quality(quality) if quality is not None else 0.5
-        diff_f = normalize_difficulty(difficulty) if difficulty is not None else 0.5
-        sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else 0.5
+        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa is not None else None
+        qual_f = normalize_quality(quality) if quality is not None else None
+        diff_f = normalize_difficulty(difficulty) if difficulty is not None else None
+        sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else None
 
         # Bayesian adjust quality factor. num_ratings is intentionally truthy —
         # 0 ratings must skip the shrink (same as the live API path).

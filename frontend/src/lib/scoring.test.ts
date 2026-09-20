@@ -55,6 +55,11 @@ describe('computeGauchoScore', () => {
     const score = computeGauchoScore(0, 0, 0, 0, { gpa: 4, quality: 3, difficulty: 2, sentiment: 1 })
     expect(score).toBe(0)
   })
+
+  it('omits missing RateMyProfessors factors instead of treating them as 0.5', () => {
+    const score = computeGauchoScore(0.8, null, null, null, equalWeights)
+    expect(score).toBe(80)
+  })
 })
 
 describe('normalizeToggles', () => {

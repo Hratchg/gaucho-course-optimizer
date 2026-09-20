@@ -5,6 +5,7 @@ from etl.name_utils import (
     is_initial_only,
     initial_matches,
     find_duplicate_pairs,
+    truncated_name_match,
 )
 
 
@@ -32,6 +33,20 @@ class TestParseNexusName:
     def test_empty_string(self):
         result = parse_nexus_name("")
         assert result == {"last": "", "first": "", "is_initial": False}
+
+
+class TestTruncatedNameMatch:
+    def test_hyphenated_surname_fragments(self):
+        assert truncated_name_match("CASTELLA-CABE", "Ana Castellanos Cabrera") is True
+
+    def test_truncated_given_and_last(self):
+        assert truncated_name_match("ALONSO RODRIG", "Maria Alonso Rodriguez") is True
+
+    def test_does_not_match_unrelated_short_last(self):
+        assert truncated_name_match("WANG", "Wangari Maathai") is False
+
+    def test_rejects_initial_only(self):
+        assert truncated_name_match("CHANG S", "Shiyu Chang") is False
 
 
 class TestIsInitialOnly:

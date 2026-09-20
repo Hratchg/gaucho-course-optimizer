@@ -1,4 +1,4 @@
-import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult, QuarterInfo, ScheduledSection } from '@/types/api'
+import type { CourseResult, ProfessorRanking, GradeQuarter, CommentResult, QuarterInfo, ScheduledSection, DataFreshness } from '@/types/api'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -9,8 +9,14 @@ export async function fetchCourses(query: string): Promise<CourseResult[]> {
 }
 
 export async function fetchProfessors(courseId: number): Promise<ProfessorRanking[]> {
-  const res = await fetch(`${API_URL}/courses/${courseId}/professors`)
+  const res = await fetch(`${API_URL}/courses/${courseId}/professors?limit=200`)
   if (!res.ok) throw new Error(`Professors fetch failed: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchFreshness(): Promise<DataFreshness> {
+  const res = await fetch(`${API_URL}/meta/freshness`)
+  if (!res.ok) throw new Error(`Freshness fetch failed: ${res.status}`)
   return res.json()
 }
 

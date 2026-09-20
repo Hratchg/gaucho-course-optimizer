@@ -7,6 +7,7 @@ from dashboard.queries import (
     get_professors_for_course,
     search_courses,
     get_departments,
+    get_data_freshness,
 )
 
 CURRENT_YEAR = datetime.now().year
@@ -335,3 +336,20 @@ def test_recent_quarters_format(db_session):
     result = get_professors_for_course(db_session, course.id)
     assert len(result) == 1
     assert result[0]["recent_quarters"] == ["Fall 2024"]
+
+
+def test_get_data_freshness_uses_latest_grade_term(db_session):
+    prof, course = _seed_prof_and_course(db_session, "FreshProf", "FR001")
+    db_session.add(GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Winter", year=2024, avg_gpa=3.1,
+    ))
+    db_session.add(GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2025, avg_gpa=3.4,
+    ))
+    db_session.flush()
+
+    freshness = get_data_freshness(db_session)
+    assert freshness["latest_grade_year"] == 2025
+    assert freshness["latest_grade_quarter"] == "Fall"

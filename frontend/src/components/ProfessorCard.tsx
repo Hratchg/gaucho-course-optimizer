@@ -193,6 +193,14 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
                 Teaching Next Quarter
               </Badge>
             )}
+            {!professor.has_rmp && (
+              <Badge
+                variant="outline"
+                className="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
+              >
+                GPA only
+              </Badge>
+            )}
           </div>
           <Badge
             className={`${scoreColorClass(score)} text-sm font-bold px-2.5 py-1 rounded-full`}

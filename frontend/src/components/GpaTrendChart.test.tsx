@@ -56,4 +56,10 @@ describe('GpaTrendChart', () => {
       screen.getByRole('img', { name: /gpa trend from f22 \(3\.2\) to w23 \(3\.4\)/i })
     ).toBeInTheDocument()
   })
+
+  it('exposes a data table alternative', () => {
+    render(<GpaTrendChart quarters={mockQuarters} />)
+    expect(screen.getByRole('table', { name: /gpa by quarter/i })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /f22 3\.2/i })).toBeInTheDocument()
+  })
 })

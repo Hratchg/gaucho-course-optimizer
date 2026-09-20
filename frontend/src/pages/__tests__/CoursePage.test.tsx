@@ -32,6 +32,7 @@ function makeProfessorData(overrides: Record<string, unknown> = {}) {
     quality_factor: 0.80,
     difficulty_factor: 0.65,
     sentiment_factor: 0.75,
+    has_rmp: true,
     rmp_quality: 4.1,
     rmp_difficulty: 3.2,
     rmp_would_take_again: 0.78,

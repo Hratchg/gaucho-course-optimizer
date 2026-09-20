@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import { RegistrationBanner } from '@/components/RegistrationBanner'
+import { Footer } from '@/components/Footer'
 
 export default function Layout() {
   const location = useLocation()
@@ -22,6 +23,7 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

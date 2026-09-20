@@ -45,19 +45,27 @@ export function normalizeToggles(toggles: ToggleWeights): Weights {
 }
 
 export function computeGauchoScore(
-  gpaFactor: number,
-  qualityFactor: number,
-  difficultyFactor: number,
-  sentimentFactor: number,
+  gpaFactor: number | null,
+  qualityFactor: number | null,
+  difficultyFactor: number | null,
+  sentimentFactor: number | null,
   weights: Weights | ToggleWeights
 ): number {
   const w = typeof weights.gpa === 'boolean'
     ? normalizeToggles(weights as ToggleWeights)
     : normalizeWeights(weights as Weights)
-  const raw =
-    gpaFactor * w.gpa +
-    qualityFactor * w.quality +
-    difficultyFactor * w.difficulty +
-    sentimentFactor * w.sentiment
+  const values = {
+    gpa: gpaFactor,
+    quality: qualityFactor,
+    difficulty: difficultyFactor,
+    sentiment: sentimentFactor,
+  } as const
+  const usable = (Object.keys(values) as Array<keyof typeof values>).filter(
+    (key) => values[key] != null && w[key] > 0
+  )
+  if (usable.length === 0) return 0
+  const weightSum = usable.reduce((sum, key) => sum + w[key], 0)
+  if (weightSum === 0) return 0
+  const raw = usable.reduce((sum, key) => sum + (values[key] as number) * (w[key] / weightSum), 0)
   return Math.round(Math.max(0, Math.min(100, raw * 100)))
 }

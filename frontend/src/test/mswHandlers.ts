@@ -15,6 +15,7 @@ const mockProfessors: ProfessorRanking[] = [
     quality_factor: 0.80,
     difficulty_factor: 0.65,
     sentiment_factor: 0.75,
+    has_rmp: true,
     rmp_quality: 4.1,
     rmp_difficulty: 3.2,
     rmp_would_take_again: 0.78,
@@ -57,6 +58,7 @@ const mockProfessors: ProfessorRanking[] = [
     quality_factor: 0.68,
     difficulty_factor: 0.55,
     sentiment_factor: 0.60,
+    has_rmp: true,
     rmp_quality: 3.5,
     rmp_difficulty: 2.8,
     rmp_would_take_again: 0.62,
@@ -147,5 +149,13 @@ export const handlers = [
 
   http.get('http://localhost:8001/quarters/current', () => {
     return HttpResponse.json(mockQuarterInfo)
+  }),
+
+  http.get('http://localhost:8001/meta/freshness', () => {
+    return HttpResponse.json({
+      latest_grade_year: 2025,
+      latest_grade_quarter: 'Fall',
+      schedule_fetched_at: '2026-09-19T08:30:00+00:00',
+    })
   }),
 ]

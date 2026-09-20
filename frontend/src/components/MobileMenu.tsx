@@ -12,6 +12,7 @@ import { Menu } from 'lucide-react'
 const navItems = [
   { to: '/', label: 'Home', end: true },
   { to: '/search', label: 'Search', end: false },
+  { to: '/methodology', label: 'Methodology', end: false },
 ]
 
 export default function MobileMenu() {

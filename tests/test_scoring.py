@@ -66,6 +66,11 @@ def test_compute_gaucho_score_custom_weights():
     assert score == 100.0
 
 
+def test_missing_rmp_factors_use_gpa_only():
+    score = compute_gaucho_score(0.8, None, None, None)
+    assert score == 80.0
+
+
 def test_known_inputs_all_half():
     """All factors at 0.5, equal weights => exactly 50.0."""
     score = compute_gaucho_score(0.5, 0.5, 0.5, 0.5)
@@ -266,8 +271,8 @@ def test_compute_all_scores_treats_zero_gpa_and_quality_as_data(mem_session):
         .one()
     )
     # 0.0 GPA → 0.0 factor; 0.0 quality → 0.0 factor; difficulty 3.0 → 0.4;
-    # missing/zero ratings skip Bayesian; no sentiment → 0.5.
-    expected = compute_gaucho_score(0.0, 0.0, normalize_difficulty(3.0), 0.5)
+    # missing/zero ratings skip Bayesian; missing sentiment is omitted.
+    expected = compute_gaucho_score(0.0, 0.0, normalize_difficulty(3.0), None)
     assert stored.score == expected
     # The pre-fix fallback (0.5, 0.5, 0.4, 0.5) is 47.5 — must not land there.
     fallback = compute_gaucho_score(0.5, 0.5, normalize_difficulty(3.0), 0.5)

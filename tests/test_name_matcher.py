@@ -41,3 +41,10 @@ def test_match_names_no_match():
     rmp_names = ["Robert Johnson"]
     matches = match_names(nexus_names, rmp_names)
     assert "ZHANG, WEI" not in matches or matches["ZHANG, WEI"]["confidence"] < 70
+
+
+def test_match_names_truncated_hyphenated_surname():
+    matches = match_names(["CASTELLA-CABE"], ["Ana Castellanos Cabrera"])
+    assert matches["CASTELLA-CABE"]["rmp_name"] == "Ana Castellanos Cabrera"
+    assert matches["CASTELLA-CABE"]["confidence"] >= 85
+    assert matches["CASTELLA-CABE"]["status"] == "auto"

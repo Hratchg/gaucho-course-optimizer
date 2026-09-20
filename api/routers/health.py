@@ -3,7 +3,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db
-from api.schemas import HealthResponse
+from api.schemas import DataFreshness, HealthResponse
+from db.queries import get_data_freshness
 
 router = APIRouter(tags=["health"])
 
@@ -36,3 +37,9 @@ def readiness_check(response: Response, db: Session = Depends(get_db)) -> dict:
         response.status_code = 503
         return {"status": "unavailable"}
     return {"status": "ok"}
+
+
+@router.get("/meta/freshness", response_model=DataFreshness)
+def freshness(db: Session = Depends(get_db)) -> dict:
+    """Newest official grade term and last schedule sync timestamp."""
+    return get_data_freshness(db)
