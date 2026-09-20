@@ -55,32 +55,35 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [0, 2.1, 5.6], fov: 42 }}
+      camera={{ position: [0, 2.35, 9.3], fov: 48 }}
       gl={{ antialias: true }}
       aria-hidden
     >
       <color attach="background" args={[night ? '#171428' : '#2c2545']} />
-      <fog attach="fog" args={[night ? '#171428' : '#2c2545', 9, 22]} />
+      <fog attach="fog" args={[night ? '#171428' : '#2c2545', 16, 34]} />
 
       <Suspense fallback={null}>
-        <Environment files="/3d/library-hdri.hdr" environmentIntensity={night ? 0.25 : 0.55} />
+        <Environment files="/3d/library-hdri.hdr" environmentIntensity={night ? 0.4 : 0.55} />
 
         {/* Key light — warm reading lamps feel */}
         <directionalLight
-          position={[3, 6, 4]}
-          intensity={night ? 0.7 : 1.4}
+          position={[2, 7, 6]}
+          intensity={night ? 1.05 : 1.45}
           color={night ? '#ffd9a0' : '#fff2dd'}
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
-        <ambientLight intensity={night ? 0.12 : 0.25} color="#cbb8ff" />
-        {/* Warm accent pools per bookcase */}
+        <hemisphereLight
+          args={[night ? '#4a3f72' : '#7a7098', night ? '#1a1528' : '#3a3048', night ? 0.42 : 0.28]}
+        />
+        <ambientLight intensity={night ? 0.28 : 0.3} color="#cbb8ff" />
+        {/* Warm accent pools per bookcase — sit in front of each plaque */}
         {BOOKCASES.map((b) => (
           <pointLight
             key={b.dept}
-            position={[b.position[0], 3.4, b.position[2] + 1.2]}
-            intensity={night ? 1.6 : 0.8}
-            distance={5.5}
+            position={[b.position[0], 3.35, b.position[2] + 1.35]}
+            intensity={night ? 2.4 : 1.25}
+            distance={6.8}
             color="#ffc93c"
           />
         ))}
@@ -104,8 +107,8 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
         <CameraRig target={target} />
 
         <EffectComposer>
-          <Bloom intensity={night ? 0.55 : 0.25} luminanceThreshold={0.8} mipmapBlur />
-          <Vignette eskil={false} offset={0.18} darkness={0.75} />
+          <Bloom intensity={night ? 0.38 : 0.22} luminanceThreshold={0.82} mipmapBlur />
+          <Vignette eskil={false} offset={0.22} darkness={night ? 0.5 : 0.62} />
         </EffectComposer>
       </Suspense>
     </Canvas>

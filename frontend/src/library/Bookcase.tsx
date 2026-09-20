@@ -134,15 +134,23 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
       {/* Books */}
       <instancedMesh ref={setInstances} args={[bookGeo, bookMat, books.length]} castShadow />
 
-      {/* Brass plaque */}
+      {/* Brass plaque — emissive so outer cases stay readable at night */}
       <mesh position={[0, CASE_H + 0.02, CASE_D / 2 - 0.1]} castShadow>
-        <boxGeometry args={[0.9, 0.22, 0.03]} />
-        <meshStandardMaterial color="#8a6d2f" metalness={0.9} roughness={0.35} />
+        <boxGeometry args={[1.02, 0.24, 0.03]} />
+        <meshStandardMaterial
+          color="#c4a35a"
+          metalness={0.55}
+          roughness={0.4}
+          emissive="#8a6a28"
+          emissiveIntensity={0.55}
+        />
       </mesh>
       <Text
-        position={[0, CASE_H + 0.02, CASE_D / 2 - 0.08]}
-        fontSize={0.11}
-        color="#241d0e"
+        position={[0, CASE_H + 0.02, CASE_D / 2 - 0.078]}
+        fontSize={0.125}
+        color="#f6ecd0"
+        outlineWidth={0.016}
+        outlineColor="#1c1408"
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.08}

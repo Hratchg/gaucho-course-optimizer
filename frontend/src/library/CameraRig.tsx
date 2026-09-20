@@ -10,8 +10,8 @@ export interface CameraTarget {
   bookFocus: boolean
 }
 
-const REST_POS = new THREE.Vector3(0, 2.1, 5.6)
-const REST_LOOK = new THREE.Vector3(0, 1.6, -1.2)
+const REST_POS = new THREE.Vector3(0, 2.35, 9.3)
+const REST_LOOK = new THREE.Vector3(0, 1.45, -1.0)
 
 /** Smoothly flies the camera between the overview and a focused bookcase. */
 export default function CameraRig({ target }: { target: CameraTarget }) {
