@@ -37,11 +37,15 @@ export default function GeneratedBookcase({ url, slot }: GeneratedBookcaseProps)
     })
 
     source.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
-        obj.material = wood
-        obj.castShadow = true
-        obj.receiveShadow = true
-      }
+      if (!(obj instanceof THREE.Mesh)) return
+      obj.castShadow = true
+      obj.receiveShadow = true
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
+      const textured = mats.some(
+        (m) => Boolean(m && 'map' in m && (m as THREE.MeshStandardMaterial).map),
+      )
+      // Keep Tripo/Meshy PBR when the web-app export already has maps.
+      if (!textured) obj.material = wood
     })
 
     const box = new THREE.Box3().setFromObject(source)
@@ -58,8 +62,8 @@ export default function GeneratedBookcase({ url, slot }: GeneratedBookcaseProps)
 
   return (
     <group position={slot.position} rotation-y={slot.rotationY}>
-      {/* Tripo drafts face +X; rotate so empty shelves look down the aisle. */}
-      <group ref={root} rotation-y={-Math.PI / 2} />
+      {/* Studio export is already aisle-facing; untextured API drafts needed -PI/2. */}
+      <group ref={root} />
       <DeptPlaque label={slot.dept} />
     </group>
   )
