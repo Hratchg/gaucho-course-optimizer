@@ -139,6 +139,26 @@ class TestPass1:
         assert nexus.rmp_id is None
         assert nexus.match_confidence is None
 
+    def test_does_not_reuse_consumed_rmp_candidate(self, db_session):
+        """BUG-8: after linking, the consumed RMP row must leave the candidate pool.
+
+        Two abbreviated Nexus professors share a surname + initial. Without
+        pruning, the second is handed the same (now-deleted) RMP object.
+        """
+        course = _make_course(db_session)
+        first = _make_nexus_prof(db_session, "HUANG L", course=course)
+        second = _make_nexus_prof(db_session, "HUANG L", course=course)
+        rmp = _make_rmp_prof(db_session, "Lei", "Huang", rmp_id=444)
+        expected_rmp_id = rmp.rmp_id
+
+        stats = _pass1_initial_match(db_session, [first, second], [rmp])
+        assert stats["matched"] == 1
+        assert stats["no_candidate"] == 1
+        linked = [p for p in (first, second) if p.rmp_id == expected_rmp_id]
+        unmatched = [p for p in (first, second) if p.rmp_id is None]
+        assert len(linked) == 1
+        assert len(unmatched) == 1
+
 
 class TestPass2:
     def test_fuzzy_matches_full_name(self, db_session):
@@ -166,3 +186,53 @@ class TestPass4:
         # Full-name professor should have the grades
         remaining = db_session.get(Professor, full_id)
         assert remaining is not None
+
+
+class TestConsumedCandidatesAcrossPasses:
+    def test_run_all_passes_does_not_hand_deleted_rmp_to_second_abbrev(self, db_session):
+        """BUG-8 e2e: two abbreviated Nexus rows share a surname/initial.
+
+        Only one RMP candidate exists. The second Nexus professor must stay
+        unmatched — not be handed the row pass 1 already deleted.
+        """
+        course = _make_course(db_session, code="CMPSCBUG8")
+        first = _make_nexus_prof(db_session, "HUANG L", course=course)
+        second = _make_nexus_prof(db_session, "HUANG L", course=course)
+        rmp = _make_rmp_prof(db_session, "Lei", "Huang", rmp_id=555)
+        expected_rmp_id = rmp.rmp_id
+
+        result = run_enhanced_matching(db_session, min_year=2023)
+        assert result["pass1"]["matched"] == 1
+        assert result["pass1"]["no_candidate"] == 1
+
+        db_session.refresh(first)
+        db_session.refresh(second)
+        linked = [p for p in (first, second) if p.rmp_id == expected_rmp_id]
+        unmatched = [p for p in (first, second) if p.rmp_id is None]
+        assert len(linked) == 1
+        assert len(unmatched) == 1
+        # The RMP-only row is gone; the consumed id must not reappear on both.
+        assert db_session.query(Professor).filter_by(rmp_id=expected_rmp_id).count() == 1
+
+    def test_pass3_does_not_reuse_consumed_rmp_candidate(self, db_session):
+        """Pass 3 also built rmp_by_last up front and never pruned it."""
+        course = _make_course(db_session, code="CMPSCBUG8P3")
+        first = _make_nexus_prof(db_session, "HUANG L", course=course)
+        second = _make_nexus_prof(db_session, "HUANG L", course=course)
+        lei = _make_rmp_prof(db_session, "Lei", "Huang", dept="Computer Science", rmp_id=701)
+        lin = _make_rmp_prof(db_session, "Lin", "Huang", dept="History", rmp_id=702)
+        expected = lei.rmp_id
+
+        # Pass 1 sees two last+initial candidates → ambiguous, no link.
+        p1 = _pass1_initial_match(db_session, [first, second], [lei, lin])
+        assert p1["matched"] == 0
+        assert p1["ambiguous"] == 2
+
+        p3 = _pass3_dept_disambiguation(db_session, min_year=2023)
+        assert p3["matched"] == 1
+        db_session.refresh(first)
+        db_session.refresh(second)
+        linked = [p for p in (first, second) if p.rmp_id == expected]
+        unmatched = [p for p in (first, second) if p.rmp_id is None]
+        assert len(linked) == 1
+        assert len(unmatched) == 1

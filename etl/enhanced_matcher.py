@@ -104,6 +104,7 @@ def _pass1_initial_match(
     unmatched: list[Professor],
     rmp_profs: list[Professor],
     dry_run: bool = False,
+    consumed_rmp_ids: set[int] | None = None,
 ) -> dict:
     """Pass 1: Match initial-only Nexus names to RMP professors by last name + initial.
 
@@ -113,10 +114,13 @@ def _pass1_initial_match(
     as fact when the departments disagree (DATA-1 / BUG-9).
     """
     stats = {"matched": 0, "ambiguous": 0, "no_candidate": 0, "dept_mismatch": 0}
+    consumed = consumed_rmp_ids if consumed_rmp_ids is not None else set()
 
     # Index RMP professors by lowercase last name
     rmp_by_last: dict[str, list[Professor]] = defaultdict(list)
     for rmp in rmp_profs:
+        if rmp.id in consumed:
+            continue
         if rmp.name_rmp:
             parts = rmp.name_rmp.strip().split()
             if parts:
@@ -133,7 +137,9 @@ def _pass1_initial_match(
 
         candidates = [
             rmp for rmp in rmp_by_last.get(last, [])
-            if rmp.name_rmp and initial_matches(initial, rmp.name_rmp.split()[0])
+            if rmp.id not in consumed
+            and rmp.name_rmp
+            and initial_matches(initial, rmp.name_rmp.split()[0])
         ]
 
         if len(candidates) == 0:
@@ -150,6 +156,8 @@ def _pass1_initial_match(
                 continue
 
             if _link_professor(session, prof, rmp_prof, 90.0, dry_run):
+                consumed.add(rmp_prof.id)
+                rmp_by_last[last] = [r for r in rmp_by_last[last] if r.id != rmp_prof.id]
                 stats["matched"] += 1
                 logger.info(
                     f"Pass 1: {prof.name_nexus} -> {rmp_prof.name_rmp} "
@@ -171,16 +179,18 @@ def _pass2_fullname_fuzzy(
     session: Session,
     min_year: int = 2023,
     dry_run: bool = False,
+    consumed_rmp_ids: set[int] | None = None,
 ) -> dict:
     """Pass 2: Fuzzy match full-name Nexus professors against unlinked RMP records.
 
     Threshold 85+. Department match boosts confidence by 5.
     """
     stats = {"matched": 0, "below_threshold": 0}
+    consumed = consumed_rmp_ids if consumed_rmp_ids is not None else set()
 
     # Re-query after Pass 1 may have changed state
     unmatched = _get_unmatched_nexus(session, min_year)
-    rmp_profs = _get_unlinked_rmp(session)
+    rmp_profs = [r for r in _get_unlinked_rmp(session) if r.id not in consumed]
 
     if not rmp_profs:
         return stats
@@ -194,7 +204,7 @@ def _pass2_fullname_fuzzy(
         best_rmp = None
 
         for rmp in rmp_profs:
-            if not rmp.name_rmp:
+            if rmp.id in consumed or not rmp.name_rmp:
                 continue
             norm_rmp = normalize_rmp_name(rmp.name_rmp)
             score = match_confidence(norm_nexus, norm_rmp)
@@ -207,6 +217,7 @@ def _pass2_fullname_fuzzy(
             confidence = min(best_score + (5 if dept_match else 0), 100.0)
 
             if _link_professor(session, prof, best_rmp, confidence, dry_run):
+                consumed.add(best_rmp.id)
                 stats["matched"] += 1
                 # Remove from candidate pool
                 rmp_profs.remove(best_rmp)
@@ -227,12 +238,14 @@ def _pass3_dept_disambiguation(
     session: Session,
     min_year: int = 2023,
     dry_run: bool = False,
+    consumed_rmp_ids: set[int] | None = None,
 ) -> dict:
     """Pass 3: For ambiguous initial-only names, use department to narrow to 1 candidate."""
     stats = {"matched": 0, "still_ambiguous": 0, "no_dept": 0}
+    consumed = consumed_rmp_ids if consumed_rmp_ids is not None else set()
 
     unmatched = _get_unmatched_nexus(session, min_year)
-    rmp_profs = _get_unlinked_rmp(session)
+    rmp_profs = [r for r in _get_unlinked_rmp(session) if r.id not in consumed]
 
     # Index RMP by last name
     rmp_by_last: dict[str, list[Professor]] = defaultdict(list)
@@ -257,7 +270,9 @@ def _pass3_dept_disambiguation(
         # Find all candidates matching last name + initial
         candidates = [
             rmp for rmp in rmp_by_last.get(last, [])
-            if rmp.name_rmp and initial_matches(initial, rmp.name_rmp.split()[0])
+            if rmp.id not in consumed
+            and rmp.name_rmp
+            and initial_matches(initial, rmp.name_rmp.split()[0])
         ]
 
         if len(candidates) <= 1:
@@ -272,6 +287,8 @@ def _pass3_dept_disambiguation(
         if len(dept_matches) == 1:
             rmp_prof = dept_matches[0]
             if _link_professor(session, prof, rmp_prof, 90.0, dry_run):
+                consumed.add(rmp_prof.id)
+                rmp_by_last[last] = [r for r in rmp_by_last[last] if r.id != rmp_prof.id]
                 stats["matched"] += 1
                 logger.info(
                     f"Pass 3: {prof.name_nexus} ({prof.department}) -> "
@@ -390,22 +407,23 @@ def run_enhanced_matching(
     # Get initial state
     unmatched = _get_unmatched_nexus(session, min_year)
     rmp_profs = _get_unlinked_rmp(session)
+    consumed_rmp_ids: set[int] = set()
 
     logger.info(f"Starting: {len(unmatched)} unmatched Nexus, {len(rmp_profs)} unlinked RMP")
 
     # Pass 1
     logger.info("--- Pass 1: Initial Match ---")
-    p1 = _pass1_initial_match(session, unmatched, rmp_profs, dry_run)
+    p1 = _pass1_initial_match(session, unmatched, rmp_profs, dry_run, consumed_rmp_ids)
     logger.info(f"Pass 1 results: {p1}")
 
     # Pass 2
     logger.info("--- Pass 2: Full-Name Fuzzy ---")
-    p2 = _pass2_fullname_fuzzy(session, min_year, dry_run)
+    p2 = _pass2_fullname_fuzzy(session, min_year, dry_run, consumed_rmp_ids)
     logger.info(f"Pass 2 results: {p2}")
 
     # Pass 3
     logger.info("--- Pass 3: Department Disambiguation ---")
-    p3 = _pass3_dept_disambiguation(session, min_year, dry_run)
+    p3 = _pass3_dept_disambiguation(session, min_year, dry_run, consumed_rmp_ids)
     logger.info(f"Pass 3 results: {p3}")
 
     # Pass 4
