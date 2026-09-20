@@ -10,6 +10,12 @@ MONTH_NAMES = [
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ]
 
+# Chronological rank of each quarter within a calendar year. The `quarter`
+# column is text, so ordering by it in SQL sorts alphabetically (Fall, Spring,
+# Summer, Winter) rather than by time. Matches the quarter-code convention used
+# in api/routers/courses.py: Winter=1, Spring=2, Summer=3, Fall=4.
+QUARTER_ORDER: dict[str, int] = {"Winter": 1, "Spring": 2, "Summer": 3, "Fall": 4}
+
 # ---------------------------------------------------------------------------
 # Tag Vocabulary — maps raw keyword substrings (lowercase) to curated tags
 # ---------------------------------------------------------------------------
@@ -113,11 +119,27 @@ def get_departments(session: Session) -> list[str]:
 
 
 def search_courses(session: Session, query: str, department: str | None = None) -> list[dict]:
-    """Search courses by code or title fragment, optionally filtered by department."""
-    pattern = f"%{query}%"
-    q = session.query(Course).filter(
-        or_(Course.code.ilike(pattern), Course.title.ilike(pattern))
-    )
+    """Search courses by code or title fragment, optionally filtered by department.
+
+    Course codes are stored with all whitespace removed (see
+    scrapers/grades_ingester.normalize_course_code), so the code half of the
+    search collapses whitespace in the query too — otherwise "CS 16", the way
+    the university writes it, can never match the stored "CS16". Titles do
+    contain spaces, so the title half matches the query as typed.
+    """
+    code_query = "".join(query.split())
+    title_query = " ".join(query.split())
+
+    q = session.query(Course)
+    # An empty query means "browse everything" (optionally within a department),
+    # so only constrain by text when the caller actually supplied some.
+    if code_query:
+        q = q.filter(
+            or_(
+                Course.code.ilike(f"%{code_query}%"),
+                Course.title.ilike(f"%{title_query}%"),
+            )
+        )
     if department:
         q = q.filter(Course.department == department)
     courses = q.order_by(Course.code).limit(20).all()
@@ -218,7 +240,7 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
     prof_ids = [row[0].id for row in results]
     quarters_map: dict[int, list[str]] = {}
     if prof_ids:
-        quarter_order = {"Fall": 4, "Summer": 3, "Spring": 2, "Winter": 1}
+        quarter_order = QUARTER_ORDER
         quarter_rows = (
             session.query(
                 GradeDistribution.professor_id,
@@ -285,13 +307,20 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
 
 
 def get_grade_history(session: Session, professor_id: int, course_id: int) -> list[dict]:
-    """Get quarter-by-quarter grade history for a professor+course."""
+    """Get quarter-by-quarter grade history for a professor+course, oldest first.
+
+    Ordered chronologically by (year, quarter rank). Ordering by the raw
+    `quarter` text column sorts alphabetically — Fall, Spring, Summer, Winter —
+    which puts Fall before Spring within the same year. Consumers depend on
+    true chronological order: GradeChart treats the last element as the most
+    recent quarter, and GpaTrendChart plots the array order onto the x-axis.
+    """
     grades = (
         session.query(GradeDistribution)
         .filter_by(professor_id=professor_id, course_id=course_id)
-        .order_by(GradeDistribution.year, GradeDistribution.quarter)
         .all()
     )
+    grades.sort(key=lambda g: (g.year, QUARTER_ORDER.get(g.quarter, 0)))
     return [
         {
             "quarter": f"{g.quarter} {g.year}",
