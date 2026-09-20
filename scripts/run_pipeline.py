@@ -50,6 +50,14 @@ def run_nlp(session):
     return stats
 
 
+def run_keyword_backfill(session):
+    from etl.nlp_processor import backfill_keywords
+    logger.info("=== Maintenance: Keyword Backfill ===")
+    stats = backfill_keywords(session)
+    logger.info(f"Backfill complete: {stats}")
+    return stats
+
+
 def run_scoring(session):
     from etl.scoring import compute_all_scores
     logger.info("=== Phase 3: Gaucho Score Computation ===")
@@ -64,12 +72,24 @@ def main():
     parser.add_argument("--match", action="store_true", help="Run enhanced matching only")
     parser.add_argument("--nlp", action="store_true", help="Run NLP processing only")
     parser.add_argument("--score", action="store_true", help="Run scoring only")
+    parser.add_argument(
+        "--backfill-keywords",
+        action="store_true",
+        help=(
+            "Recompute keywords for comments already processed under the old "
+            "single-row scheme (BUG-4). One-off maintenance; not part of --all."
+        ),
+    )
     args = parser.parse_args()
 
-    run_all = not (args.scrape or args.match or args.nlp or args.score)
+    run_all = not (
+        args.scrape or args.match or args.nlp or args.score or args.backfill_keywords
+    )
 
     session = get_session()
     try:
+        if args.backfill_keywords:
+            run_keyword_backfill(session)
         if run_all or args.scrape:
             run_scrape(session)
         if run_all or args.match:
