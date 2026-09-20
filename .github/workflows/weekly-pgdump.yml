@@ -30,6 +30,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           pg_dump --version
+          # data/ is gitignored and the dump was purged from history (SEC-1),
+          # so a fresh checkout has no data/ directory — create it first.
+          mkdir -p data
           # Same flags as scripts/export_db.sh so the dump restores via scripts/import_db.sh
           pg_dump --clean --if-exists --no-owner --no-acl "$DATABASE_URL" > data/gco_dump.sql
           echo "Dump size: $(du -h data/gco_dump.sql | cut -f1)"
