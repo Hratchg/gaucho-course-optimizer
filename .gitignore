@@ -11,3 +11,5 @@ data/
 .DS_Store
 export_err.txt
 scrape_output.log
+art/tripo/outputs/
+art/tripo/.env

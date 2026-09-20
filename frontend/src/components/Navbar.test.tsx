@@ -10,7 +10,8 @@ describe('Navbar', () => {
         <Navbar />
       </MemoryRouter>
     )
-    expect(screen.getByText('CoursePick')).toBeInTheDocument()
+    // Wordmark renders as Course + Pick spans; match on the link's accessible name
+    expect(screen.getByRole('link', { name: /coursepick/i })).toBeInTheDocument()
   })
 
   it('renders both "Home" and "Search" link text', () => {
@@ -49,7 +50,7 @@ describe('Navbar', () => {
         <Navbar />
       </MemoryRouter>
     )
-    const brandLink = screen.getByText('CoursePick').closest('a')
+    const brandLink = screen.getByRole('link', { name: /coursepick/i })
     expect(brandLink).toHaveAttribute('href', '/')
   })
 })
