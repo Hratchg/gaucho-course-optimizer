@@ -141,6 +141,10 @@ export const handlers = [
     return HttpResponse.json(mockComments)
   }),
 
+  http.get('http://localhost:8001/courses/:id/sections', () => {
+    return HttpResponse.json(mockProfessors[0].scheduled_sections)
+  }),
+
   http.get('http://localhost:8001/quarters/current', () => {
     return HttpResponse.json(mockQuarterInfo)
   }),
