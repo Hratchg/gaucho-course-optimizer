@@ -11,7 +11,10 @@ def seeded_professor(db_session):
     db_session.add(course)
     db_session.flush()
 
-    prof = Professor(name_nexus="Jones, Alice", name_rmp="Alice Jones", rmp_id=99001, department="PHYS")
+    prof = Professor(
+        name_nexus="Jones, Alice", name_rmp="Alice Jones",
+        rmp_id=99001, department="PHYS", match_confidence=95,
+    )
     db_session.add(prof)
     db_session.flush()
 

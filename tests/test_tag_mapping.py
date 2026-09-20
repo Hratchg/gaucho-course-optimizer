@@ -183,7 +183,7 @@ class TestGetProfessorsTagsIntegration:
         with structured {name, count} objects."""
         from dashboard.queries import get_professors_for_course
 
-        prof = Professor(name_nexus="Tag Prof", department="CMPSC")
+        prof = Professor(name_nexus="Tag Prof", department="CMPSC", match_confidence=95)
         course = Course(code="TAG001", title="Tag Testing", department="CMPSC")
         db_session.add_all([prof, course])
         db_session.flush()
@@ -234,7 +234,7 @@ class TestGetProfessorsTagsIntegration:
         it only counts as 1 toward that tag's count."""
         from dashboard.queries import get_professors_for_course
 
-        prof = Professor(name_nexus="Dedup Prof", department="CMPSC")
+        prof = Professor(name_nexus="Dedup Prof", department="CMPSC", match_confidence=95)
         course = Course(code="TAG002", title="Dedup Test", department="CMPSC")
         db_session.add_all([prof, course])
         db_session.flush()

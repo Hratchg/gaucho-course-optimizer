@@ -5,7 +5,12 @@ import random
 from db.models import Professor, RmpRating
 from scrapers.rmp_loader import get_active_professors, is_stale, load_rmp_teacher_to_db
 from scrapers.rmp_scraper import RmpScraper
-from etl.name_matcher import normalize_nexus_name, normalize_rmp_name, match_confidence
+from etl.name_matcher import (
+    AUTO_MATCH_THRESHOLD,
+    normalize_nexus_name,
+    normalize_rmp_name,
+    match_confidence,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +77,10 @@ def scrape_active_professors(
                 best_confidence = confidence
                 best_match = teacher
 
-        if best_match and best_confidence >= 70:
-            status = "auto" if best_confidence >= 85 else "review"
+        # Only persist matches at or above AUTO_MATCH_THRESHOLD. The old
+        # "review" branch (70-84) wrote straight to production with no review
+        # queue, so weak matches (e.g. 73%) appeared as fact on course pages.
+        if best_match and best_confidence >= AUTO_MATCH_THRESHOLD:
             try:
                 load_rmp_teacher_to_db(
                     best_match, session,
@@ -82,7 +89,7 @@ def scrape_active_professors(
                 )
                 stats["matched"] += 1
                 logger.info(
-                    f"[{i+1}/{total}] {status.upper()} {nexus_name} -> "
+                    f"[{i+1}/{total}] AUTO {nexus_name} -> "
                     f"{best_match['first_name']} {best_match['last_name']} "
                     f"({best_confidence}%)"
                 )
@@ -94,7 +101,8 @@ def scrape_active_professors(
             stats["skipped"] += 1
             logger.debug(
                 f"[{i+1}/{total}] SKIP {nexus_name} — "
-                f"best match: {best_confidence}%"
+                f"best match: {best_confidence}% "
+                f"(need >= {AUTO_MATCH_THRESHOLD})"
             )
 
         # Rate limiting

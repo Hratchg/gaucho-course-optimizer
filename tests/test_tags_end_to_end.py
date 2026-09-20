@@ -12,7 +12,10 @@ from dashboard.queries import get_professors_for_course, map_keywords_to_tags
 
 
 def test_tags_appear_for_a_professor_with_consistent_comments(db_session):
-    prof = Professor(name_nexus="TAGS, TEST", name_rmp="Tag Test", department="CMPSC")
+    prof = Professor(
+        name_nexus="TAGS, TEST", name_rmp="Tag Test",
+        department="CMPSC", match_confidence=95,
+    )
     course = Course(code="CMPSCTAG", title="Tagging", department="CMPSC")
     db_session.add_all([prof, course])
     db_session.flush()
@@ -59,7 +62,10 @@ def test_tags_appear_for_a_professor_with_consistent_comments(db_session):
 
 def test_single_comment_professor_has_no_tags(db_session):
     """One comment cannot reach min_count — absence here is correct, not a bug."""
-    prof = Professor(name_nexus="TAGS, SOLO", name_rmp="Solo", department="CMPSC")
+    prof = Professor(
+        name_nexus="TAGS, SOLO", name_rmp="Solo",
+        department="CMPSC", match_confidence=95,
+    )
     course = Course(code="CMPSCSOLO", title="Solo", department="CMPSC")
     db_session.add_all([prof, course])
     db_session.flush()
@@ -100,7 +106,10 @@ def test_backfill_recovers_tags_for_already_processed_comments(db_session):
     Reproduces production state: comments already have sentiment scores and the
     old single-row keyword layout, so the BUG-4 fix alone leaves them tagless.
     """
-    prof = Professor(name_nexus="TAGS, OLD", name_rmp="Old Data", department="CMPSC")
+    prof = Professor(
+        name_nexus="TAGS, OLD", name_rmp="Old Data",
+        department="CMPSC", match_confidence=95,
+    )
     course = Course(code="CMPSCOLD", title="Legacy", department="CMPSC")
     db_session.add_all([prof, course])
     db_session.flush()

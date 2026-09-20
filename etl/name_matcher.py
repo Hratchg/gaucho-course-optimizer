@@ -20,15 +20,36 @@ def normalize_rmp_name(name: str) -> str:
     return " ".join(name.lower().split())
 
 
+# Minimum confidence (0-100) required to publish an RMP match as fact.
+# Below this, matches may be written for later review but must not be served
+# to students as if they were the same person (DATA-1).
+AUTO_MATCH_THRESHOLD = 85
+
+
 def match_confidence(name_a: str, name_b: str) -> int:
     """Return fuzzy match confidence (0-100) using token_sort_ratio."""
     return fuzz.token_sort_ratio(name_a, name_b)
 
 
+def is_confident_match(
+    confidence: float | None,
+    threshold: float = AUTO_MATCH_THRESHOLD,
+) -> bool:
+    """True when match_confidence is high enough to publish as fact.
+
+    Confidence is stored on a 0-100 scale. None means unmatched / unknown and
+    is never treated as confident — otherwise legacy rows with RMP data but no
+    recorded confidence would keep leaking into rankings.
+    """
+    if confidence is None:
+        return False
+    return confidence >= threshold
+
+
 def match_names(
     nexus_names: list[str],
     rmp_names: list[str],
-    auto_threshold: int = 85,
+    auto_threshold: int = AUTO_MATCH_THRESHOLD,
     review_threshold: int = 70,
 ) -> dict:
     """Match Nexus names to RMP names.

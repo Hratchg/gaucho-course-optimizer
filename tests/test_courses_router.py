@@ -244,7 +244,7 @@ def test_search_route_not_shadowed_by_course_id_route(monkeypatch):
 
 def test_professor_response_includes_passthrough_fields(monkeypatch):
     """avg_sentiment, std_gpa, match_confidence from query are present in response."""
-    prof = _make_prof(avg_sentiment=0.6, std_gpa=0.3, match_confidence=0.95)
+    prof = _make_prof(avg_sentiment=0.6, std_gpa=0.3, match_confidence=95)
     monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, cid: [prof])
     mock_db = MagicMock()
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -255,7 +255,7 @@ def test_professor_response_includes_passthrough_fields(monkeypatch):
         data = resp.json()[0]
         assert data["avg_sentiment"] == 0.6
         assert data["std_gpa"] == 0.3
-        assert data["match_confidence"] == 0.95
+        assert data["match_confidence"] == 95
     finally:
         app.dependency_overrides.clear()
 
@@ -278,5 +278,45 @@ def test_professor_response_includes_active_teaching_fields(monkeypatch):
         assert data["is_active_teacher"] is True
         assert isinstance(data["recent_quarters"], list)
         assert data["recent_quarters"] == ["Fall 2024", "Winter 2024"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Test 11: Bayesian small-sample adjustment on quality (BUG-5)
+# ---------------------------------------------------------------------------
+
+def test_bayesian_adjustment_shrinks_small_sample_quality(monkeypatch):
+    """Identical 5.0 raw quality: the professor with 5 ratings must score below
+    the one with 50. Without Bayesian adjustment they tie and tiny samples
+    dominate real rankings (BUG-5 / MATH4A Kulick vs Garfield).
+    """
+    few = _make_prof(
+        id=1, name="Few Ratings", mean_gpa=3.5,
+        rmp_quality=5.0, rmp_num_ratings=5, rmp_difficulty=3.0, avg_sentiment=0.0,
+    )
+    many = _make_prof(
+        id=2, name="Many Ratings", mean_gpa=3.5,
+        rmp_quality=5.0, rmp_num_ratings=50, rmp_difficulty=3.0, avg_sentiment=0.0,
+    )
+    monkeypatch.setattr(
+        "api.routers.courses.get_professors_for_course", lambda db, cid: [few, many]
+    )
+    monkeypatch.setattr(
+        "api.routers.courses.get_scheduled_sections", lambda *a, **k: {}
+    )
+
+    mock_db = MagicMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    client = TestClient(app)
+    try:
+        resp = client.get("/courses/1/professors")
+        assert resp.status_code == 200
+        by_name = {p["name"]: p for p in resp.json()}
+        assert by_name["Few Ratings"]["quality_factor"] < by_name["Many Ratings"]["quality_factor"]
+        assert by_name["Few Ratings"]["gaucho_score"] < by_name["Many Ratings"]["gaucho_score"]
+        # Raw display value stays unadjusted
+        assert by_name["Few Ratings"]["rmp_quality"] == 5.0
+        assert by_name["Many Ratings"]["rmp_quality"] == 5.0
     finally:
         app.dependency_overrides.clear()

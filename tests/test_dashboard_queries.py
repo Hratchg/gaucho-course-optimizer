@@ -14,7 +14,7 @@ CURRENT_YEAR = datetime.now().year
 
 def _seed_professor_with_comments(session):
     """Create a professor with an RMP rating and comments for testing."""
-    prof = Professor(name_nexus="Test Prof", department="CMPSC")
+    prof = Professor(name_nexus="Test Prof", department="CMPSC", match_confidence=95)
     session.add(prof)
     session.flush()
 
@@ -146,7 +146,11 @@ def test_get_departments(db_session):
 def test_get_professors_returns_rmp_data(db_session):
     """Verify get_professors_for_course returns RMP stats without N+1 queries."""
     # Create 2 professors and a course
-    prof1 = Professor(name_rmp="Alice Smith", name_nexus="A Smith", department="CMPSC")
+    # match_confidence must be >= AUTO_MATCH_THRESHOLD for RMP data to be served
+    prof1 = Professor(
+        name_rmp="Alice Smith", name_nexus="A Smith",
+        department="CMPSC", match_confidence=95,
+    )
     prof2 = Professor(name_nexus="Bob Jones", department="CMPSC")
     course = Course(code="CMPSC130A", title="Data Structures", department="CMPSC")
     db_session.add_all([prof1, prof2, course])

@@ -7,6 +7,7 @@ from api.dependencies import get_db
 from api.schemas import CourseResult, ProfessorRanking, ScheduledSectionResponse
 from dashboard.queries import get_all_course_sections, get_professors_for_course, get_scheduled_sections, search_courses
 from etl.scoring import (
+    bayesian_adjust,
     compute_gaucho_score,
     normalize_difficulty,
     normalize_gpa,
@@ -88,7 +89,17 @@ def get_professors(
     for p in profs:
         # None-safe factor computation — fall back to 0.5 (neutral) when data is missing
         gpa_f = normalize_gpa(p["mean_gpa"]) if p["mean_gpa"] is not None else 0.5
-        qual_f = normalize_quality(p["rmp_quality"]) if p["rmp_quality"] is not None else 0.5
+
+        # Bayesian-adjust quality toward a 3.0 prior when the sample is small
+        # (BUG-5). Without this, a 5.0 from 5 ratings outranks a 4.0 from 251.
+        if p["rmp_quality"] is not None and p["rmp_num_ratings"]:
+            adj_qual = bayesian_adjust(p["rmp_quality"], p["rmp_num_ratings"], 3.0)
+            qual_f = normalize_quality(adj_qual)
+        elif p["rmp_quality"] is not None:
+            qual_f = normalize_quality(p["rmp_quality"])
+        else:
+            qual_f = 0.5
+
         diff_f = normalize_difficulty(p["rmp_difficulty"]) if p["rmp_difficulty"] is not None else 0.5
 
         # avg_sentiment is a VADER score in [-1, 1]. Map to [0, 1] before scoring.

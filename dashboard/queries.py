@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from db.models import Professor, Course, GradeDistribution, RmpRating, RmpComment, ScheduledSection
+from etl.name_matcher import is_confident_match
 
 MONTH_NAMES = [
     "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -264,9 +265,15 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
 
     professors = []
     for prof, mean_gpa, std_gpa, quarters_taught, rmp, avg_sentiment, active_count in results:
+        # DATA-1: only surface RMP data when the name match is confident enough
+        # to publish as fact. Weak or missing confidence is treated as unmatched
+        # so students never see another person's reviews attributed as truth.
+        confident = is_confident_match(prof.match_confidence)
+        trusted_rmp = rmp if confident else None
+
         # Per-comment deduplication: for each comment's keyword list, map to tags
         # and deduplicate so one comment only counts once per tag.
-        comment_kw_lists = comments_kw_map.get(rmp.id, []) if rmp else []
+        comment_kw_lists = comments_kw_map.get(trusted_rmp.id, []) if trusted_rmp else []
         deduped_keywords: list[str] = []
         for comment_keywords in comment_kw_lists:
             # Map this comment's raw keywords to tag names, deduplicate within comment
@@ -281,24 +288,35 @@ def get_professors_for_course(session: Session, course_id: int, min_year: int | 
             # We re-use the tag name as the keyword so map_keywords_to_tags can count
             deduped_keywords.extend(mapped_tags)
 
-        tags = map_keywords_to_tags(deduped_keywords, min_count=3)
+        tags = map_keywords_to_tags(deduped_keywords, min_count=3) if trusted_rmp else []
 
         distinct_recent = active_count if active_count else 0
         is_active = distinct_recent >= 3
+        # Prefer the Nexus roster name when the RMP link is untrusted — otherwise
+        # a weak match would still display the wrong person's name.
+        display_name = (
+            (prof.name_rmp if confident and prof.name_rmp else None)
+            or prof.name_nexus
+            or "Unknown"
+        )
         professors.append({
             "id": prof.id,
-            "name": prof.name_rmp or prof.name_nexus or "Unknown",
+            "name": display_name,
             "department": prof.department,
             "mean_gpa": round(float(mean_gpa), 2) if mean_gpa else None,
             "std_gpa": round(float(std_gpa), 2) if std_gpa else None,
             "quarters_taught": quarters_taught,
-            "rmp_quality": rmp.overall_quality if rmp else None,
-            "rmp_difficulty": rmp.difficulty if rmp else None,
-            "rmp_would_take_again": rmp.would_take_again_pct if rmp else None,
-            "rmp_num_ratings": rmp.num_ratings if rmp else None,
-            "avg_sentiment": round(float(avg_sentiment), 2) if avg_sentiment is not None else None,
+            "rmp_quality": trusted_rmp.overall_quality if trusted_rmp else None,
+            "rmp_difficulty": trusted_rmp.difficulty if trusted_rmp else None,
+            "rmp_would_take_again": trusted_rmp.would_take_again_pct if trusted_rmp else None,
+            "rmp_num_ratings": trusted_rmp.num_ratings if trusted_rmp else None,
+            "avg_sentiment": (
+                round(float(avg_sentiment), 2)
+                if trusted_rmp is not None and avg_sentiment is not None
+                else None
+            ),
             "tags": tags,
-            "match_confidence": prof.match_confidence,
+            "match_confidence": prof.match_confidence if confident else None,
             "is_active_teacher": is_active,
             "recent_quarters": quarters_map.get(prof.id, []),
         })
@@ -336,7 +354,16 @@ def get_grade_history(session: Session, professor_id: int, course_id: int) -> li
 
 
 def get_comments_for_professor(session: Session, professor_id: int, limit: int = 5) -> list[dict]:
-    """Fetch the most recent RMP comments for a professor."""
+    """Fetch the most recent RMP comments for a professor.
+
+    Returns an empty list when the professor's RMP link is below the publish
+    confidence threshold (DATA-1) — otherwise a weak match would still expose
+    another person's reviews via the comments endpoint.
+    """
+    prof = session.get(Professor, professor_id)
+    if prof is None or not is_confident_match(prof.match_confidence):
+        return []
+
     comments = (
         session.query(RmpComment)
         .join(RmpRating, RmpComment.rmp_rating_id == RmpRating.id)

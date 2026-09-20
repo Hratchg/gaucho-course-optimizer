@@ -107,9 +107,12 @@ def _pass1_initial_match(
 ) -> dict:
     """Pass 1: Match initial-only Nexus names to RMP professors by last name + initial.
 
-    Links only when exactly 1 candidate exists. Confidence 90 (dept match) or 75 (no dept).
+    Links only when exactly 1 candidate exists AND departments match.
+    Confidence is always 90. Cross-department initial-only links (formerly
+    confidence 75) are skipped — surname+initial alone is too weak to publish
+    as fact when the departments disagree (DATA-1 / BUG-9).
     """
-    stats = {"matched": 0, "ambiguous": 0, "no_candidate": 0}
+    stats = {"matched": 0, "ambiguous": 0, "no_candidate": 0, "dept_mismatch": 0}
 
     # Index RMP professors by lowercase last name
     rmp_by_last: dict[str, list[Professor]] = defaultdict(list)
@@ -137,14 +140,20 @@ def _pass1_initial_match(
             stats["no_candidate"] += 1
         elif len(candidates) == 1:
             rmp_prof = candidates[0]
-            dept_match = departments_match(prof.department, rmp_prof.department)
-            confidence = 90.0 if dept_match else 75.0
+            if not departments_match(prof.department, rmp_prof.department):
+                stats["dept_mismatch"] += 1
+                logger.debug(
+                    f"Pass 1: {prof.name_nexus} -> {rmp_prof.name_rmp} "
+                    f"skipped — department mismatch "
+                    f"({prof.department!r} vs {rmp_prof.department!r})"
+                )
+                continue
 
-            if _link_professor(session, prof, rmp_prof, confidence, dry_run):
+            if _link_professor(session, prof, rmp_prof, 90.0, dry_run):
                 stats["matched"] += 1
                 logger.info(
                     f"Pass 1: {prof.name_nexus} -> {rmp_prof.name_rmp} "
-                    f"(conf={confidence}, dept={'Y' if dept_match else 'N'})"
+                    f"(conf=90, dept=Y)"
                 )
         else:
             stats["ambiguous"] += 1

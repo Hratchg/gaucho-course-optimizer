@@ -112,6 +112,7 @@ class TestPass1:
         stats = _pass1_initial_match(db_session, unmatched, rmp_profs)
         assert stats["matched"] == 1
         assert nexus.rmp_id == expected_rmp_id
+        assert nexus.match_confidence == 90.0
 
     def test_skips_ambiguous(self, db_session):
         course = _make_course(db_session)
@@ -122,6 +123,21 @@ class TestPass1:
         stats = _pass1_initial_match(db_session, [nexus], [rmp1, rmp2])
         assert stats["ambiguous"] == 1
         assert nexus.rmp_id is None
+
+    def test_skips_department_mismatch(self, db_session):
+        """Initial-only links across departments used to write at confidence 75
+        (DATA-1 / BUG-9). Surname+initial alone is not enough when depts disagree.
+        """
+        course = _make_course(db_session)
+        nexus = _make_nexus_prof(db_session, "HUANG L", dept="CMPSC", course=course)
+        # Same last name + initial, but History instead of Computer Science
+        rmp = _make_rmp_prof(db_session, "Lei", "Huang", dept="History", rmp_id=333)
+
+        stats = _pass1_initial_match(db_session, [nexus], [rmp])
+        assert stats["matched"] == 0
+        assert stats["dept_mismatch"] == 1
+        assert nexus.rmp_id is None
+        assert nexus.match_confidence is None
 
 
 class TestPass2:
