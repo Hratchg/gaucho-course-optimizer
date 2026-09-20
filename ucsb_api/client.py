@@ -203,8 +203,11 @@ class UCSBApiClient:
             )
             resp.raise_for_status()
         except requests.RequestException as exc:
-            logger.error("UCSB quarter calendar API error: %s", exc)
-            raise UCSBApiError(f"Failed to fetch quarter calendar: {exc}") from exc
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            logger.error("UCSB quarter calendar API error (status=%s): %s", status, exc)
+            raise UCSBApiError(
+                f"Failed to fetch quarter calendar (status={status}): {exc}"
+            ) from exc
 
         data = resp.json()
         logger.info("Fetched quarter calendar for %s: %s", quarter_code, data.get("name", ""))
@@ -224,8 +227,11 @@ class UCSBApiClient:
             )
             resp.raise_for_status()
         except requests.RequestException as exc:
-            logger.error("UCSB current quarter API error: %s", exc)
-            raise UCSBApiError(f"Failed to fetch current quarter: {exc}") from exc
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            logger.error("UCSB current quarter API error (status=%s): %s", status, exc)
+            raise UCSBApiError(
+                f"Failed to fetch current quarter (status={status}): {exc}"
+            ) from exc
 
         return resp.json()
 

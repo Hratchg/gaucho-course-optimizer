@@ -13,7 +13,7 @@ from etl.scoring import (
     normalize_gpa,
     normalize_quality,
 )
-from ucsb_api.client import get_next_quarter_code
+from ucsb_api.quarters import current_and_next_quarter_codes
 
 router = APIRouter()
 
@@ -57,21 +57,7 @@ def get_professors(
 
     # Fetch schedule data for all professors in one query
     prof_ids = [p["id"] for p in profs]
-    # Determine next quarter code: try to derive from current date
-    # Quarter codes: YYYYQ where Q: 1=Winter, 2=Spring, 3=Summer, 4=Fall
-    import datetime as _dt
-    now = _dt.date.today()
-    month = now.month
-    year = now.year
-    if month <= 3:
-        current_qcode = f"{year}1"  # Winter
-    elif month <= 6:
-        current_qcode = f"{year}2"  # Spring
-    elif month <= 8:
-        current_qcode = f"{year}3"  # Summer
-    else:
-        current_qcode = f"{year}4"  # Fall
-    next_qcode = get_next_quarter_code(current_qcode)
+    current_qcode, next_qcode = current_and_next_quarter_codes()
 
     # Query both current and next quarter so students see data regardless of
     # where we are in the academic calendar (e.g. mid-Spring still shows Spring).
@@ -147,19 +133,7 @@ def get_course_sections(
 
     Filtered to sections with a named instructor and meeting time.
     """
-    import datetime as _dt
-    now = _dt.date.today()
-    month = now.month
-    year = now.year
-    if month <= 3:
-        current_qcode = f"{year}1"
-    elif month <= 6:
-        current_qcode = f"{year}2"
-    elif month <= 8:
-        current_qcode = f"{year}3"
-    else:
-        current_qcode = f"{year}4"
-    next_qcode = get_next_quarter_code(current_qcode)
+    current_qcode, next_qcode = current_and_next_quarter_codes()
 
     sections = get_all_course_sections(db, course_id, [current_qcode, next_qcode])
     if not sections:

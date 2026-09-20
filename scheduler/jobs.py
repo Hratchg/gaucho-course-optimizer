@@ -65,28 +65,15 @@ def nightly_schedule_refresh():
     logger.info("Starting nightly schedule refresh...")
     from db.connection import get_session
     from dashboard.queries import get_departments
-    from ucsb_api.client import UCSBApiClient, get_next_quarter_code
+    from ucsb_api.client import UCSBApiClient
+    from ucsb_api.quarters import current_and_next_quarter_codes
     from ucsb_api.schedule_sync import sync_department_sections
 
     session = get_session()
     failed: list[str] = []  # "DEPT/quarter" for each sync that raised
     try:
         client = UCSBApiClient()
-
-        # Determine next quarter code from current date
-        import datetime as _dt
-        now = _dt.date.today()
-        month = now.month
-        year = now.year
-        if month <= 3:
-            current_qcode = f"{year}1"
-        elif month <= 6:
-            current_qcode = f"{year}2"
-        elif month <= 8:
-            current_qcode = f"{year}3"
-        else:
-            current_qcode = f"{year}4"
-        next_qcode = get_next_quarter_code(current_qcode)
+        current_qcode, next_qcode = current_and_next_quarter_codes()
 
         departments = get_departments(session)
         total_stats = {"inserted": 0, "updated": 0, "matched": 0, "auto_created": 0}
