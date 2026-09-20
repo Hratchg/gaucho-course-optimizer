@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import LibraryLanding from '@/library/LibraryLanding'
+import MobileLibraryHero from '@/library/MobileLibraryHero'
 import { canRender3D } from '@/lib/webgl'
 import { Button } from '@/components/ui/button'
 import {
@@ -83,21 +84,15 @@ export default function HomePage() {
   return (
     <div>
       {/* Interactive library hero (3D-capable devices only) */}
-      {show3D && <LibraryLanding />}
+      {show3D ? <LibraryLanding /> : <MobileLibraryHero />}
 
       {/* Content container */}
       <div className="max-w-4xl mx-auto px-4">
-        {/* Section 1: Hero */}
+        {/* Section 1: Hero — demoted to h2 whenever a library hero owns the h1 */}
         <section className="py-16 text-center border-b border-primary/10">
-          {show3D ? (
-            <h2 className="font-heading font-extrabold text-[28px] leading-tight mb-4 text-foreground">
-              Find the Best Professor for Any UCSB Course
-            </h2>
-          ) : (
-            <h1 className="font-heading font-extrabold text-[28px] leading-tight mb-4 text-foreground">
-              Find the Best Professor for Any UCSB Course
-            </h1>
-          )}
+          <h2 className="font-heading font-extrabold text-[28px] leading-tight mb-4 text-foreground">
+            Find the Best Professor for Any UCSB Course
+          </h2>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Search any UCSB course and instantly see which professor will give
             you the best outcome &mdash; ranked by GPA, teaching quality,

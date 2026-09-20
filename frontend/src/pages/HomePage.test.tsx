@@ -20,10 +20,25 @@ describe('HomePage', () => {
   })
 
   describe('Hero', () => {
-    it('renders hero heading as h1', () => {
+    it('renders the 2D library hero as the page h1 when 3D is unavailable', () => {
+      renderHomePage()
+      expect(
+        screen.getByRole('heading', {
+          level: 1,
+          name: /every ucsb course/i,
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/welcome to the stacks/i)).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /search courses/i })).toHaveAttribute(
+        'href',
+        '/search',
+      )
+    })
+
+    it('demotes the classic hero copy to h2', () => {
       renderHomePage()
       const heading = screen.getByRole('heading', {
-        level: 1,
+        level: 2,
         name: /find the best professor for any ucsb course/i,
       })
       expect(heading).toBeInTheDocument()
