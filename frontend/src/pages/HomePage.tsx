@@ -1,5 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LibraryLanding from '@/library/LibraryLanding'
+import { canRender3D } from '@/lib/webgl'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -75,8 +77,14 @@ export default function HomePage() {
     document.title = 'Home | CoursePick'
   }, [])
 
+  // Decided once per mount: 3D library needs WebGL, motion OK, md+ viewport.
+  const [show3D] = useState(() => canRender3D())
+
   return (
     <div>
+      {/* Interactive library hero (3D-capable devices only) */}
+      {show3D && <LibraryLanding />}
+
       {/* Content container */}
       <div className="max-w-4xl mx-auto px-4">
         {/* Section 1: Hero */}
