@@ -44,8 +44,8 @@ const factors = [
     name: 'Sentiment',
     icon: MessageCircle,
     definition:
-      'Percentage of recent student comments that express a positive experience',
-    example: 'Example: 72% positive',
+      'Average VADER sentiment of RateMyProfessors comments, mapped from \u22121\u20131 (negative to positive) onto a 0\u20131 factor',
+    example: 'Example: 0.65 compound \u2192 0.83 factor',
   },
 ]
 
@@ -60,7 +60,7 @@ const steps = [
     number: 2,
     icon: BarChart2,
     title: 'Compare Professors',
-    body: 'See every professor ranked by Prof Score with GPA, ratings, and student comments side by side',
+    body: 'See every professor ranked by Gaucho Score with GPA, ratings, and student comments side by side',
   },
   {
     number: 3,
@@ -94,17 +94,17 @@ export default function HomePage() {
         {/* Section 2: Score Breakdown */}
         <section className="py-16">
           <h2 className="font-heading font-bold text-[20px] text-center mb-8">
-            How Prof Score Works
+            How Gaucho Score Works
           </h2>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Each score is a 0&ndash;100 composite of four equally weighted
+            Each Gaucho Score is a 0&ndash;100 composite of four equally weighted
             factors. Weights are adjustable on the results page.
           </p>
 
           {/* Score bar */}
           <div
             role="img"
-            aria-label="Prof Score breakdown: four equally weighted factors"
+            aria-label="Gaucho Score breakdown: four equally weighted factors"
             className="flex w-full h-10 rounded-full overflow-hidden ring-1 ring-foreground/10"
           >
             <div
@@ -227,14 +227,13 @@ export default function HomePage() {
           <p className="text-base text-primary-foreground/80 mb-8">
             Search any UCSB course and see ranked results in seconds.
           </p>
-          <Link to="/search">
-            <Button
-              size="lg"
-              className="btn-press bg-white text-primary hover:bg-white/90 font-semibold min-h-[44px] px-6"
-            >
-              Start Searching
-            </Button>
-          </Link>
+          <Button
+            asChild
+            size="lg"
+            className="btn-press bg-white text-primary hover:bg-white/90 font-semibold min-h-[44px] px-6"
+          >
+            <Link to="/search">Start Searching</Link>
+          </Button>
         </div>
       </section>
     </div>

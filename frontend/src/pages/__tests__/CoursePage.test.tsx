@@ -99,4 +99,21 @@ describe('CoursePage - Active Teacher Filter', () => {
     expect(screen.getByText('Bob Jones')).toBeInTheDocument()
     expect(screen.getByText(/no professors have taught this course recently/i)).toBeInTheDocument()
   })
+
+  it('shows a server-fault message and retry when the API fails', async () => {
+    let calls = 0
+    server.use(
+      http.get('http://localhost:8001/courses/:id/professors', () => {
+        calls += 1
+        return new HttpResponse(null, { status: 500 })
+      })
+    )
+    const user = userEvent.setup()
+    renderCoursePage()
+    expect(await screen.findByText(/we could not load professors/i)).toBeInTheDocument()
+    expect(screen.queryByText(/check your connection/i)).not.toBeInTheDocument()
+    const before = calls
+    await user.click(screen.getByRole('button', { name: /try again/i }))
+    await waitFor(() => expect(calls).toBeGreaterThan(before))
+  })
 })

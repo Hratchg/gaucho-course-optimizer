@@ -40,11 +40,11 @@ describe('HomePage', () => {
   })
 
   describe('Score Breakdown', () => {
-    it('renders "How Prof Score Works" as h2', () => {
+    it('renders "How Gaucho Score Works" as h2', () => {
       renderHomePage()
       const heading = screen.getByRole('heading', {
         level: 2,
-        name: /how prof score works/i,
+        name: /how gaucho score works/i,
       })
       expect(heading).toBeInTheDocument()
     })
@@ -52,7 +52,7 @@ describe('HomePage', () => {
     it('renders score bar container with role="img" and appropriate aria-label', () => {
       renderHomePage()
       const bar = screen.getByRole('img', {
-        name: /prof score breakdown.*four equally weighted factors/i,
+        name: /gaucho score breakdown.*four equally weighted factors/i,
       })
       expect(bar).toBeInTheDocument()
     })
@@ -97,7 +97,7 @@ describe('HomePage', () => {
       expect(screen.getByText(/3\.45 \/ 4\.00/)).toBeInTheDocument()
       expect(screen.getByText(/4\.2 \/ 5\.0/)).toBeInTheDocument()
       expect(screen.getByText(/2\.8 \/ 5\.0/)).toBeInTheDocument()
-      expect(screen.getByText(/72% positive/)).toBeInTheDocument()
+      expect(screen.getByText(/0\.65 compound/)).toBeInTheDocument()
     })
   })
 

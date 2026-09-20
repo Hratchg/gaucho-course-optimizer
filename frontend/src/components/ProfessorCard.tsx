@@ -194,7 +194,12 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
               </Badge>
             )}
           </div>
-          <Badge className={`${scoreColorClass(score)} text-sm font-bold px-2.5 py-1 rounded-full`}>{score}</Badge>
+          <Badge
+            className={`${scoreColorClass(score)} text-sm font-bold px-2.5 py-1 rounded-full`}
+            aria-label={`Gaucho Score: ${score}`}
+          >
+            {score}
+          </Badge>
         </div>
         <p className="mt-1 text-sm">
           Avg GPA: {professor.mean_gpa !== null ? professor.mean_gpa.toFixed(2) : 'N/A'}

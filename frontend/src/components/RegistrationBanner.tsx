@@ -1,10 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X, ExternalLink, CalendarClock } from 'lucide-react'
 import { useQuarterInfo } from '@/hooks/useQuarterInfo'
 
 const GOLD_URL = 'https://my.sa.ucsb.edu/gold/'
-const DISMISS_KEY = 'registration-banner-dismissed'
+const DISMISS_KEY_PREFIX = 'registration-banner-dismissed-'
 const SHOW_WITHIN_DAYS = 7
+
+function dismissKey(quarterCode: string): string {
+  return `${DISMISS_KEY_PREFIX}${quarterCode}`
+}
 
 function getDaysUntil(dateStr: string): number {
   const target = new Date(dateStr)
@@ -21,17 +25,16 @@ interface PassInfo {
 export function RegistrationBanner() {
   const { data: quarterInfo, isLoading } = useQuarterInfo()
 
-  const [dismissed, setDismissed] = useState(() => {
+  const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    if (!quarterInfo?.next_quarter_code) return
     try {
-      const stored = localStorage.getItem(DISMISS_KEY)
-      if (!stored) return false
-      // Dismiss expires when the quarter changes
-      const parsed = JSON.parse(stored)
-      return parsed.dismissed === true && parsed.quarterCode !== undefined
+      setDismissed(localStorage.getItem(dismissKey(quarterInfo.next_quarter_code)) === '1')
     } catch {
-      return false
+      setDismissed(false)
     }
-  })
+  }, [quarterInfo?.next_quarter_code])
 
   const nextPass = useMemo<PassInfo | null>(() => {
     if (!quarterInfo) return null
@@ -42,7 +45,6 @@ export function RegistrationBanner() {
       { label: 'Pass 3', date: quarterInfo.pass3_begin },
     ]
 
-    // Find the next upcoming pass (smallest positive daysUntil within threshold)
     let closest: PassInfo | null = null
 
     for (const p of passes) {
@@ -60,17 +62,15 @@ export function RegistrationBanner() {
 
   function handleDismiss() {
     setDismissed(true)
+    const code = quarterInfo?.next_quarter_code
+    if (!code) return
     try {
-      localStorage.setItem(
-        DISMISS_KEY,
-        JSON.stringify({ dismissed: true, quarterCode: quarterInfo?.next_quarter_code })
-      )
+      localStorage.setItem(dismissKey(code), '1')
     } catch {
       // localStorage may be unavailable
     }
   }
 
-  // Don't render if loading, dismissed, no data, or no upcoming pass
   if (isLoading || dismissed || !quarterInfo || !nextPass) return null
 
   const countdownText =

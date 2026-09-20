@@ -81,7 +81,7 @@ function QuarterFilterButtons({
 export default function CoursePage() {
   const { courseId } = useParams<{ courseId: string }>()
   const numericCourseId = Number(courseId)
-  const { data: professors, isLoading, error } = useProfessors(numericCourseId)
+  const { data: professors, isLoading, error, refetch } = useProfessors(numericCourseId)
 
   const [weights, setWeights] = useState<ToggleWeights>(DEFAULT_TOGGLE_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -184,10 +184,21 @@ export default function CoursePage() {
         <section className="min-w-0 flex-1" aria-label="Professor rankings">
           <CourseSections courseId={numericCourseId} />
           {error ? (
-            <div className="py-12 text-center">
+            <div className="py-12 text-center" role="alert">
               <p className="font-semibold">
-                Could not load professors. Check your connection and try refreshing.
+                We could not load professors for this course.
               </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Something went wrong on our end. You can try again.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 min-h-[44px]"
+                onClick={() => refetch()}
+              >
+                Try again
+              </Button>
             </div>
           ) : isLoading ? (
             <>
