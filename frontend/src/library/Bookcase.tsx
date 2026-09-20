@@ -134,7 +134,15 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
       {/* Books */}
       <instancedMesh ref={setInstances} args={[bookGeo, bookMat, books.length]} castShadow />
 
-      {/* Brass plaque — emissive so outer cases stay readable at night */}
+      <DeptPlaque label={slot.dept} />
+    </group>
+  )
+}
+
+/** Shared brass plaque so generated GLB cases keep the same department label. */
+export function DeptPlaque({ label }: { label: string }) {
+  return (
+    <>
       <mesh position={[0, CASE_H + 0.02, CASE_D / 2 - 0.1]} castShadow>
         <boxGeometry args={[1.02, 0.24, 0.03]} />
         <meshStandardMaterial
@@ -155,8 +163,8 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
         anchorY="middle"
         letterSpacing={0.08}
       >
-        {slot.dept}
+        {label}
       </Text>
-    </group>
+    </>
   )
 }

@@ -4,9 +4,11 @@ import { Canvas } from '@react-three/fiber'
 import { Environment, ContactShadows, useTexture } from '@react-three/drei'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import Bookcase from './Bookcase'
+import GeneratedBookcase from './GeneratedBookcase'
 import PulledBook from './PulledBook'
 import CameraRig, { type CameraTarget } from './CameraRig'
 import { BOOKCASES } from './layout'
+import { GENERATED_BOOKCASE_URL } from './generatedAssets'
 
 export interface LibrarySceneProps {
   target: CameraTarget
@@ -90,9 +92,13 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
 
         <Floor />
         <BackWall night={night} />
-        {BOOKCASES.map((b, i) => (
-          <Bookcase key={b.dept} slot={b} seed={i * 7919 + 13} />
-        ))}
+        {BOOKCASES.map((b, i) =>
+          GENERATED_BOOKCASE_URL ? (
+            <GeneratedBookcase key={b.dept} url={GENERATED_BOOKCASE_URL} slot={b} />
+          ) : (
+            <Bookcase key={b.dept} slot={b} seed={i * 7919 + 13} />
+          ),
+        )}
 
         {pulledCourse && (
           <PulledBook
