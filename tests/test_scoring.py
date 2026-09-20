@@ -11,10 +11,16 @@ from db.models import Professor, Course, GradeDistribution, RmpRating, RmpCommen
 
 
 def test_normalize_gpa():
-    # 4.0 GPA in a dept with median 3.0 → high score
-    assert normalize_gpa(4.0, dept_median=3.0, dept_max=4.0) > 0.8
+    # 4.0 GPA against a 4.0 max → high score
+    assert normalize_gpa(4.0, dept_max=4.0) > 0.8
     # 2.0 GPA → moderate-low score (2.0/4.0 = 0.5)
-    assert normalize_gpa(2.0, dept_median=3.0, dept_max=4.0) == 0.5
+    assert normalize_gpa(2.0, dept_max=4.0) == 0.5
+
+
+def test_normalize_gpa_has_no_dept_median_parameter():
+    """BUG-12: dept_median was accepted and silently ignored. Drop it."""
+    import inspect
+    assert "dept_median" not in inspect.signature(normalize_gpa).parameters
 
 
 def test_normalize_quality():

@@ -1,5 +1,10 @@
-def normalize_gpa(gpa: float, dept_median: float = 3.0, dept_max: float = 4.0) -> float:
-    """Normalize GPA to 0-1 relative to department stats."""
+def normalize_gpa(gpa: float, dept_max: float = 4.0) -> float:
+    """Normalize GPA to 0-1 by dividing by dept_max (default 4.0).
+
+    Does not center on a department median — that parameter was accepted
+    and silently ignored (BUG-12). Absolute 0–4 comparison is what every
+    live caller already does.
+    """
     if dept_max == 0:
         return 0.0
     return max(0.0, min(1.0, gpa / dept_max))
