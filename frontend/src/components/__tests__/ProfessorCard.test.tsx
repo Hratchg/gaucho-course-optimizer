@@ -6,8 +6,8 @@ import { ProfessorCard } from '../ProfessorCard'
 import type { ProfessorRanking } from '@/types/api'
 import type { GradeQuarter } from '@/types/api'
 
-class ResizeObserverMock { observe() {} unobserve() {} disconnect() {} }
-globalThis.ResizeObserver = ResizeObserverMock as any
+class ResizeObserverMock implements ResizeObserver { observe() {} unobserve() {} disconnect() {} }
+globalThis.ResizeObserver = ResizeObserverMock
 
 vi.mock('@/hooks/useProfessorGrades', () => ({
   useProfessorGrades: vi.fn(),

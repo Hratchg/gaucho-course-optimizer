@@ -3,8 +3,8 @@ import { describe, it, expect } from 'vitest'
 import type { GradeQuarter } from '@/types/api'
 import { GpaTrendChart } from './GpaTrendChart'
 
-class ResizeObserverMock { observe() {} unobserve() {} disconnect() {} }
-globalThis.ResizeObserver = ResizeObserverMock as any
+class ResizeObserverMock implements ResizeObserver { observe() {} unobserve() {} disconnect() {} }
+globalThis.ResizeObserver = ResizeObserverMock
 
 const mockQuarters: GradeQuarter[] = [
   {
