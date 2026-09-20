@@ -12,6 +12,10 @@ projects (e.g. Needle) for credit attribution.
   you can always tell which credits CoursePick consumed.
 - **Outputs:** models land in `outputs/` (gitignored; large binaries). Final
   compressed assets that ship are copied to `frontend/public/models/`.
+- **Compress:** `art/tripo/compress.sh` takes the Max-textured keeper
+  (`outputs/hero-bookshelf-web.glb`) down to ~1 MB (quantize + WebP 1K,
+  no Draco) at `frontend/public/models/hero-bookshelf.glb`. Preview with
+  `VITE_GENERATED_BOOKCASE=1`; do not commit the GLB.
 
 ## Cost (H3 `text_to_model`)
 
