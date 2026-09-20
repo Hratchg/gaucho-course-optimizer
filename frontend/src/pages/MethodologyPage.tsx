@@ -15,7 +15,10 @@ export default function MethodologyPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="font-heading text-[28px] font-bold text-primary">How CoursePick ranks professors</h1>
+      <p className="font-script text-2xl text-brand-violet">behind the shelves</p>
+      <h1 className="mt-1 font-heading text-3xl font-extrabold text-foreground">
+        How CoursePick ranks professors
+      </h1>
       <p className="mt-4 text-muted-foreground">
         Gaucho Score is a 0–100 ranking for a professor in a specific UCSB course.
         It only uses the factors we actually have. A missing RateMyProfessors match

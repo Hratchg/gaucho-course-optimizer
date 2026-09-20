@@ -89,9 +89,15 @@ export default function HomePage() {
       <div className="max-w-4xl mx-auto px-4">
         {/* Section 1: Hero */}
         <section className="py-16 text-center border-b border-primary/10">
-          <h1 className="font-heading font-bold text-[28px] leading-tight mb-4 text-primary">
-            Find the Best Professor for Any UCSB Course
-          </h1>
+          {show3D ? (
+            <h2 className="font-heading font-extrabold text-[28px] leading-tight mb-4 text-foreground">
+              Find the Best Professor for Any UCSB Course
+            </h2>
+          ) : (
+            <h1 className="font-heading font-extrabold text-[28px] leading-tight mb-4 text-foreground">
+              Find the Best Professor for Any UCSB Course
+            </h1>
+          )}
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Search any UCSB course and instantly see which professor will give
             you the best outcome &mdash; ranked by GPA, teaching quality,
