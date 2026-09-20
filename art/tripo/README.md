@@ -13,8 +13,22 @@ projects (e.g. Needle) for credit attribution.
 - **Outputs:** models land in `outputs/` (gitignored; large binaries). Final
   compressed assets that ship are copied to `frontend/public/models/`.
 
+## Cost (H3 `text_to_model`)
+
+| Flag | Credits | Notes |
+| --- | --- | --- |
+| `--texture no` (default) | 10 | Also sends `pbr: false`. Required — `pbr: true` forces texturing. |
+| `--texture standard` | 20 | |
+| `--texture HD` | 30 | `texture_quality=detailed` |
+
+The previous CoursePick attempt failed at 15 credits because the script left
+`pbr` at the API default (`true`), which silently billed a 20-credit textured
+task. That is fixed.
+
 ## Usage
 
 ```sh
-python art/tripo/generate.py "a wooden library bookshelf, ..." --name hero-bookshelf
+python3 art/tripo/generate.py --balance
+python3 art/tripo/generate.py "a wooden library bookshelf, ..." --name hero-bookshelf
+python3 art/tripo/generate.py "..." --name hero-bookshelf --texture standard
 ```

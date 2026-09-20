@@ -13,3 +13,6 @@ export_err.txt
 scrape_output.log
 art/tripo/outputs/
 art/tripo/.env
+art/meshy/outputs/
+art/meshy/.env
+frontend/public/models/*.glb
