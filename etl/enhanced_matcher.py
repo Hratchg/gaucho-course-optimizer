@@ -311,8 +311,10 @@ def _pass4_deduplication(
     """Pass 4: Merge duplicate Nexus professor pairs (abbreviated + full name).
 
     Transfers grade records from the abbreviated-name professor to the full-name one.
+    Skips abbreviated names that match more than one full name in the same
+    department — those need manual resolution (BUG-10).
     """
-    stats = {"merged": 0}
+    stats = {"merged": 0, "skipped_ambiguous": 0}
 
     # Get all Nexus professors (not just unmatched — we want to find duplicates)
     all_nexus = (
@@ -328,7 +330,24 @@ def _pass4_deduplication(
 
     pairs = find_duplicate_pairs(names_with_dept)
 
+    # An abbreviated name that pairs with more than one full name in the same
+    # department is ambiguous — merging would attribute grades by iteration
+    # order (BUG-10). Group first; only mutate 1:1 pairs.
+    pairs_by_abbr: dict[int, list[tuple[dict, dict]]] = defaultdict(list)
     for abbr_info, full_info in pairs:
+        pairs_by_abbr[abbr_info["id"]].append((abbr_info, full_info))
+
+    for abbr_id, group in pairs_by_abbr.items():
+        if len(group) != 1:
+            stats["skipped_ambiguous"] += 1
+            names = ", ".join(sorted({full["name"] for _abbr, full in group}))
+            logger.warning(
+                f"Pass 4: skipped ambiguous merge for professor id={abbr_id} "
+                f"— matches {len(group)} full names ({names})"
+            )
+            continue
+
+        abbr_info, full_info = group[0]
         abbr = session.get(Professor, abbr_info["id"])
         full = session.get(Professor, full_info["id"])
 

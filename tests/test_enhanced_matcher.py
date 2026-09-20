@@ -187,6 +187,21 @@ class TestPass4:
         remaining = db_session.get(Professor, full_id)
         assert remaining is not None
 
+    def test_skips_ambiguous_abbreviated_name(self, db_session):
+        """BUG-10: SMITH J matching both JOHN and JANE must not merge by iteration order."""
+        course = _make_course(db_session, code="CMPSCBUG10")
+        abbr = _make_nexus_prof(db_session, "SMITH J", dept="CMPSC", course=course)
+        john = _make_nexus_prof(db_session, "SMITH JOHN", dept="CMPSC", course=course)
+        jane = _make_nexus_prof(db_session, "SMITH JANE", dept="CMPSC", course=course)
+        abbr_id, john_id, jane_id = abbr.id, john.id, jane.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+        assert stats["merged"] == 0
+        assert stats["skipped_ambiguous"] == 1
+        assert db_session.get(Professor, abbr_id) is not None
+        assert db_session.get(Professor, john_id) is not None
+        assert db_session.get(Professor, jane_id) is not None
+
 
 class TestConsumedCandidatesAcrossPasses:
     def test_run_all_passes_does_not_hand_deleted_rmp_to_second_abbrev(self, db_session):
