@@ -282,6 +282,48 @@ def test_professor_response_includes_active_teaching_fields(monkeypatch):
         app.dependency_overrides.clear()
 
 
+PROFESSOR_RESPONSE_KEYS = {
+    "id",
+    "name",
+    "department",
+    "gaucho_score",
+    "gpa_factor",
+    "quality_factor",
+    "difficulty_factor",
+    "sentiment_factor",
+    "rmp_quality",
+    "rmp_difficulty",
+    "rmp_would_take_again",
+    "rmp_num_ratings",
+    "mean_gpa",
+    "std_gpa",
+    "avg_sentiment",
+    "match_confidence",
+    "quarters_taught",
+    "tags",
+    "is_active_teacher",
+    "recent_quarters",
+    "teaching_next_quarter",
+    "scheduled_sections",
+}
+
+
+def test_professor_response_pins_json_shape(monkeypatch):
+    """TEST-1: professors payload keeps the contract the SPA type-checks against."""
+    prof = _make_prof(is_active_teacher=True, recent_quarters=["Fall 2024"])
+    monkeypatch.setattr("api.routers.courses.get_professors_for_course", lambda db, cid: [prof])
+    monkeypatch.setattr("api.routers.courses.get_scheduled_sections", lambda *a, **k: {})
+    mock_db = MagicMock()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    client = TestClient(app)
+    try:
+        resp = client.get("/courses/1/professors")
+        assert resp.status_code == 200
+        assert set(resp.json()[0].keys()) == PROFESSOR_RESPONSE_KEYS
+    finally:
+        app.dependency_overrides.clear()
+
+
 # ---------------------------------------------------------------------------
 # Test 11: Bayesian small-sample adjustment on quality (BUG-5)
 # ---------------------------------------------------------------------------
