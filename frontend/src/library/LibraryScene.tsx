@@ -94,7 +94,7 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
         <BackWall night={night} />
         {BOOKCASES.map((b, i) =>
           GENERATED_BOOKCASE_URL ? (
-            <GeneratedBookcase key={b.dept} url={GENERATED_BOOKCASE_URL} slot={b} />
+            <GeneratedBookcase key={b.dept} url={GENERATED_BOOKCASE_URL} slot={b} seed={i * 7919 + 13} />
           ) : (
             <Bookcase key={b.dept} slot={b} seed={i * 7919 + 13} />
           ),

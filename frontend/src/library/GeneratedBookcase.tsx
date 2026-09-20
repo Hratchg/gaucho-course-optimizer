@@ -3,22 +3,37 @@ import * as THREE from 'three'
 import { useGLTF, useTexture } from '@react-three/drei'
 import type { BookcaseSlot } from './layout'
 import { CASE_H, DeptPlaque } from './Bookcase'
+import { generatedShelfLayout, materialHasColorMap, packShelfBooks, useBookInstances } from './books'
 
 interface GeneratedBookcaseProps {
   url: string
   slot: BookcaseSlot
+  seed: number
 }
 
 /**
  * Drop-in replacement for the procedural Bookcase: a Tripo/Meshy GLB
- * normalized to CASE_H, oak PBR applied to untextured drafts, brass plaque on top.
+ * normalized to CASE_H, oak PBR applied to untextured drafts, brass plaque
+ * on top, and the same instanced books packed onto measured shelf tops.
  */
-export default function GeneratedBookcase({ url, slot }: GeneratedBookcaseProps) {
+export default function GeneratedBookcase({ url, slot, seed }: GeneratedBookcaseProps) {
   const gltf = useGLTF(url)
   const root = useRef<THREE.Group>(null)
   const [woodMap, woodRough] = useTexture(['/3d/wood-diff.jpg', '/3d/wood-rough.jpg'])
 
   const source = useMemo(() => gltf.scene.clone(true), [gltf.scene])
+
+  const books = useMemo(() => {
+    const layout = generatedShelfLayout(CASE_H)
+    return packShelfBooks({
+      seed,
+      shelfYs: layout.shelfYs,
+      innerW: layout.innerW,
+      caseD: layout.caseD,
+      maxHeights: layout.maxHeights,
+    })
+  }, [seed])
+  const { bookGeo, bookMat, setInstances } = useBookInstances(books)
 
   useLayoutEffect(() => {
     const map = woodMap.clone()
@@ -41,9 +56,7 @@ export default function GeneratedBookcase({ url, slot }: GeneratedBookcaseProps)
       obj.castShadow = true
       obj.receiveShadow = true
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-      const textured = mats.some(
-        (m) => Boolean(m && 'map' in m && (m as THREE.MeshStandardMaterial).map),
-      )
+      const textured = materialHasColorMap(mats)
       // Keep Tripo/Meshy PBR when the web-app export already has maps.
       if (!textured) obj.material = wood
     })
@@ -64,6 +77,7 @@ export default function GeneratedBookcase({ url, slot }: GeneratedBookcaseProps)
     <group position={slot.position} rotation-y={slot.rotationY}>
       {/* Studio export is already aisle-facing; untextured API drafts needed -PI/2. */}
       <group ref={root} />
+      <instancedMesh ref={setInstances} args={[bookGeo, bookMat, books.length]} castShadow />
       <DeptPlaque label={slot.dept} />
     </group>
   )
