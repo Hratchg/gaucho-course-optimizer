@@ -102,17 +102,17 @@ if search_query:
             st.info("No professor data found for this course.")
         else:
             # Compute scores with current weights
-            dept_gpas = [p["mean_gpa"] for p in professors if p["mean_gpa"]]
+            dept_gpas = [p["mean_gpa"] for p in professors if p["mean_gpa"] is not None]
             dept_median = sorted(dept_gpas)[len(dept_gpas) // 2] if dept_gpas else 3.0
 
             for prof in professors:
-                gpa_f = normalize_gpa(prof["mean_gpa"], dept_median) if prof["mean_gpa"] else 0.5
-                qual_f = normalize_quality(prof["rmp_quality"]) if prof["rmp_quality"] else 0.5
-                diff_f = normalize_difficulty(prof["rmp_difficulty"]) if prof["rmp_difficulty"] else 0.5
+                gpa_f = normalize_gpa(prof["mean_gpa"], dept_median) if prof["mean_gpa"] is not None else 0.5
+                qual_f = normalize_quality(prof["rmp_quality"]) if prof["rmp_quality"] is not None else 0.5
+                diff_f = normalize_difficulty(prof["rmp_difficulty"]) if prof["rmp_difficulty"] is not None else 0.5
                 sent_f = (prof["avg_sentiment"] + 1) / 2 if prof["avg_sentiment"] is not None else 0.5
 
                 # Bayesian adjust quality if few ratings
-                if prof["rmp_num_ratings"] and prof["rmp_quality"]:
+                if prof["rmp_num_ratings"] and prof["rmp_quality"] is not None:
                     adj_qual = bayesian_adjust(prof["rmp_quality"], prof["rmp_num_ratings"], 3.0)
                     qual_f = normalize_quality(adj_qual)
 

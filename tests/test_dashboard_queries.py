@@ -224,6 +224,23 @@ def test_get_professors_returns_rmp_data(db_session):
     assert p2["avg_sentiment"] is None
 
 
+def test_zero_mean_gpa_is_preserved(db_session):
+    """BUG-11: a 0.0 average GPA must be returned as 0.0, not dropped to None."""
+    prof = Professor(name_nexus="ZERO GPA", department="MATH")
+    course = Course(code="MATH0", title="Zero", department="MATH")
+    db_session.add_all([prof, course])
+    db_session.flush()
+    db_session.add(GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2024, avg_gpa=0.0,
+    ))
+    db_session.flush()
+
+    result = get_professors_for_course(db_session, course.id)
+    assert len(result) == 1
+    assert result[0]["mean_gpa"] == 0.0
+
+
 # ---------------------------------------------------------------------------
 # Active Teaching Tests
 # ---------------------------------------------------------------------------

@@ -228,6 +228,46 @@ def test_compute_all_scores_no_duplicates_on_second_call(mem_session):
     assert count == 1
 
 
+def test_compute_all_scores_treats_zero_gpa_and_quality_as_data(mem_session):
+    """BUG-11: a genuine 0.0 GPA or RMP quality must not be treated as missing.
+
+    Truthiness guards replace 0.0 with the 0.5 neutral fallback, which scores
+    the worst-performing professors as average. 0 ratings skip Bayesian so
+    this test isolates the falsy-zero path.
+    """
+    prof = Professor(name_nexus="ZERO, DATA", name_rmp="Zero Data", rmp_id=9001, department="CS")
+    course = Course(code="CS0", title="Zero", department="CS")
+    mem_session.add_all([prof, course])
+    mem_session.flush()
+    mem_session.add_all([
+        GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter="Fall", year=2023, avg_gpa=0.0,
+        ),
+        RmpRating(
+            professor_id=prof.id,
+            overall_quality=0.0,
+            difficulty=3.0,
+            num_ratings=0,
+        ),
+    ])
+    mem_session.flush()
+
+    compute_all_scores(mem_session)
+    stored = (
+        mem_session.query(GauchoScore)
+        .filter_by(professor_id=prof.id, course_id=course.id)
+        .one()
+    )
+    # 0.0 GPA → 0.0 factor; 0.0 quality → 0.0 factor; difficulty 3.0 → 0.4;
+    # missing/zero ratings skip Bayesian; no sentiment → 0.5.
+    expected = compute_gaucho_score(0.0, 0.0, normalize_difficulty(3.0), 0.5)
+    assert stored.score == expected
+    # The pre-fix fallback (0.5, 0.5, 0.4, 0.5) is 47.5 — must not land there.
+    fallback = compute_gaucho_score(0.5, 0.5, normalize_difficulty(3.0), 0.5)
+    assert stored.score != fallback
+
+
 def test_compute_all_scores_return_dict_always_has_both_keys(mem_session):
     """Test 4: return dict always has both 'computed' and 'skipped' integer keys."""
     # Empty DB — no professors at all

@@ -126,13 +126,14 @@ def compute_all_scores(
             stats["skipped"] += 1
             continue
 
-        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa else 0.5
-        qual_f = normalize_quality(quality) if quality else 0.5
-        diff_f = normalize_difficulty(difficulty) if difficulty else 0.5
+        gpa_f = normalize_gpa(float(mean_gpa)) if mean_gpa is not None else 0.5
+        qual_f = normalize_quality(quality) if quality is not None else 0.5
+        diff_f = normalize_difficulty(difficulty) if difficulty is not None else 0.5
         sent_f = (float(avg_sentiment) + 1) / 2 if avg_sentiment is not None else 0.5
 
-        # Bayesian adjust quality factor
-        if quality and num_ratings:
+        # Bayesian adjust quality factor. num_ratings is intentionally truthy —
+        # 0 ratings must skip the shrink (same as the live API path).
+        if quality is not None and num_ratings:
             adj_qual = bayesian_adjust(quality, num_ratings, 3.0)
             qual_f = normalize_quality(adj_qual)
 
