@@ -49,4 +49,11 @@ describe('GpaTrendChart', () => {
     render(<GpaTrendChart quarters={nullGpaQuarters} />)
     expect(screen.getByText('No GPA trend data available')).toBeInTheDocument()
   })
+
+  it('exposes an accessible name summarizing the trend', () => {
+    render(<GpaTrendChart quarters={mockQuarters} />)
+    expect(
+      screen.getByRole('img', { name: /gpa trend from f22 \(3\.2\) to w23 \(3\.4\)/i })
+    ).toBeInTheDocument()
+  })
 })
