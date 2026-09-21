@@ -22,7 +22,7 @@ export function Footer() {
   const scheduleDate = formatFetchedAt(data?.schedule_fetched_at ?? null)
 
   return (
-    <footer className="bg-[oklch(0.206_0.039_289.4)] text-white">
+    <footer className="border-t-2 border-brand-gold bg-brand-ink text-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-3 md:max-w-2xl">
           <BrandWordmark className="text-lg" />
@@ -35,12 +35,12 @@ export function Footer() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex shrink-0 gap-4">
-          <Link to="/methodology" className="focusable rounded-sm text-brand-sun hover:underline">
+          <Link to="/methodology" className="focusable rounded-sm text-brand-gold-soft hover:underline">
             Methodology
           </Link>
           <a
             href="https://www.ratemyprofessors.com"
-            className="focusable rounded-sm text-brand-sun hover:underline"
+            className="focusable rounded-sm text-brand-gold-soft hover:underline"
             rel="noreferrer"
           >
             RateMyProfessors

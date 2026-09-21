@@ -170,7 +170,7 @@ export default function CoursePage() {
       <div className="flex gap-6">
         {/* Left sidebar -- desktop only, sticky */}
         <aside className="hidden w-64 shrink-0 md:block">
-          <div className="sticky top-20 space-y-6 rounded-lg border border-primary/20 p-4">
+          <div className="sticky top-20 space-y-6 rounded-lg border border-brand-gold/40 bg-brand-parchment/60 p-4 dark:bg-card">
             <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
             <ActiveTeacherFilter
               checked={showActiveOnly}

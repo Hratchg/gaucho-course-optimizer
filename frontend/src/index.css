@@ -5,6 +5,7 @@
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource/caveat/700.css";
+@import "@fontsource-variable/fraunces";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,7 +13,12 @@
     --font-heading: 'Bricolage Grotesque Variable', 'Inter Variable', sans-serif;
     --font-sans: 'Space Grotesk Variable', 'Inter Variable', sans-serif;
     --font-script: 'Caveat', cursive;
+    --font-display: 'Fraunces Variable', Georgia, serif;
     --color-brand-coral: var(--brand-coral);
+    --color-brand-gold: var(--brand-gold);
+    --color-brand-gold-soft: var(--brand-gold-soft);
+    --color-brand-burgundy: var(--brand-burgundy);
+    --color-brand-parchment: var(--brand-parchment);
     --color-brand-violet: var(--brand-violet);
     --color-brand-sun: var(--brand-sun);
     --color-brand-teal: var(--brand-teal);
@@ -66,16 +72,22 @@
     --brand-sun: oklch(0.861 0.159 86.4);
     --brand-teal: oklch(0.724 0.126 180.2);
     --brand-sky: oklch(0.751 0.142 241.3);
-    --brand-ink: oklch(0.235 0.036 290.6);
+    --brand-ink: oklch(0.205 0.038 290.6);
     --brand-paper: oklch(0.974 0.014 84.6);
+
+    /* Regal library primitives */
+    --brand-gold: oklch(0.720 0.130 91.0);
+    --brand-gold-soft: oklch(0.835 0.107 92.0);
+    --brand-burgundy: oklch(0.400 0.120 15.0);
+    --brand-parchment: oklch(0.956 0.020 90.0);
 
     /* Semantic — light ("paper") theme */
     --background: oklch(0.974 0.014 84.6);
-    --foreground: oklch(0.235 0.036 290.6);
+    --foreground: oklch(0.205 0.038 290.6);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.235 0.036 290.6);
+    --card-foreground: oklch(0.205 0.038 290.6);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.235 0.036 290.6);
+    --popover-foreground: oklch(0.205 0.038 290.6);
     --primary: oklch(0.689 0.200 22.4);
     --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.568 0.202 283.1);
@@ -83,7 +95,7 @@
     --muted: oklch(0.943 0.025 83.4);
     --muted-foreground: oklch(0.534 0.058 293.0);
     --accent: oklch(0.943 0.025 83.4);
-    --accent-foreground: oklch(0.235 0.036 290.6);
+    --accent-foreground: oklch(0.205 0.038 290.6);
     --destructive: oklch(0.629 0.197 23.3);
     --border: oklch(0.899 0.030 84.0);
     --input: oklch(0.899 0.030 84.0);
@@ -95,18 +107,18 @@
     --chart-5: oklch(0.751 0.142 241.3);
     --radius: 1rem;
     --sidebar: oklch(0.943 0.025 83.4);
-    --sidebar-foreground: oklch(0.235 0.036 290.6);
+    --sidebar-foreground: oklch(0.205 0.038 290.6);
     --sidebar-primary: oklch(0.689 0.200 22.4);
     --sidebar-primary-foreground: oklch(1 0 0);
     --sidebar-accent: oklch(0.943 0.025 83.4);
-    --sidebar-accent-foreground: oklch(0.235 0.036 290.6);
+    --sidebar-accent-foreground: oklch(0.205 0.038 290.6);
     --sidebar-border: oklch(0.899 0.030 84.0);
     --sidebar-ring: oklch(0.568 0.202 283.1);
 }
 
 .dark {
     /* Semantic — dark ("night library") theme */
-    --background: oklch(0.235 0.036 290.6);
+    --background: oklch(0.205 0.038 290.6);
     --foreground: oklch(0.974 0.014 84.6);
     --card: oklch(0.283 0.049 291.4);
     --card-foreground: oklch(0.974 0.014 84.6);

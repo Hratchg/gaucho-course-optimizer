@@ -15,8 +15,8 @@ export default function MethodologyPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <p className="font-script text-2xl text-brand-violet">behind the shelves</p>
-      <h1 className="mt-1 font-heading text-3xl font-extrabold text-foreground">
+      <p className="font-script text-2xl text-brand-burgundy dark:text-brand-gold-soft">behind the shelves</p>
+      <h1 className="mt-1 font-display text-3xl font-extrabold text-foreground">
         How CoursePick ranks professors
       </h1>
       <p className="mt-4 text-muted-foreground">
@@ -25,7 +25,7 @@ export default function MethodologyPage() {
         is omitted, not treated as a 3.0 / 0.5 placeholder.
       </p>
 
-      <h2 className="font-heading mt-10 text-xl font-bold">Sources</h2>
+      <h2 className="font-display mt-10 text-xl font-bold">Sources</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
         <li>
           Official UCSB grade distributions through {gradeTerm}. These determine
@@ -41,14 +41,14 @@ export default function MethodologyPage() {
         </li>
       </ul>
 
-      <h2 className="font-heading mt-10 text-xl font-bold">Matching</h2>
+      <h2 className="font-display mt-10 text-xl font-bold">Matching</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         UCSB grade files and RateMyProfessors use different name formats. We only
         publish a match at 85% confidence or higher. Truncated Nexus surnames can
         still match when every fragment is a prefix of the RateMyProfessors name.
       </p>
 
-      <h2 className="font-heading mt-10 text-xl font-bold">Scoring</h2>
+      <h2 className="font-display mt-10 text-xl font-bold">Scoring</h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         GPA is scaled by 4.0. Quality is Bayesian-adjusted toward 3.0 when the
         sample is small, then scaled by 5. Difficulty is inverted so easier
