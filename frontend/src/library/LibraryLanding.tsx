@@ -18,6 +18,7 @@ export default function LibraryLanding() {
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<CourseResult | null>(null)
   const [hovered, setHovered] = useState<CourseResult | null>(null)
+  const [flying, setFlying] = useState(false)
   const { data: courses, isLoading } = useCourseSearch(query)
   const { theme } = useTheme()
   const navigate = useNavigate()
@@ -34,11 +35,18 @@ export default function LibraryLanding() {
   const target: CameraTarget = {
     dept: top ? deptOf(top) : null,
     bookFocus: Boolean(picked),
+    flyIn: flying,
   }
 
   const openBook = () => {
-    if (!picked) return
-    navigate(`/courses/${picked.id}`, { state: { courseCode: picked.code } })
+    if (!picked || flying) return
+    // Fly the camera into the pulled book, then hand off to the book view.
+    setFlying(true)
+    window.setTimeout(() => {
+      navigate(`/courses/${picked.id}`, {
+        state: { courseCode: picked.code, courseTitle: picked.title ?? null },
+      })
+    }, 700)
   }
 
   return (

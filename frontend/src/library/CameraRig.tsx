@@ -8,6 +8,8 @@ export interface CameraTarget {
   dept: string | null
   /** extra push-in when a book is pulled */
   bookFocus: boolean
+  /** final dive into the pulled book before navigating to the book view */
+  flyIn?: boolean
 }
 
 const REST_POS = new THREE.Vector3(0, 2.35, 9.3)
@@ -23,7 +25,7 @@ export default function CameraRig({ target }: { target: CameraTarget }) {
   useFrame((_, dt) => {
     if (target.dept) {
       const slot = slotForDept(target.dept)
-      const push = target.bookFocus ? 2.6 : 2.9
+      const push = target.flyIn ? 1.1 : target.bookFocus ? 2.6 : 2.9
       desiredPos.current.set(
         slot.position[0] + Math.sin(slot.rotationY) * push,
         target.bookFocus ? 1.8 : 1.9,
