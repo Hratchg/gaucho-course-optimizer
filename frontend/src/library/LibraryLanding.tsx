@@ -60,18 +60,21 @@ export default function LibraryLanding() {
 
       {/* UI overlay */}
       <div className="relative z-10 flex h-full flex-col items-center pointer-events-none">
-        <div className="mt-[8vh] text-center px-4">
-          <p className="font-script text-2xl text-brand-sun drop-shadow-md">welcome to the stacks</p>
-          <h1 className="mt-1 font-heading font-extrabold text-4xl md:text-5xl text-white drop-shadow-lg">
+        <div className="mt-[10vh] text-center px-4">
+          <p className="font-script text-2xl text-brand-gold-soft drop-shadow-md">welcome to the stacks</p>
+          <h1 className="mt-1 font-display font-extrabold text-4xl md:text-5xl text-white drop-shadow-lg">
             Every UCSB course.
             <br />
             One library.
           </h1>
         </div>
 
-        {/* Search card */}
-        <div className="pointer-events-auto mt-8 w-full max-w-xl px-4">
-          <div className="rounded-2xl bg-white/95 dark:bg-brand-ink/90 shadow-2xl ring-1 ring-black/10 dark:ring-white/15 backdrop-blur">
+        {/* Search card — docked top-right */}
+        <div
+          data-testid="search-dock"
+          className="pointer-events-auto absolute left-4 right-4 top-4 sm:left-auto sm:right-6 sm:top-6 sm:w-96"
+        >
+          <div className="rounded-2xl bg-brand-parchment/95 dark:bg-brand-ink/90 shadow-2xl ring-1 ring-brand-gold/50 dark:ring-brand-gold/40 backdrop-blur">
             <div className="flex items-center gap-3 px-4">
               <Search className="h-5 w-5 shrink-0 text-brand-violet" aria-hidden />
               <input

@@ -28,6 +28,11 @@ describe('LibraryLanding overlay', () => {
 
     expect(screen.getByLabelText('Search courses')).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/find a course/i)).toBeInTheDocument()
+    // Search card is docked top-right (absolute, right-anchored on sm+).
+    const dock = screen.getByTestId('search-dock')
+    expect(dock.className).toContain('absolute')
+    expect(dock.className).toContain('sm:right-6')
+    expect(dock.className).toContain('sm:top-6')
     expect(screen.getByRole('heading', { level: 1, name: /every ucsb course/i })).toBeInTheDocument()
     // Lazy scene resolves to the mock — never a WebGL canvas.
     expect(await screen.findByTestId('library-scene-mock')).toBeInTheDocument()
