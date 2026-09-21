@@ -7,8 +7,12 @@ import Bookcase from './Bookcase'
 import GeneratedBookcase from './GeneratedBookcase'
 import PulledBook from './PulledBook'
 import CameraRig, { type CameraTarget } from './CameraRig'
+import { lazy } from 'react'
 import { BOOKCASES } from './layout'
-import { GENERATED_BOOKCASE_URL } from './generatedAssets'
+import { GENERATED_BOOKCASE_URL, LIBRARY_PROPS_ENABLED } from './generatedAssets'
+
+// Lazy so the GLBs are never requested unless the flag is on.
+const LibraryProps = lazy(() => import('./LibraryProps'))
 
 export interface LibrarySceneProps {
   target: CameraTarget
@@ -35,6 +39,16 @@ function Floor() {
     <mesh rotation-x={-Math.PI / 2} position={[0, 0, 1]} receiveShadow>
       <planeGeometry args={[40, 24]} />
       <meshStandardMaterial map={map} roughnessMap={rough} roughness={0.9} color="#9a7b57" />
+    </mesh>
+  )
+}
+
+/** Burgundy runner down the aisle — regal set dressing, always on. */
+function CarpetRunner() {
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[0, 0.012, 1.6]} receiveShadow>
+      <planeGeometry args={[19, 2.6]} />
+      <meshStandardMaterial color="#331018" roughness={1} />
     </mesh>
   )
 }
@@ -79,6 +93,8 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
           args={[night ? '#4a3f72' : '#7a7098', night ? '#1a1528' : '#3a3048', night ? 0.42 : 0.28]}
         />
         <ambientLight intensity={night ? 0.28 : 0.3} color="#cbb8ff" />
+        {/* Subtle gold rim from behind the cases for the regal glow */}
+        <directionalLight position={[-4, 3.5, -6]} intensity={night ? 0.5 : 0.35} color="#c9a227" />
         {/* Warm accent pools per bookcase — sit in front of each plaque */}
         {BOOKCASES.map((b) => (
           <pointLight
@@ -91,7 +107,9 @@ export default function LibraryScene({ target, pulledCourse, night }: LibrarySce
         ))}
 
         <Floor />
+        <CarpetRunner />
         <BackWall night={night} />
+        {LIBRARY_PROPS_ENABLED && <LibraryProps />}
         {BOOKCASES.map((b, i) =>
           GENERATED_BOOKCASE_URL ? (
             <GeneratedBookcase key={b.dept} url={GENERATED_BOOKCASE_URL} slot={b} seed={i * 7919 + 13} />
