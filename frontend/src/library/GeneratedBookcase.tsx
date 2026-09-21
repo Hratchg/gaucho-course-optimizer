@@ -3,7 +3,8 @@ import * as THREE from 'three'
 import { useGLTF, useTexture } from '@react-three/drei'
 import type { BookcaseSlot } from './layout'
 import { CASE_H, DeptPlaque } from './Bookcase'
-import { generatedShelfLayout, materialHasColorMap, packShelfBooks, useBookInstances } from './books'
+import BookInstances from './BookInstances'
+import { generatedShelfLayout, materialHasColorMap, packShelfBooks } from './books'
 
 interface GeneratedBookcaseProps {
   url: string
@@ -33,7 +34,6 @@ export default function GeneratedBookcase({ url, slot, seed }: GeneratedBookcase
       maxHeights: layout.maxHeights,
     })
   }, [seed])
-  const { bookGeo, bookMat, setInstances } = useBookInstances(books)
 
   useLayoutEffect(() => {
     const map = woodMap.clone()
@@ -77,7 +77,7 @@ export default function GeneratedBookcase({ url, slot, seed }: GeneratedBookcase
     <group position={slot.position} rotation-y={slot.rotationY}>
       {/* Studio export is already aisle-facing; untextured API drafts needed -PI/2. */}
       <group ref={root} />
-      <instancedMesh ref={setInstances} args={[bookGeo, bookMat, books.length]} castShadow />
+      <BookInstances books={books} />
       <DeptPlaque label={slot.dept} />
     </group>
   )

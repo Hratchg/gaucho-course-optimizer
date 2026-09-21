@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 import { useTexture, Text } from '@react-three/drei'
 import type { BookcaseSlot } from './layout'
+import BookInstances from './BookInstances'
 import {
   CASE_D,
   CASE_H,
@@ -10,7 +11,6 @@ import {
   SHELF_T,
   packShelfBooks,
   proceduralShelfYs,
-  useBookInstances,
 } from './books'
 
 export { CASE_D, CASE_H, CASE_W } from './books'
@@ -51,7 +51,6 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
       }),
     [seed],
   )
-  const { bookGeo, bookMat, setInstances } = useBookInstances(books)
 
   return (
     <group position={slot.position} rotation-y={slot.rotationY}>
@@ -84,7 +83,7 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
         </mesh>
       ))}
 
-      <instancedMesh ref={setInstances} args={[bookGeo, bookMat, books.length]} castShadow />
+      <BookInstances books={books} />
 
       <DeptPlaque label={slot.dept} />
     </group>

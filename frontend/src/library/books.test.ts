@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import {
-  BOOK_PALETTE,
   CASE_H,
   CASE_W,
   GENERATED_SHELF_Y_NATIVE,
+  MAX_LEAN,
+  SPINE_VARIANTS,
   generatedShelfLayout,
   materialHasColorMap,
   packShelfBooks,
   proceduralShelfYs,
+  spineSpec,
 } from './books'
 
 describe('proceduralShelfYs', () => {
@@ -58,7 +60,34 @@ describe('packShelfBooks', () => {
       expect(x).toBeGreaterThan(-innerW / 2)
       expect(x).toBeLessThan(innerW / 2)
       expect(shelfYs.some((shelfY) => y > shelfY && y < shelfY + 0.55)).toBe(true)
-      expect(BOOK_PALETTE).toContain(book.color)
+      expect(book.color).toMatch(/^#[0-9a-f]{6}$/)
+    }
+  })
+
+  it('assigns every book a valid spine variant and bounded lean', () => {
+    const books = packShelfBooks({
+      seed: 99,
+      shelfYs: proceduralShelfYs(),
+      innerW: CASE_W - 0.2,
+      caseD: 0.45,
+    })
+    for (const book of books) {
+      expect(book.variant).toBeGreaterThanOrEqual(0)
+      expect(book.variant).toBeLessThan(SPINE_VARIANTS)
+      expect(Number.isInteger(book.variant)).toBe(true)
+      expect(Math.abs(book.lean)).toBeLessThanOrEqual(MAX_LEAN)
+    }
+  })
+
+  it('adds flat stacked books on some shelves that stay upright and in bounds', () => {
+    const innerW = CASE_W - 0.2
+    const books = packShelfBooks({ seed: 5, shelfYs: proceduralShelfYs(), innerW, caseD: 0.45 })
+    // Flat books are wider than tall; upright books the reverse.
+    const flat = books.filter((b) => b.scale[0] > b.scale[1])
+    expect(flat.length).toBeGreaterThan(0)
+    for (const b of flat) {
+      expect(b.lean).toBe(0)
+      expect(b.pos[0] + b.scale[0] / 2).toBeLessThanOrEqual(innerW / 2)
     }
   })
 
@@ -86,5 +115,34 @@ describe('packShelfBooks', () => {
       expect(shelfIndex, `book ${i}`).toBeGreaterThanOrEqual(0)
       expect(book.scale[1]).toBeLessThanOrEqual(layout.maxHeights[shelfIndex] + 1e-6)
     })
+  })
+})
+
+describe('spineSpec', () => {
+  it('is deterministic per variant and stays inside the palette', () => {
+    for (let v = 0; v < SPINE_VARIANTS; v++) {
+      const a = spineSpec(v)
+      const b = spineSpec(v)
+      expect(a).toEqual(b)
+      expect(a.base).toMatch(/^#[0-9a-f]{6}$/)
+      expect(a.bands.length).toBeGreaterThanOrEqual(1)
+      for (const [cy, bh] of a.bands) {
+        expect(cy).toBeGreaterThan(0)
+        expect(cy).toBeLessThan(1)
+        expect(bh).toBeGreaterThan(0)
+        expect(bh).toBeLessThan(0.1)
+      }
+      for (const r of a.ridges) {
+        expect(r).toBeGreaterThan(0.2)
+        expect(r).toBeLessThan(0.95)
+      }
+    }
+  })
+
+  it('varies band layout across variants', () => {
+    const layouts = new Set(
+      Array.from({ length: SPINE_VARIANTS }, (_, v) => JSON.stringify(spineSpec(v))),
+    )
+    expect(layouts.size).toBeGreaterThan(SPINE_VARIANTS / 2)
   })
 })
