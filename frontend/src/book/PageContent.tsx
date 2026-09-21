@@ -1,19 +1,26 @@
-import { Link } from 'react-router-dom'
+import type { CSSProperties } from 'react'
 import { WeightToggles } from '@/components/WeightToggles'
 import { GradeChart } from '@/components/GradeChart'
-import { useProfessorGrades } from '@/hooks/useProfessorGrades'
+import type { GradeQuarter } from '@/types/api'
 import type { ToggleWeights } from '@/lib/scoring'
 import type { PageDef, RankedProfessor } from './paginate'
 
 export const PAGE_PX_W = 420
 export const PAGE_PX_H = 560
 
+/**
+ * NOTE: drei <Html> mounts its children in a separate React root, so router
+ * and react-query contexts are NOT available here. Links are plain anchors
+ * and all data arrives via props.
+ */
 interface PageContentProps {
   page: PageDef
   side: 'left' | 'right'
   courseId: number
   weights: ToggleWeights
   onWeightsChange: (w: ToggleWeights) => void
+  /** Grade history for the top professor, fetched by the parent view. */
+  topProfGrades?: GradeQuarter[]
 }
 
 function ScorePill({ score }: { score: number }) {
@@ -37,32 +44,35 @@ function CondensedProfessor({ prof, rank, courseId }: { prof: RankedProfessor; r
         </p>
       </div>
       <ScorePill score={prof.computedScore} />
-      <Link
-        to={`/courses/${courseId}?classic=1`}
+      <a
+        href={`/courses/${courseId}?classic=1`}
         className="focusable shrink-0 text-xs text-brand-burgundy underline-offset-2 hover:underline"
         aria-label={`Full details for ${prof.name} in classic view`}
       >
         details
-      </Link>
-    </div>
-  )
-}
-
-function OverviewGradeChart({ professorId, courseId }: { professorId: number; courseId: number }) {
-  const { data: grades } = useProfessorGrades(professorId, courseId)
-  if (!grades || grades.length === 0) return null
-  return (
-    <div className="mt-2 h-40">
-      <GradeChart quarters={grades} selectedQuarter="all" />
+      </a>
     </div>
   )
 }
 
 /** One parchment page of the open book, rendered as real DOM inside drei Html. */
-export default function PageContent({ page, side, courseId, weights, onWeightsChange }: PageContentProps) {
+export default function PageContent({ page, side, courseId, weights, onWeightsChange, topProfGrades }: PageContentProps) {
   return (
     <div
-      style={{ width: PAGE_PX_W, height: PAGE_PX_H }}
+      style={
+        {
+          width: PAGE_PX_W,
+          height: PAGE_PX_H,
+          // The page is always light parchment, even when the app is in dark
+          // mode — pin the semantic tokens the embedded components consume.
+          '--foreground': 'oklch(0.205 0.038 290.6)',
+          '--muted-foreground': 'oklch(0.534 0.058 293.0)',
+          '--border': 'oklch(0.899 0.030 84.0)',
+          '--input': 'oklch(0.899 0.030 84.0)',
+          '--card': 'oklch(1 0 0)',
+          '--card-foreground': 'oklch(0.205 0.038 290.6)',
+        } as CSSProperties
+      }
       className={`flex select-none flex-col overflow-hidden bg-transparent px-7 py-6 text-brand-ink ${
         side === 'left' ? 'pr-8' : 'pl-8'
       }`}
@@ -98,8 +108,10 @@ export default function PageContent({ page, side, courseId, weights, onWeightsCh
               </div>
             )}
           </dl>
-          {page.topProfessorId != null && (
-            <OverviewGradeChart professorId={page.topProfessorId} courseId={courseId} />
+          {topProfGrades && topProfGrades.length > 0 && (
+            <div className="mt-2 h-44">
+              <GradeChart quarters={topProfGrades} selectedQuarter="all" />
+            </div>
           )}
           <p className="mt-auto text-xs text-[#8a8064]">
             Flip the pages for the full ranking →
@@ -116,9 +128,9 @@ export default function PageContent({ page, side, courseId, weights, onWeightsCh
           <WeightToggles weights={weights} onWeightsChange={onWeightsChange} />
           <p className="mt-auto text-xs text-[#8a8064]">
             Prefer the classic layout?{' '}
-            <Link to={`/courses/${courseId}?classic=1`} className="focusable text-brand-burgundy underline">
+            <a href={`/courses/${courseId}?classic=1`} className="focusable text-brand-burgundy underline">
               Open classic view
-            </Link>
+            </a>
           </p>
         </>
       )}

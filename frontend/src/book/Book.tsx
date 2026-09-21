@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { easing } from 'maath'
 import type { ToggleWeights } from '@/lib/scoring'
+import type { GradeQuarter } from '@/types/api'
 import PageContent, { PAGE_PX_W, PAGE_PX_H } from './PageContent'
 import type { Spread } from './paginate'
 
@@ -13,8 +14,8 @@ const PAGE_SEGMENTS = 24
 const SEG_W = PAGE_W / PAGE_SEGMENTS
 const SHEET_GAP = 0.006
 const EASING = 0.32
-/** drei Html transform: 1 css px = 1 world unit before scaling. */
-const HTML_SCALE = PAGE_W / PAGE_PX_W
+/** drei Html transform mode: world size = css px × distanceFactor / 400. */
+const HTML_DISTANCE_FACTOR = (PAGE_W * 400) / PAGE_PX_W
 
 const PARCHMENT = '#f1e8d0'
 const PARCHMENT_EDGE = '#e2d5b4'
@@ -117,8 +118,10 @@ function FrontCover({ total }: { total: number }) {
   const board = useMemo(() => {
     const geo = new THREE.BoxGeometry(PAGE_W + 0.06, PAGE_H + 0.09, 0.02)
     geo.translate((PAGE_W + 0.06) / 2, 0, 0)
-    const mat = new THREE.MeshStandardMaterial({ color: LEATHER, roughness: 0.55, metalness: 0.08 })
-    const mesh = new THREE.Mesh(geo, mat)
+    const leather = new THREE.MeshStandardMaterial({ color: LEATHER, roughness: 0.55, metalness: 0.08 })
+    const endpaper = new THREE.MeshStandardMaterial({ color: PARCHMENT, roughness: 0.9 })
+    // -z face (5) becomes the visible inside once the cover flips open.
+    const mesh = new THREE.Mesh(geo, [leather, leather, leather, leather, leather, endpaper])
     mesh.castShadow = true
     mesh.receiveShadow = true
     return mesh
@@ -146,21 +149,24 @@ interface BookProps {
   onWeightsChange: (w: ToggleWeights) => void
   /** True while a page turn (or the entrance) is settling — dims the DOM content. */
   turning: boolean
+  topProfGrades?: GradeQuarter[]
 }
 
 /**
  * The regal open book: leather covers, gilt-edged parchment sheets flipping
  * on bone chains, and real DOM content (drei Html) resting on the open spread.
  */
-export default function Book({ spreads, spreadIndex, courseId, weights, onWeightsChange, turning }: BookProps) {
+export default function Book({ spreads, spreadIndex, courseId, weights, onWeightsChange, turning, topProfGrades }: BookProps) {
   const sheetCount = Math.max(spreads.length - 1, 0)
   const spread = spreads[Math.min(spreadIndex, spreads.length - 1)] ?? null
 
   const backBoard = useMemo(() => {
     const geo = new THREE.BoxGeometry(PAGE_W + 0.06, PAGE_H + 0.09, 0.02)
     geo.translate((PAGE_W + 0.06) / 2, 0, 0)
-    const mat = new THREE.MeshStandardMaterial({ color: LEATHER, roughness: 0.55, metalness: 0.08 })
-    const mesh = new THREE.Mesh(geo, mat)
+    const leather = new THREE.MeshStandardMaterial({ color: LEATHER, roughness: 0.55, metalness: 0.08 })
+    const endpaper = new THREE.MeshStandardMaterial({ color: PARCHMENT, roughness: 0.9 })
+    // +z face (4) looks up under the right page stack.
+    const mesh = new THREE.Mesh(geo, [leather, leather, leather, leather, endpaper, leather])
     mesh.receiveShadow = true
     return mesh
   }, [])
@@ -172,7 +178,7 @@ export default function Book({ spreads, spreadIndex, courseId, weights, onWeight
   }
 
   return (
-    <group rotation={[-0.42, 0, 0]} position={[0, -0.1, 0]}>
+    <group rotation={[-0.28, 0, 0]} position={[0, -0.08, 0]}>
       {/* Back cover under the right stack */}
       <primitive object={backBoard} position={[0, 0, -(sheetCount + 2) * SHEET_GAP]} />
       {/* Spine */}
@@ -193,7 +199,7 @@ export default function Book({ spreads, spreadIndex, courseId, weights, onWeight
           <Html
             transform
             position={[-PAGE_W / 2, 0, 0.03]}
-            scale={HTML_SCALE}
+            distanceFactor={HTML_DISTANCE_FACTOR}
             style={contentStyle}
             zIndexRange={[10, 0]}
           >
@@ -204,13 +210,14 @@ export default function Book({ spreads, spreadIndex, courseId, weights, onWeight
                 courseId={courseId}
                 weights={weights}
                 onWeightsChange={onWeightsChange}
+                topProfGrades={topProfGrades}
               />
             </div>
           </Html>
           <Html
             transform
             position={[PAGE_W / 2, 0, 0.03]}
-            scale={HTML_SCALE}
+            distanceFactor={HTML_DISTANCE_FACTOR}
             style={contentStyle}
             zIndexRange={[10, 0]}
           >
@@ -221,6 +228,7 @@ export default function Book({ spreads, spreadIndex, courseId, weights, onWeight
                 courseId={courseId}
                 weights={weights}
                 onWeightsChange={onWeightsChange}
+                topProfGrades={topProfGrades}
               />
             </div>
           </Html>

@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { Canvas } from '@react-three/fiber'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useProfessors } from '@/hooks/useProfessors'
+import { useProfessorGrades } from '@/hooks/useProfessorGrades'
 import { computeGauchoScore, DEFAULT_TOGGLE_WEIGHTS, type ToggleWeights } from '@/lib/scoring'
 import { Button } from '@/components/ui/button'
 import Book from './Book'
@@ -59,6 +60,10 @@ export default function BookCourseView() {
     () => paginateCourse({ courseCode, courseTitle, professors: ranked }),
     [courseCode, courseTitle, ranked],
   )
+
+  // Grade history for the top-ranked professor, shown on the overview page.
+  // Fetched here because drei Html content has no react-query context.
+  const { data: topProfGrades } = useProfessorGrades(ranked[0]?.id ?? 0, numericCourseId)
 
   const maxSpread = Math.max(spreads.length - 1, 0)
   const clampedIndex = Math.min(spreadIndex, maxSpread)
@@ -133,6 +138,7 @@ export default function BookCourseView() {
               weights={weights}
               onWeightsChange={setWeights}
               turning={turning}
+              topProfGrades={topProfGrades}
             />
           )}
         </Canvas>
