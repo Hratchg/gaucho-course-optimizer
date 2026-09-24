@@ -23,6 +23,7 @@ describe('Navbar', () => {
     expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /methodology/i })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /^search$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /day mode|night mode/i })).not.toBeInTheDocument()
   })
 
   it('at "/", Home link has aria-current="page"', () => {

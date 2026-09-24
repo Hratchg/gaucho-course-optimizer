@@ -1,6 +1,5 @@
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import MobileMenu from '@/components/MobileMenu'
-import ThemeToggle from '@/components/ThemeToggle'
 import BrandWordmark from '@/components/BrandWordmark'
 
 export default function Navbar() {
@@ -26,8 +25,6 @@ export default function Navbar() {
               Methodology
             </NavLink>
           </div>
-
-          <ThemeToggle />
 
           {/* Mobile hamburger menu */}
           <div className="flex md:hidden">

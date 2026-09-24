@@ -5,6 +5,13 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
+document.documentElement.classList.add('dark')
+try {
+  localStorage.removeItem('coursepick-theme')
+} catch {
+  // storage unavailable — the dark class still applies
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

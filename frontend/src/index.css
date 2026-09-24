@@ -128,6 +128,7 @@
 }
 
 .dark {
+    color-scheme: dark;
     --background: var(--library-wall-night);
     --foreground: oklch(0.95 0.012 80);
     --card: oklch(0.24 0.016 50);

@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useTheme } from '@/hooks/useTheme'
 import { courseIdFromPath } from './courseRoute'
 import ClassicBookHud from './ClassicBookHud'
 import CourseSearchDock from './CourseSearchDock'
@@ -38,7 +37,6 @@ function courseFromLocation(pathname: string, state: unknown): CourseResult | nu
 export default function LibraryLanding({ initialCourse = null, startOpen = false }: LibraryLandingProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { theme } = useTheme()
 
   const routed = courseFromLocation(location.pathname, location.state)
   const [picked, setPicked] = useState<CourseResult | null>(initialCourse ?? routed)
@@ -169,7 +167,7 @@ export default function LibraryLanding({ initialCourse = null, startOpen = false
             docked={docked || flight != null}
             flight={flight}
             holdBook={holdBook}
-            night={theme === 'dark'}
+            night
             onSphereClick={showHud ? closeBook : undefined}
           />
         </Suspense>
