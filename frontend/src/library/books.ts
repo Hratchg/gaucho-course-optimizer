@@ -13,10 +13,10 @@ export function mulberry32(seed: number) {
   }
 }
 
-/** Muted leather/cloth regal palette — one entry per spine variant. */
+/** Cloth/leather spines that sit with stone + terracotta chrome. */
 export const BOOK_PALETTE = [
-  '#6e2434', '#2f4a3c', '#23304d', '#5a3a22', '#3d2f4f',
-  '#7a4a2b', '#4a2530', '#31424f', '#5c5030', '#274035',
+  '#8a4630', '#3d4a42', '#2c3544', '#6b4a32', '#4a3d38',
+  '#7a5338', '#3a2c28', '#4d5a52', '#5c4030', '#2f3d38',
 ] as const
 
 export const SPINE_VARIANTS = BOOK_PALETTE.length
@@ -26,6 +26,12 @@ export const CASE_H = 3.1
 export const CASE_D = 0.45
 export const SHELF_COUNT = 5
 export const SHELF_T = 0.045
+
+/** Full-viewport landing shelf — wide enough to fill a 16:9 frame at fov 46. */
+export const HERO_W = 7.4
+export const HERO_H = 4.35
+export const HERO_D = 0.52
+export const HERO_SHELVES = 6
 
 /**
  * Native Tripo keeper (Y 0–1) shelf-top clusters from the unsimplified mesh,
@@ -50,6 +56,11 @@ export interface BookInstance {
   variant: number
   /** Small z-rotation in radians for leaning books; 0 for upright/stacked. */
   lean: number
+  /**
+   * Full local Euler (XYZ, radians). When set, it replaces `lean`.
+   * Used by the sphere so each spine faces outward.
+   */
+  rotation?: [number, number, number]
 }
 
 export const MAX_LEAN = 0.09
@@ -155,7 +166,8 @@ export function applyBookInstances(mesh: THREE.InstancedMesh | null, books: Book
   books.forEach((b, i) => {
     v.set(...b.pos)
     sc.set(...b.scale)
-    e.set(0, 0, b.lean)
+    const [rx, ry, rz] = b.rotation ?? [0, 0, b.lean]
+    e.set(rx, ry, rz)
     q.setFromEuler(e)
     m.compose(v, q, sc)
     mesh.setMatrixAt(i, m)

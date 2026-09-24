@@ -14,53 +14,66 @@ export default function MethodologyPage() {
     : 'the latest published UCSB term'
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <p className="font-script text-2xl text-brand-burgundy dark:text-brand-gold-soft">behind the shelves</p>
-      <h1 className="mt-1 font-display text-3xl font-extrabold text-foreground">
+    <article className="mx-auto max-w-2xl px-5 py-16">
+      <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground">
         How CoursePick ranks professors
       </h1>
-      <p className="mt-4 text-muted-foreground">
+      <p className="mt-4 max-w-[62ch] text-base leading-relaxed text-muted-foreground">
         Gaucho Score is a 0–100 ranking for a professor in a specific UCSB course.
         It only uses the factors we actually have. A missing RateMyProfessors match
         is omitted, not treated as a 3.0 / 0.5 placeholder.
       </p>
 
-      <h2 className="font-display mt-10 text-xl font-bold">Sources</h2>
-      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
-        <li>
-          Official UCSB grade distributions through {gradeTerm}. These determine
-          average GPA and the grade-history charts.
-        </li>
-        <li>
-          RateMyProfessors quality, difficulty, would-take-again, and comments.
-          Comments are scored with VADER sentiment and mapped onto tags.
-        </li>
-        <li>
-          UCSB Curriculums API section listings for who is teaching the current
-          and next quarter.
-        </li>
-      </ul>
+      <section className="mt-12">
+        <h2 className="font-heading text-xl font-semibold tracking-tight">Sources</h2>
+        <ul className="mt-4 space-y-4 text-sm leading-relaxed">
+          <li>
+            <p className="font-medium text-foreground">UCSB grade distributions</p>
+            <p className="mt-1 text-muted-foreground">
+              Official grades through {gradeTerm}. These set average GPA and the grade-history charts.
+            </p>
+          </li>
+          <li>
+            <p className="font-medium text-foreground">RateMyProfessors</p>
+            <p className="mt-1 text-muted-foreground">
+              Quality, difficulty, would-take-again, and comments. Comments are scored with VADER sentiment and mapped onto tags.
+            </p>
+          </li>
+          <li>
+            <p className="font-medium text-foreground">UCSB Curriculums API</p>
+            <p className="mt-1 text-muted-foreground">
+              Section listings for who is teaching the current and next quarter.
+            </p>
+          </li>
+        </ul>
+      </section>
 
-      <h2 className="font-display mt-10 text-xl font-bold">Matching</h2>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        UCSB grade files and RateMyProfessors use different name formats. We only
-        publish a match at 85% confidence or higher. Truncated Nexus surnames can
-        still match when every fragment is a prefix of the RateMyProfessors name.
-      </p>
+      <section className="mt-12">
+        <h2 className="font-heading text-xl font-semibold tracking-tight">Matching</h2>
+        <p className="mt-4 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
+          UCSB grade files and RateMyProfessors use different name formats. We only
+          publish a match at 85% confidence or higher. Truncated Nexus surnames can
+          still match when every fragment is a prefix of the RateMyProfessors name.
+        </p>
+      </section>
 
-      <h2 className="font-display mt-10 text-xl font-bold">Scoring</h2>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        GPA is scaled by 4.0. Quality is Bayesian-adjusted toward 3.0 when the
-        sample is small, then scaled by 5. Difficulty is inverted so easier
-        courses score higher. Sentiment maps VADER&apos;s −1…1 range onto 0…1.
-        Enabled factors share the weight equally. You can change those weights
-        on a course page.
-      </p>
+      <section className="mt-12">
+        <h2 className="font-heading text-xl font-semibold tracking-tight">Scoring</h2>
+        <p className="mt-4 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
+          GPA is scaled by 4.0. Quality is Bayesian-adjusted toward 3.0 when the
+          sample is small, then scaled by 5. Difficulty is inverted so easier
+          courses score higher. Sentiment maps VADER&apos;s −1…1 range onto 0…1.
+          Enabled factors share the weight equally. You can change those weights
+          on a course page.
+        </p>
+      </section>
 
-      <p className="mt-10 text-sm">
-        <Link to="/search" className="text-primary hover:underline">Search a course</Link>
-        {' '}to see the ranking applied.
+      <p className="mt-14 text-sm">
+        <Link to="/" className="text-primary hover:underline">
+          Search a course
+        </Link>
+        {' '}to see the ranking.
       </p>
-    </div>
+    </article>
   )
 }

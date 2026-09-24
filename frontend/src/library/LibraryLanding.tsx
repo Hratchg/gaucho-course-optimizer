@@ -1,159 +1,181 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, BookOpen, ArrowRight } from 'lucide-react'
-import { useCourseSearch } from '@/hooks/useCourseSearch'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '@/hooks/useTheme'
-import { BOOKCASES, deptFromCourseCode } from './layout'
-import type { CameraTarget } from './CameraRig'
+import { deptFromCourseCode } from './layout'
+import { courseIdFromPath } from './courseRoute'
+import ClassicBookHud from './ClassicBookHud'
+import CourseSearchDock from './CourseSearchDock'
+import HomeCopy from './HomeCopy'
+import { FLIGHT_MS } from './flight'
 import type { CourseResult } from '@/types/api'
 
 const LibraryScene = lazy(() => import('./LibraryScene'))
 
+const CLOSE_MS = 200
+
+interface LibraryLandingProps {
+  initialCourse?: CourseResult | null
+  /** Deep link: skip the pull and show the open book. */
+  startOpen?: boolean
+}
+
+function courseFromLocation(pathname: string, state: unknown): CourseResult | null {
+  const id = courseIdFromPath(pathname)
+  if (id == null) return null
+  const nav = state as { courseCode?: string; courseTitle?: string | null } | null
+  return {
+    id,
+    code: nav?.courseCode ?? '',
+    title: nav?.courseTitle ?? null,
+    department: null,
+  }
+}
+
 /**
- * The interactive library landing. Owns search state, maps the highlighted
- * course to a bookcase (camera flight), and pulls the book on selection.
- * "Open the book" navigates to the course page.
+ * A rotating sphere of books. Search pulls one book to the right and docks
+ * the sphere on the left; the open book is the classic course HUD.
  */
-export default function LibraryLanding() {
-  const [query, setQuery] = useState('')
-  const [picked, setPicked] = useState<CourseResult | null>(null)
-  const [hovered, setHovered] = useState<CourseResult | null>(null)
-  const [flying, setFlying] = useState(false)
-  const { data: courses, isLoading } = useCourseSearch(query)
-  const { theme } = useTheme()
+export default function LibraryLanding({ initialCourse = null, startOpen = false }: LibraryLandingProps) {
+  const location = useLocation()
   const navigate = useNavigate()
+  const { theme } = useTheme()
 
-  const results = (courses ?? []).slice(0, 6)
-  const top = picked ?? hovered ?? results[0] ?? null
+  const routed = courseFromLocation(location.pathname, location.state)
+  const [picked, setPicked] = useState<CourseResult | null>(initialCourse ?? routed)
+  const [hudOpen, setHudOpen] = useState(Boolean((initialCourse && startOpen) || routed))
+  const [closing, setClosing] = useState(false)
+  const [bookKey, setBookKey] = useState(0)
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const routeId = courseIdFromPath(location.pathname)
+  const routeIdRef = useRef(routeId)
+  const pathnameRef = useRef(location.pathname)
+  pathnameRef.current = location.pathname
 
-  const featured = useMemo(() => new Set(BOOKCASES.map((b) => b.dept)), [])
-  const deptOf = (c: CourseResult) => {
-    const d = (c.department ?? deptFromCourseCode(c.code)).toUpperCase()
-    return featured.has(d) ? d : 'GENERAL'
-  }
+  const docked = Boolean(picked) && !closing
 
-  const target: CameraTarget = {
-    dept: top ? deptOf(top) : null,
-    bookFocus: Boolean(picked),
-    flyIn: flying,
-  }
+  useEffect(() => {
+    return () => {
+      if (openTimer.current) clearTimeout(openTimer.current)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    }
+  }, [])
 
-  const openBook = () => {
-    if (!picked || flying) return
-    // Fly the camera into the pulled book, then hand off to the book view.
-    setFlying(true)
-    window.setTimeout(() => {
-      navigate(`/courses/${picked.id}`, {
-        state: { courseCode: picked.code, courseTitle: picked.title ?? null },
+  useEffect(() => {
+    const previous = routeIdRef.current
+    routeIdRef.current = routeId
+    if (previous != null && routeId == null) {
+      if (openTimer.current) clearTimeout(openTimer.current)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+      setClosing(false)
+      setHudOpen(false)
+      setPicked(null)
+      return
+    }
+    if (routeId != null && previous !== routeId) {
+      const fromUrl = courseFromLocation(location.pathname, location.state)
+      setPicked((current) => (current?.id === routeId && current.code ? current : fromUrl))
+      setClosing(false)
+      setHudOpen(true)
+    }
+  }, [routeId, location.pathname, location.state])
+
+  useEffect(() => {
+    if (hudOpen && picked) {
+      const label = picked.code?.trim() || `Course ${picked.id}`
+      document.title = `${label} | CoursePick`
+    } else if (!hudOpen) {
+      document.title = 'Home | CoursePick'
+    }
+  }, [hudOpen, picked])
+
+  const closeBook = useCallback(() => {
+    if (!hudOpen || closing) return
+    setClosing(true)
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    closeTimer.current = setTimeout(() => {
+      setClosing(false)
+      setHudOpen(false)
+      setPicked(null)
+      if (courseIdFromPath(pathnameRef.current) != null) {
+        navigate('/', { replace: true })
+      }
+    }, CLOSE_MS)
+  }, [hudOpen, closing, navigate])
+
+  useEffect(() => {
+    if (!hudOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      closeBook()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [hudOpen, closeBook])
+
+  const pickCourse = (c: CourseResult) => {
+    if (openTimer.current) clearTimeout(openTimer.current)
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setClosing(false)
+    setHudOpen(false)
+    setPicked(c)
+    setBookKey((k) => k + 1)
+
+    const replace = courseIdFromPath(location.pathname) != null
+    openTimer.current = setTimeout(() => {
+      setHudOpen(true)
+      navigate(`/courses/${c.id}`, {
+        replace,
+        state: { courseCode: c.code, courseTitle: c.title ?? null },
       })
-    }, 700)
+    }, FLIGHT_MS)
   }
+
+  const showHud = Boolean(picked && (hudOpen || closing))
 
   return (
-    <section className="relative h-[calc(100dvh-3.5rem)] min-h-[480px] w-full overflow-hidden bg-brand-ink">
-      {/* 3D scene */}
+    <section className="relative h-[calc(100dvh-3.5rem)] min-h-[480px] w-full overflow-hidden bg-[#efeae3] dark:bg-library-fog-night">
       <div className="absolute inset-0">
-        <Suspense fallback={<div className="h-full w-full bg-brand-ink" aria-hidden />}>
+        <Suspense fallback={<div className="h-full w-full bg-[#efeae3] dark:bg-library-fog-night" aria-hidden />}>
           <LibraryScene
-            target={target}
+            docked={docked}
             pulledCourse={
-              picked
-                ? { code: picked.code, title: picked.title ?? undefined, dept: deptOf(picked) }
+              picked && !hudOpen && !closing
+                ? {
+                    code: picked.code,
+                    title: picked.title ?? undefined,
+                    dept: deptFromCourseCode(picked.code),
+                    key: bookKey,
+                  }
                 : null
             }
             night={theme === 'dark'}
+            onSphereClick={showHud ? closeBook : undefined}
           />
         </Suspense>
       </div>
 
-      {/* UI overlay */}
-      <div className="relative z-10 flex h-full flex-col items-center pointer-events-none">
-        <div className="mt-[10vh] text-center px-4">
-          <p className="font-script text-2xl text-brand-gold-soft drop-shadow-md">welcome to the stacks</p>
-          <h1 className="mt-1 font-display font-extrabold text-4xl md:text-5xl text-white drop-shadow-lg">
-            Every UCSB course.
-            <br />
-            One library.
-          </h1>
-        </div>
+      {!picked && <HomeCopy layout="stage" />}
 
-        {/* Search card — docked top-right */}
-        <div
-          data-testid="search-dock"
-          className="pointer-events-auto absolute left-4 right-4 top-4 sm:left-auto sm:right-6 sm:top-6 sm:w-96"
-        >
-          <div className="rounded-2xl bg-brand-parchment/95 dark:bg-brand-ink/90 shadow-2xl ring-1 ring-brand-gold/50 dark:ring-brand-gold/40 backdrop-blur">
-            <div className="flex items-center gap-3 px-4">
-              <Search className="h-5 w-5 shrink-0 text-brand-violet" aria-hidden />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  setPicked(null)
-                }}
-                placeholder='Find a course — try "CMPSC 130A"'
-                aria-label="Search courses"
-                className="focusable w-full bg-transparent py-4 font-sans text-base text-foreground placeholder:text-muted-foreground outline-none"
-              />
-            </div>
-
-            {query.trim().length >= 2 && !picked && (
-              <ul className="max-h-64 overflow-y-auto border-t border-border" role="listbox" aria-label="Course results">
-                {isLoading && (
-                  <li className="px-4 py-3 text-sm text-muted-foreground">Searching the stacks…</li>
-                )}
-                {!isLoading && results.length === 0 && (
-                  <li className="px-4 py-3 text-sm text-muted-foreground">
-                    Nothing on these shelves. Try a course code like &ldquo;MATH 4A&rdquo;.
-                  </li>
-                )}
-                {results.map((c) => (
-                  <li key={c.id} role="option" aria-selected={top?.id === c.id}>
-                    <button
-                      type="button"
-                      onClick={() => setPicked(c)}
-                      onMouseEnter={() => setHovered(c)}
-                      onMouseLeave={() => setHovered(null)}
-                      onFocus={() => setHovered(c)}
-                      onBlur={() => setHovered(null)}
-                      className={`focusable flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-brand-violet/10 ${
-                        top?.id === c.id ? 'bg-brand-violet/5' : ''
-                      }`}
-                    >
-                      <BookOpen className="h-4 w-4 shrink-0 text-brand-coral" aria-hidden />
-                      <span className="font-sans font-semibold text-foreground">{c.code}</span>
-                      {c.title && (
-                        <span className="truncate text-sm text-muted-foreground">{c.title}</span>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+      {showHud && picked && (
+        <div className="pointer-events-none absolute inset-0 z-20">
+          <div className="pointer-events-auto absolute bottom-24 right-3 top-3 w-[calc(66.666vw-0.75rem)]">
+            <ClassicBookHud
+              courseId={picked.id}
+              code={picked.code}
+              title={picked.title}
+              closing={closing}
+              onClose={closeBook}
+            />
           </div>
-
-          {/* Pulled-book action card */}
-          {picked && (
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-brand-violet px-5 py-4 shadow-2xl">
-              <div className="min-w-0">
-                <p className="font-heading font-bold text-white">{picked.code}</p>
-                {picked.title && (
-                  <p className="truncate text-sm text-white/80">{picked.title}</p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={openBook}
-                className="focusable btn-press ml-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-5 py-2.5 font-sans font-semibold text-brand-violet hover:bg-white/90"
-              >
-                Open the book
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          )}
         </div>
-      </div>
+      )}
+
+      <CourseSearchDock
+        onPick={pickCourse}
+        placeholder={hudOpen ? 'Search another course' : 'Search a course'}
+        caption={picked ? undefined : 'Find the right professor for any UCSB course'}
+      />
     </section>
   )
 }

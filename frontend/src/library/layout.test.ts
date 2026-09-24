@@ -22,20 +22,10 @@ describe('deptFromCourseCode', () => {
 })
 
 describe('slotForDept', () => {
-  it('returns the featured bookcase for a known department', () => {
-    expect(slotForDept('MATH').dept).toBe('MATH')
-    expect(slotForDept('PSY').dept).toBe('PSY')
-  })
-
-  it('falls back to the GENERAL case for unknown departments', () => {
-    const general = BOOKCASES[BOOKCASES.length - 1]
-    expect(general.dept).toBe('GENERAL')
-    expect(slotForDept('HIST')).toBe(general)
-    expect(slotForDept('WRIT')).toBe(general)
-  })
-
-  it('falls back to GENERAL when the case does not match exactly', () => {
-    expect(slotForDept('general').dept).toBe('GENERAL')
-    expect(slotForDept('')).toBe(BOOKCASES[BOOKCASES.length - 1])
+  it('always returns the single hero shelf', () => {
+    expect(BOOKCASES).toHaveLength(1)
+    expect(slotForDept('MATH')).toBe(BOOKCASES[0])
+    expect(slotForDept('HIST')).toBe(BOOKCASES[0])
+    expect(slotForDept('')).toBe(BOOKCASES[0])
   })
 })

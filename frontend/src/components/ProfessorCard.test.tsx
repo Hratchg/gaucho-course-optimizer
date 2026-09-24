@@ -62,25 +62,44 @@ describe('ProfessorCard', () => {
     expect(screen.getByText(/Avg GPA:.*3\.45/)).toBeInTheDocument()
   })
 
-  it('displays score in a badge with green color for score >= 70', () => {
+  it('omits review fields that have no data', () => {
+    renderWithClient(
+      <ProfessorCard
+        professor={{
+          ...mockProfessor,
+          mean_gpa: null,
+          rmp_quality: null,
+          rmp_difficulty: null,
+          rmp_would_take_again: null,
+        }}
+        score={75}
+        courseId={1}
+      />,
+    )
+    expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Avg GPA/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Quality:/)).not.toBeInTheDocument()
+  })
+
+  it('displays score in a badge with terracotta for score >= 70', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)
     const badge = screen.getByText('75')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-green-600')
+    expect(badge.className).toContain('bg-primary')
   })
 
-  it('displays score in a badge with yellow color for score 50-69', () => {
+  it('displays score in a badge with oak for score 50-69', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={55} courseId={1} />)
     const badge = screen.getByText('55')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-yellow-600')
+    expect(badge.className).toContain('bg-brand-oak')
   })
 
-  it('displays score in a badge with red color for score < 50', () => {
+  it('displays score in a badge with muted color for score < 50', () => {
     renderWithClient(<ProfessorCard professor={mockProfessor} score={35} courseId={1} />)
     const badge = screen.getByText('35')
     expect(badge).toBeInTheDocument()
-    expect(badge.className).toContain('bg-red-600')
+    expect(badge.className).toContain('bg-muted')
   })
 
   it('toggles "Show details" / "Hide details" on click', async () => {

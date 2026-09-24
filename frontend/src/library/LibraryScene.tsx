@@ -1,139 +1,60 @@
-import { Suspense, useMemo } from 'react'
+import { Suspense, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { Canvas } from '@react-three/fiber'
-import { Environment, ContactShadows, useTexture } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
-import Bookcase from './Bookcase'
-import GeneratedBookcase from './GeneratedBookcase'
+import { Canvas, useThree } from '@react-three/fiber'
+import BookSphere from './BookSphere'
 import PulledBook from './PulledBook'
-import CameraRig, { type CameraTarget } from './CameraRig'
-import { lazy } from 'react'
-import { BOOKCASES } from './layout'
-import { GENERATED_BOOKCASE_URL, LIBRARY_PROPS_ENABLED } from './generatedAssets'
 
-// Lazy so the GLBs are never requested unless the flag is on.
-const LibraryProps = lazy(() => import('./LibraryProps'))
+function Backdrop({ night }: { night: boolean }) {
+  const { scene } = useThree()
+  useLayoutEffect(() => {
+    scene.background = new THREE.Color(night ? '#1c1916' : '#efeae3')
+  }, [night, scene])
+  return null
+}
 
 export interface LibrarySceneProps {
-  target: CameraTarget
-  pulledCourse: { code: string; title?: string; dept: string } | null
+  /** Sphere shifts left while a course is open or a book is in flight. */
+  docked: boolean
+  pulledCourse: { code: string; title?: string; dept: string; key?: number } | null
   night: boolean
-}
-
-function Floor() {
-  const [woodMap, woodRough] = useTexture(['/3d/wood-diff.jpg', '/3d/wood-rough.jpg'])
-  const map = useMemo(() => {
-    const m = woodMap.clone()
-    m.wrapS = m.wrapT = THREE.RepeatWrapping
-    m.repeat.set(8, 8)
-    m.colorSpace = THREE.SRGBColorSpace
-    return m
-  }, [woodMap])
-  const rough = useMemo(() => {
-    const m = woodRough.clone()
-    m.wrapS = m.wrapT = THREE.RepeatWrapping
-    m.repeat.set(8, 8)
-    return m
-  }, [woodRough])
-  return (
-    <mesh rotation-x={-Math.PI / 2} position={[0, 0, 1]} receiveShadow>
-      <planeGeometry args={[40, 24]} />
-      <meshStandardMaterial map={map} roughnessMap={rough} roughness={0.9} color="#9a7b57" />
-    </mesh>
-  )
-}
-
-/** Burgundy runner down the aisle — regal set dressing, always on. */
-function CarpetRunner() {
-  return (
-    <mesh rotation-x={-Math.PI / 2} position={[0, 0.012, 1.6]} receiveShadow>
-      <planeGeometry args={[19, 2.6]} />
-      <meshStandardMaterial color="#331018" roughness={1} />
-    </mesh>
-  )
-}
-
-function BackWall({ night }: { night: boolean }) {
-  return (
-    <mesh position={[0, 4, -3.2]}>
-      <planeGeometry args={[44, 12]} />
-      <meshStandardMaterial color={night ? '#241f38' : '#4a3f63'} roughness={1} />
-    </mesh>
-  )
+  onSphereClick?: () => void
 }
 
 /**
- * The 3D library. Pure presentational: camera target + pulled book come
- * from the parent (LibraryLanding) which owns search state.
+ * Rotating sphere of books. Searching a course docks the sphere on the left
+ * and flies one book toward the course panel on the right.
  */
-export default function LibraryScene({ target, pulledCourse, night }: LibrarySceneProps) {
+export default function LibraryScene({ docked, pulledCourse, night, onSphereClick }: LibrarySceneProps) {
+  const exitPoint = useRef(new THREE.Vector3(1.55, 0.15, 0.6))
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.75]}
-      camera={{ position: [0, 2.35, 9.3], fov: 48 }}
+      dpr={[1, 1.5]}
+      camera={{ position: [0, 0.28, 9.1], fov: 34 }}
       gl={{ antialias: true }}
+      style={{ touchAction: 'none' }}
       aria-hidden
     >
-      <color attach="background" args={[night ? '#171428' : '#2c2545']} />
-      <fog attach="fog" args={[night ? '#171428' : '#2c2545', 16, 34]} />
+      <Backdrop night={night} />
+      <hemisphereLight args={[night ? '#3a342c' : '#f4efe6', night ? '#14110e' : '#c4b5a4', night ? 0.45 : 0.65]} />
+      <ambientLight intensity={night ? 0.35 : 0.42} color={night ? '#d9cbb8' : '#fff6ea'} />
+      <directionalLight
+        position={[3.2, 4.8, 5.4]}
+        intensity={night ? 1.15 : 1.55}
+        color={night ? '#ffe4c4' : '#fff8ee'}
+      />
 
       <Suspense fallback={null}>
-        <Environment files="/3d/library-hdri.hdr" environmentIntensity={night ? 0.4 : 0.55} />
-
-        {/* Key light — warm reading lamps feel */}
-        <directionalLight
-          position={[2, 7, 6]}
-          intensity={night ? 1.05 : 1.45}
-          color={night ? '#ffd9a0' : '#fff2dd'}
-          castShadow
-          shadow-mapSize={[1024, 1024]}
-        />
-        <hemisphereLight
-          args={[night ? '#4a3f72' : '#7a7098', night ? '#1a1528' : '#3a3048', night ? 0.42 : 0.28]}
-        />
-        <ambientLight intensity={night ? 0.28 : 0.3} color="#cbb8ff" />
-        {/* Subtle gold rim from behind the cases for the regal glow */}
-        <directionalLight position={[-4, 3.5, -6]} intensity={night ? 0.5 : 0.35} color="#c9a227" />
-        {/* Warm accent pools per bookcase — sit in front of each plaque */}
-        {BOOKCASES.map((b) => (
-          <pointLight
-            key={b.dept}
-            position={[b.position[0], 3.35, b.position[2] + 1.35]}
-            intensity={night ? 2.4 : 1.25}
-            distance={6.8}
-            color="#ffc93c"
-          />
-        ))}
-
-        <Floor />
-        <CarpetRunner />
-        <BackWall night={night} />
-        {LIBRARY_PROPS_ENABLED && <LibraryProps />}
-        {BOOKCASES.map((b, i) =>
-          GENERATED_BOOKCASE_URL ? (
-            <GeneratedBookcase key={b.dept} url={GENERATED_BOOKCASE_URL} slot={b} seed={i * 7919 + 13} />
-          ) : (
-            <Bookcase key={b.dept} slot={b} seed={i * 7919 + 13} />
-          ),
-        )}
-
+        <BookSphere docked={docked} night={night} onIdleClick={onSphereClick} exitPoint={exitPoint} />
         {pulledCourse && (
           <PulledBook
+            key={pulledCourse.key ?? pulledCourse.code}
             courseCode={pulledCourse.code}
             courseTitle={pulledCourse.title}
             dept={pulledCourse.dept}
             active
+            exitPoint={exitPoint}
           />
         )}
-
-        <ContactShadows position={[0, 0.01, 0]} opacity={0.55} scale={26} blur={2.4} far={4} />
-        <CameraRig target={target} />
-
-        <EffectComposer>
-          <Bloom intensity={night ? 0.38 : 0.22} luminanceThreshold={0.82} mipmapBlur />
-          <Vignette eskil={false} offset={0.22} darkness={night ? 0.5 : 0.62} />
-        </EffectComposer>
       </Suspense>
     </Canvas>
   )

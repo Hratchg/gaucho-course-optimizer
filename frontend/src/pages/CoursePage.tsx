@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
@@ -58,29 +58,39 @@ function QuarterFilterButtons({
   ]
 
   return (
-    <div>
-      <p className="mb-2 text-sm font-medium">Quarter Filter</p>
-      <div className="flex gap-1">
-        {options.map((opt) => (
-          <Button
-            key={opt.value}
-            variant={value === opt.value ? 'default' : 'outline'}
-            size="sm"
-            className="flex-1 text-xs min-h-[36px]"
-            onClick={() => onChange(opt.value)}
-            aria-pressed={value === opt.value}
-          >
-            {opt.label}
-          </Button>
-        ))}
-      </div>
+    <div role="group" aria-label="Quarter" className="flex rounded-full bg-muted p-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`focusable min-h-9 flex-1 rounded-full px-3 text-sm transition-colors ${
+            value === opt.value
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => onChange(opt.value)}
+          aria-pressed={value === opt.value}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   )
 }
 
-export default function CoursePage() {
-  const { courseId } = useParams<{ courseId: string }>()
-  const numericCourseId = Number(courseId)
+export default function CoursePage({
+  courseId: courseIdProp,
+  compact = false,
+}: {
+  courseId?: number
+  compact?: boolean
+} = {}) {
+  const { courseId: routeId } = useParams<{ courseId: string }>()
+  const location = useLocation()
+  const numericCourseId = courseIdProp ?? Number(routeId)
+  const nav = location.state as { courseCode?: string; courseTitle?: string | null } | null
+  const courseCode = nav?.courseCode?.trim() || ''
+  const courseTitle = nav?.courseTitle?.trim() || ''
   const { data: professors, isLoading, error, refetch } = useProfessors(numericCourseId)
 
   const [weights, setWeights] = useState<ToggleWeights>(DEFAULT_TOGGLE_WEIGHTS)
@@ -90,8 +100,9 @@ export default function CoursePage() {
   const showColdStart = useColdStartMessage(isLoading)
 
   useEffect(() => {
-    document.title = 'Course Results | CoursePick'
-  }, [])
+    if (compact) return
+    document.title = courseCode ? `${courseCode} | CoursePick` : 'Course Results | CoursePick'
+  }, [compact, courseCode])
 
   const rankedProfessors = useMemo(() => {
     if (!professors) return []
@@ -141,9 +152,39 @@ export default function CoursePage() {
   )
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6">
+    <div className={compact ? 'h-full overflow-y-auto px-3 py-3' : 'mx-auto max-w-3xl px-5 py-10'}>
+      {!compact && (
+        <header className="mb-8">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {courseCode || 'Course results'}
+          </h1>
+          {courseTitle && <p className="mt-1 text-muted-foreground">{courseTitle}</p>}
+          <p className="mt-3 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
+            A 0–100 score from UCSB grades and RateMyProfessors. Missing reviews are left out.{' '}
+            <Link to="/methodology" className="text-foreground underline-offset-2 hover:underline">
+              How scoring works
+            </Link>
+          </p>
+        </header>
+      )}
+      {compact && (
+        <div className="mb-4 space-y-4">
+          <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
+          <ActiveTeacherFilter
+            checked={showActiveOnly}
+            onCheckedChange={setShowActiveOnly}
+          />
+          <details className="rounded-xl border border-border bg-muted/40 p-3">
+            <summary className="cursor-pointer text-sm font-medium">Customize ranking</summary>
+            <div className="mt-3">
+              <WeightToggles weights={weights} onWeightsChange={setWeights} />
+            </div>
+          </details>
+        </div>
+      )}
+
       {/* Mobile: "Adjust weights" button + bottom Sheet */}
-      <div className="mb-4 md:hidden">
+      <div className={compact ? 'hidden' : 'mb-4 md:hidden'}>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" className="w-full min-h-[44px]">
@@ -169,8 +210,8 @@ export default function CoursePage() {
       {/* Desktop: two-column layout */}
       <div className="flex gap-6">
         {/* Left sidebar -- desktop only, sticky */}
-        <aside className="hidden w-64 shrink-0 md:block">
-          <div className="sticky top-20 space-y-6 rounded-lg border border-brand-gold/40 bg-brand-parchment/60 p-4 dark:bg-card">
+        <aside className={compact ? 'hidden' : 'hidden w-64 shrink-0 md:block'}>
+          <div className={`sticky space-y-6 rounded-xl border border-border bg-muted/40 p-4 ${compact ? 'top-0' : 'top-20'}`}>
             <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
             <ActiveTeacherFilter
               checked={showActiveOnly}
@@ -203,8 +244,8 @@ export default function CoursePage() {
           ) : isLoading ? (
             <>
               {showColdStart && (
-                <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
-                  Waking up the server... free-tier cold start may take 15-30 seconds.
+                <div className="mb-4 rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground">
+                  Waking up the server. This can take 15–30 seconds.
                 </div>
               )}
               <SkeletonCard />
@@ -221,12 +262,12 @@ export default function CoursePage() {
           ) : (
             <>
             {quarterFilter === 'next' && !hasNextQuarterProfs && (
-              <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+              <div className="mb-4 rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground">
                 No professors are scheduled for next quarter yet. Showing all professors.
               </div>
             )}
             {showActiveOnly && !hasActiveProfs && rankedProfessors.length > 0 && (
-              <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+              <div className="mb-4 rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground">
                 No professors have taught this course recently. Showing all professors.
               </div>
             )}

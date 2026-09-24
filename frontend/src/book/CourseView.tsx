@@ -1,20 +1,29 @@
-import { lazy, Suspense, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { lazy, Suspense, useState } from 'react'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { canRender3D } from '@/lib/webgl'
+import type { CourseResult } from '@/types/api'
 
-const BookCourseView = lazy(() => import('./BookCourseView'))
+const LibraryLanding = lazy(() => import('@/library/LibraryLanding'))
 const CoursePage = lazy(() => import('@/pages/CoursePage'))
 
 /**
- * Gate for /courses/:id — the 3D open book when WebGL is available and the
- * user hasn't asked for the classic layout (?classic=1); the existing 2D
- * CoursePage otherwise. The book is its own lazy chunk, so the classic page
- * loads nothing extra.
+ * /courses/:id — same shelf as home: the course is an open book with the
+ * classic HUD. No WebGL / ?classic=1 keeps the standalone CoursePage.
  */
 export default function CourseView() {
+  const { courseId } = useParams<{ courseId: string }>()
   const [params] = useSearchParams()
+  const location = useLocation()
+  const [use3D] = useState(() => canRender3D())
   const classic = params.get('classic') === '1'
-  const use3D = useMemo(() => !classic && canRender3D(), [classic])
+
+  const state = location.state as { courseCode?: string; courseTitle?: string | null } | null
+  const initialCourse: CourseResult = {
+    id: Number(courseId),
+    code: state?.courseCode ?? '',
+    title: state?.courseTitle ?? null,
+    department: null,
+  }
 
   return (
     <Suspense
@@ -22,7 +31,11 @@ export default function CourseView() {
         <div className="mx-auto max-w-4xl px-4 py-16 text-muted-foreground">Loading course…</div>
       }
     >
-      {use3D ? <BookCourseView /> : <CoursePage />}
+      {classic || !use3D ? (
+        <CoursePage />
+      ) : (
+        <LibraryLanding initialCourse={initialCourse} startOpen />
+      )}
     </Suspense>
   )
 }

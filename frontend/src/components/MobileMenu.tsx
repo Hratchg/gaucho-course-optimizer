@@ -6,22 +6,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Home', end: true },
-  { to: '/search', label: 'Search', end: false },
   { to: '/methodology', label: 'Methodology', end: false },
 ]
 
 export default function MobileMenu() {
+  const onCourse = useLocation().pathname.startsWith('/courses/')
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <button
           aria-label="Open navigation menu"
-          className="focusable p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-white"
+          className="focusable p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -38,11 +39,12 @@ export default function MobileMenu() {
               <NavLink
                 to={item.to}
                 end={item.end}
+                replace={item.to === '/' && onCourse}
                 className={({ isActive }) =>
-                  `py-3 px-4 text-base font-sans min-h-[44px] flex items-center rounded-md transition-colors ${
+                  `py-3 px-4 text-base min-h-[44px] flex items-center rounded-lg transition-colors ${
                     isActive
-                      ? 'font-bold text-primary border-l-4 border-primary bg-primary/5'
-                      : 'text-foreground hover:text-primary hover:bg-primary/5'
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   }`
                 }
               >

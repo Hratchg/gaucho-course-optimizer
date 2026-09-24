@@ -35,7 +35,7 @@ function SectionRow({ section }: { section: ScheduledSection }) {
 
 export function CourseSections({ courseId }: { courseId: number }) {
   const { data: sections, isLoading } = useCourseSections(courseId)
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   if (isLoading || !sections || sections.length === 0) return null
 

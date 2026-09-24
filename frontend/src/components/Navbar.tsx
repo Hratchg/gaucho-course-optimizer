@@ -1,29 +1,26 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import MobileMenu from '@/components/MobileMenu'
 import ThemeToggle from '@/components/ThemeToggle'
 import BrandWordmark from '@/components/BrandWordmark'
 
 export default function Navbar() {
+  const onCourse = useLocation().pathname.startsWith('/courses/')
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `focusable rounded-sm font-sans ${isActive
-      ? 'font-bold text-white'
-      : 'text-white/80 hover:text-white transition-colors'}`
+    `focusable rounded-sm text-sm transition-colors ${isActive
+      ? 'text-foreground'
+      : 'text-muted-foreground hover:text-foreground'}`
 
   return (
-    <header className="sticky top-0 z-50 h-14 border-b-2 border-brand-gold bg-brand-ink shadow-md">
+    <header className="sticky top-0 z-50 h-14 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <nav className="flex items-center justify-between px-4 md:px-6 h-full max-w-7xl mx-auto">
-        <Link to="/" aria-label="CoursePick" className="focusable btn-press text-white">
+        <Link to="/" replace={onCourse} aria-label="CoursePick" className="focusable btn-press text-foreground">
           <BrandWordmark />
         </Link>
 
         <div className="flex items-center gap-4">
-          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-4">
-            <NavLink to="/" end className={linkClass}>
+            <NavLink to="/" end replace={onCourse} className={linkClass}>
               Home
-            </NavLink>
-            <NavLink to="/search" className={linkClass}>
-              Search
             </NavLink>
             <NavLink to="/methodology" className={linkClass}>
               Methodology

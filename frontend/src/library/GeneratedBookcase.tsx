@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useGLTF, useTexture } from '@react-three/drei'
 import type { BookcaseSlot } from './layout'
-import { CASE_H, DeptPlaque } from './Bookcase'
+import { CASE_H } from './Bookcase'
 import BookInstances from './BookInstances'
 import { generatedShelfLayout, materialHasColorMap, packShelfBooks } from './books'
 
@@ -78,7 +78,6 @@ export default function GeneratedBookcase({ url, slot, seed }: GeneratedBookcase
       {/* Studio export is already aisle-facing; untextured API drafts needed -PI/2. */}
       <group ref={root} />
       <BookInstances books={books} />
-      <DeptPlaque label={slot.dept} />
     </group>
   )
 }

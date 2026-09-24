@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { useTexture, Text } from '@react-three/drei'
+import { useTexture } from '@react-three/drei'
 import type { BookcaseSlot } from './layout'
 import BookInstances from './BookInstances'
 import {
@@ -18,13 +18,24 @@ export { CASE_D, CASE_H, CASE_W } from './books'
 interface BookcaseProps {
   slot: BookcaseSlot
   seed: number
+  width?: number
+  height?: number
+  depth?: number
+  shelves?: number
 }
 
 /**
- * Procedural bookcase: oak PBR carcass, five shelves, rows of instanced
- * books with per-case deterministic variation, and a brass dept plaque.
+ * Procedural bookcase: oak PBR carcass, shelves, and instanced books.
+ * Size defaults to the original aisle case; the landing passes hero dimensions.
  */
-export default function Bookcase({ slot, seed }: BookcaseProps) {
+export default function Bookcase({
+  slot,
+  seed,
+  width = CASE_W,
+  height = CASE_H,
+  depth = CASE_D,
+  shelves = SHELF_COUNT,
+}: BookcaseProps) {
   const [woodMap, woodRough] = useTexture(['/3d/wood-diff.jpg', '/3d/wood-rough.jpg'])
   woodMap.wrapS = woodMap.wrapT = THREE.RepeatWrapping
   woodRough.wrapS = woodRough.wrapT = THREE.RepeatWrapping
@@ -41,81 +52,47 @@ export default function Bookcase({ slot, seed }: BookcaseProps) {
     [woodMap, woodRough],
   )
 
+  const shelfYs = useMemo(() => proceduralShelfYs(height, shelves), [height, shelves])
   const books = useMemo(
     () =>
       packShelfBooks({
         seed,
-        shelfYs: proceduralShelfYs(),
-        innerW: CASE_W - 0.2,
-        caseD: CASE_D,
+        shelfYs,
+        innerW: width - 0.2,
+        caseD: depth,
+        maxHeights: shelfYs.map((y, i) => {
+          const next = shelfYs[i + 1] ?? height - 0.08
+          return Math.max(0.18, next - y - 0.04)
+        }),
       }),
-    [seed],
+    [seed, shelfYs, width, depth, height],
   )
 
   return (
     <group position={slot.position} rotation-y={slot.rotationY}>
-      {/* Carcass: two sides, top, bottom, back */}
-      <mesh material={woodMat} position={[-CASE_W / 2 + 0.05, CASE_H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.1, CASE_H, CASE_D]} />
+      <mesh material={woodMat} position={[-width / 2 + 0.05, height / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.1, height, depth]} />
       </mesh>
-      <mesh material={woodMat} position={[CASE_W / 2 - 0.05, CASE_H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.1, CASE_H, CASE_D]} />
+      <mesh material={woodMat} position={[width / 2 - 0.05, height / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.1, height, depth]} />
       </mesh>
-      <mesh material={woodMat} position={[0, CASE_H - 0.05, 0]} castShadow receiveShadow>
-        <boxGeometry args={[CASE_W, 0.1, CASE_D]} />
+      <mesh material={woodMat} position={[0, height - 0.05, 0]} castShadow receiveShadow>
+        <boxGeometry args={[width, 0.1, depth]} />
       </mesh>
       <mesh material={woodMat} position={[0, 0.09, 0]} castShadow receiveShadow>
-        <boxGeometry args={[CASE_W, 0.18, CASE_D]} />
+        <boxGeometry args={[width, 0.18, depth]} />
       </mesh>
-      <mesh material={woodMat} position={[0, CASE_H / 2, -CASE_D / 2 + 0.02]} receiveShadow>
-        <boxGeometry args={[CASE_W, CASE_H, 0.04]} />
+      <mesh material={woodMat} position={[0, height / 2, -depth / 2 + 0.02]} receiveShadow>
+        <boxGeometry args={[width, height, 0.04]} />
       </mesh>
 
-      {Array.from({ length: SHELF_COUNT }, (_, s) => (
-        <mesh
-          key={s}
-          material={woodMat}
-          position={[0, 0.28 + s * ((CASE_H - 0.5) / SHELF_COUNT), 0]}
-          castShadow
-          receiveShadow
-        >
-          <boxGeometry args={[CASE_W - 0.16, SHELF_T, CASE_D - 0.08]} />
+      {shelfYs.map((y) => (
+        <mesh key={y} material={woodMat} position={[0, y, 0]} castShadow receiveShadow>
+          <boxGeometry args={[width - 0.16, SHELF_T, depth - 0.08]} />
         </mesh>
       ))}
 
       <BookInstances books={books} />
-
-      <DeptPlaque label={slot.dept} />
     </group>
-  )
-}
-
-/** Shared brass plaque so generated GLB cases keep the same department label. */
-export function DeptPlaque({ label }: { label: string }) {
-  return (
-    <>
-      <mesh position={[0, CASE_H + 0.02, CASE_D / 2 - 0.1]} castShadow>
-        <boxGeometry args={[1.02, 0.24, 0.03]} />
-        <meshStandardMaterial
-          color="#c4a35a"
-          metalness={0.55}
-          roughness={0.4}
-          emissive="#8a6a28"
-          emissiveIntensity={0.55}
-        />
-      </mesh>
-      <Text
-        position={[0, CASE_H + 0.02, CASE_D / 2 - 0.078]}
-        fontSize={0.125}
-        color="#f6ecd0"
-        outlineWidth={0.016}
-        outlineColor="#1c1408"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.08}
-      >
-        {label}
-      </Text>
-    </>
   )
 }

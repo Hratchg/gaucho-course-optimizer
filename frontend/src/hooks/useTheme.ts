@@ -14,12 +14,22 @@ function getInitialTheme(): Theme {
   }
 }
 
+const listeners = new Set<(theme: Theme) => void>()
+
 /** Day / night theme toggle. Applies the `dark` class to <html>. */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   useEffect(() => {
+    listeners.add(setTheme)
+    return () => {
+      listeners.delete(setTheme)
+    }
+  }, [])
+
+  useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
+    listeners.forEach((listener) => listener(theme))
     try {
       localStorage.setItem(STORAGE_KEY, theme)
     } catch {

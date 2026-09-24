@@ -38,7 +38,7 @@ describe('MobileMenu', () => {
     })
   })
 
-  it('Sheet contains "Home" and "Search" links', async () => {
+  it('Sheet contains Home and Methodology links, not Search', async () => {
     const user = userEvent.setup()
     renderMobileMenu()
 
@@ -46,7 +46,8 @@ describe('MobileMenu', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Search' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Methodology' })).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: 'Search' })).not.toBeInTheDocument()
     })
   })
 

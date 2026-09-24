@@ -6,6 +6,9 @@ import { Footer } from '@/components/Footer'
 
 export default function Layout() {
   const location = useLocation()
+  const shelfMode =
+    location.pathname === '/' || /^\/courses\/[^/]+$/.test(location.pathname)
+  const pageKey = shelfMode ? 'shelf' : location.pathname
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -17,13 +20,13 @@ export default function Layout() {
       </a>
       <Navbar />
       <RegistrationBanner />
-      <Breadcrumbs />
+      {!shelfMode && <Breadcrumbs />}
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-        <div key={location.pathname} className="page-enter">
+        <div key={pageKey} className="page-enter">
           <Outlet />
         </div>
       </main>
-      <Footer />
+      {!shelfMode && <Footer />}
     </div>
   )
 }

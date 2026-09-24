@@ -1,27 +1,18 @@
-import { render } from '@testing-library/react'
-import { describe, it, expect, afterEach } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import SearchPage from './SearchPage'
 
-function renderWithProviders(ui: React.ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-  return render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter>{ui}</MemoryRouter>
-    </QueryClientProvider>
-  )
-}
-
 describe('SearchPage', () => {
-  afterEach(() => {
-    document.title = ''
-  })
-
-  it('sets document.title to "Search | CoursePick"', () => {
-    renderWithProviders(<SearchPage />)
-    expect(document.title).toBe('Search | CoursePick')
+  it('redirects to home', () => {
+    render(
+      <MemoryRouter initialEntries={['/search']}>
+        <Routes>
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/" element={<div>home shelf</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('home shelf')).toBeInTheDocument()
   })
 })

@@ -14,14 +14,15 @@ describe('Navbar', () => {
     expect(screen.getByRole('link', { name: /coursepick/i })).toBeInTheDocument()
   })
 
-  it('renders both "Home" and "Search" link text', () => {
+  it('renders Home and Methodology links, not Search', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <Navbar />
       </MemoryRouter>
     )
     expect(screen.getByRole('link', { name: /home/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /search/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /methodology/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^search$/i })).not.toBeInTheDocument()
   })
 
   it('at "/", Home link has aria-current="page"', () => {
@@ -34,14 +35,14 @@ describe('Navbar', () => {
     expect(homeLink).toHaveAttribute('aria-current', 'page')
   })
 
-  it('at "/search", Search link has aria-current="page"', () => {
+  it('at "/methodology", Methodology link has aria-current="page"', () => {
     render(
-      <MemoryRouter initialEntries={['/search']}>
+      <MemoryRouter initialEntries={['/methodology']}>
         <Navbar />
       </MemoryRouter>
     )
-    const searchLink = screen.getByRole('link', { name: /search/i })
-    expect(searchLink).toHaveAttribute('aria-current', 'page')
+    const methodologyLink = screen.getByRole('link', { name: /methodology/i })
+    expect(methodologyLink).toHaveAttribute('aria-current', 'page')
   })
 
   it('brand text links to home page', () => {

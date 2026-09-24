@@ -19,9 +19,9 @@ interface ProfessorCardProps {
 }
 
 function scoreColorClass(score: number): string {
-  if (score >= 70) return 'bg-green-600 text-white hover:bg-green-600'
-  if (score >= 50) return 'bg-yellow-600 text-white hover:bg-yellow-600'
-  return 'bg-red-600 text-white hover:bg-red-600'
+  if (score >= 70) return 'bg-primary text-primary-foreground hover:bg-primary'
+  if (score >= 50) return 'bg-brand-oak text-white hover:bg-brand-oak'
+  return 'bg-muted text-muted-foreground hover:bg-muted'
 }
 
 function formatTime(time: string | null): string {
@@ -173,7 +173,7 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
 
   return (
     <Card
-      className="mb-6 card-hover stagger-in border-l-4 border-primary/30"
+      className="mb-3 stagger-in shadow-none ring-1 ring-border"
       style={{ '--stagger-delay': `${index * 40}ms` } as React.CSSProperties}
     >
       <CardContent className="p-5">
@@ -209,14 +209,18 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
             {score}
           </Badge>
         </div>
-        <p className="mt-1 text-sm">
-          Avg GPA: {professor.mean_gpa !== null ? professor.mean_gpa.toFixed(2) : 'N/A'}
-        </p>
-        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          <span>Quality: {professor.rmp_quality !== null ? professor.rmp_quality.toFixed(1) : 'N/A'}</span>
-          <span>Difficulty: {professor.rmp_difficulty !== null ? professor.rmp_difficulty.toFixed(1) : 'N/A'}</span>
-          <span>Would take again: {professor.rmp_would_take_again !== null ? `${professor.rmp_would_take_again.toFixed(0)}%` : 'N/A'}</span>
-        </div>
+        {professor.mean_gpa !== null && (
+          <p className="mt-1 text-sm">Avg GPA: {professor.mean_gpa.toFixed(2)}</p>
+        )}
+        {(professor.rmp_quality !== null || professor.rmp_difficulty !== null || professor.rmp_would_take_again !== null) && (
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {professor.rmp_quality !== null && <span>Quality: {professor.rmp_quality.toFixed(1)}</span>}
+            {professor.rmp_difficulty !== null && <span>Difficulty: {professor.rmp_difficulty.toFixed(1)}</span>}
+            {professor.rmp_would_take_again !== null && (
+              <span>Would take again: {professor.rmp_would_take_again.toFixed(0)}%</span>
+            )}
+          </div>
+        )}
         {professor.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {professor.tags.slice(0, 6).map((tag) => (

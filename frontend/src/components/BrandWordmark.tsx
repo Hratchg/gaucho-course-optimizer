@@ -6,7 +6,7 @@ interface BrandWordmarkProps {
 /** CoursePick wordmark: open-book mark + two-tone name. */
 export default function BrandWordmark({ className = 'text-xl' }: BrandWordmarkProps) {
   return (
-    <span className={`inline-flex items-center gap-2 font-display font-extrabold ${className}`}>
+    <span className={`inline-flex items-center gap-2 font-heading font-semibold tracking-tight ${className}`}>
       <svg
         width="1.2em"
         height="1.2em"
