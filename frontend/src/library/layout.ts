@@ -18,6 +18,6 @@ export function deptFromCourseCode(code: string): string {
 }
 
 /** Every course pulls from the same hero shelf. */
-export function slotForDept(_dept: string): BookcaseSlot {
-  return BOOKCASES[0]
+export function slotForDept(dept: string): BookcaseSlot {
+  return BOOKCASES.find((slot) => slot.dept === dept) ?? BOOKCASES[0]
 }
