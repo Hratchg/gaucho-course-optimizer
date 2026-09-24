@@ -24,7 +24,7 @@ export default function MobileLibraryHero() {
   }
 
   return (
-    <section className="relative min-h-[calc(100dvh-3.5rem)] overflow-hidden bg-[#efeae3] dark:bg-library-fog-night">
+    <section className="library-wall relative min-h-[calc(100dvh-3.5rem)] overflow-hidden">
       <div className="flex h-[calc(100dvh-3.5rem)] flex-col justify-between pb-32 pt-8">
         <HomeCopy layout="stack" />
         <div className="flex items-end justify-center gap-2" aria-hidden>

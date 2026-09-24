@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronUp, Clock, MapPin, Users } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import type { ProfessorRanking, ScheduledSection } from '@/types/api'
 import { GradeChart } from './GradeChart'
@@ -33,56 +33,36 @@ function formatTime(time: string | null): string {
   return `${hour12}:${m.toString().padStart(2, '0')} ${period}`
 }
 
-function SectionDetails({ sections }: { sections: ScheduledSection[] }) {
-  const [isOpen, setIsOpen] = useState(false)
+function formatDays(days: string | null): string {
+  return (days ?? '').replace(/\s+/g, '')
+}
 
+function sectionLine(section: ScheduledSection): string {
+  const when = section.days && section.begin_time
+    ? `${formatDays(section.days)} ${formatTime(section.begin_time)}${section.end_time ? `–${formatTime(section.end_time)}` : ''}`
+    : ''
+  const where = section.building && section.room ? `${section.building} ${section.room}` : section.building ?? ''
+  const seats = section.enrolled != null && section.max_enroll != null
+    ? `${section.enrolled} of ${section.max_enroll}`
+    : ''
+  return [when, where, seats].filter(Boolean).join(', ')
+}
+
+function MeetingLines({ sections }: { sections: ScheduledSection[] }) {
   if (sections.length === 0) return null
+  const quarter = sections.find((section) => section.quarter_name)?.quarter_name
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger
-        aria-label={`${isOpen ? 'Hide' : 'Show'} section details`}
-        className="focusable rounded-sm mt-2 flex min-h-[44px] items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
-      >
-        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        View {sections.length === 1 ? 'Section' : `${sections.length} Sections`}
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="mt-2 space-y-2">
-          {sections.map((section) => (
-            <div
-              key={section.enroll_code}
-              className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm"
-            >
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {section.days && section.begin_time && section.end_time && (
-                  <span className="flex items-center gap-1 text-foreground">
-                    <Clock className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                    {section.days} {formatTime(section.begin_time)}-{formatTime(section.end_time)}
-                  </span>
-                )}
-                {section.building && section.room && (
-                  <span className="flex items-center gap-1 text-foreground">
-                    <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                    {section.building} {section.room}
-                  </span>
-                )}
-                {section.enrolled != null && section.max_enroll != null && (
-                  <span className="flex items-center gap-1 text-foreground">
-                    <Users className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                    {section.enrolled}/{section.max_enroll} enrolled
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                Enroll Code: {section.enroll_code}
-                {section.quarter_name && ` \u2022 ${section.quarter_name}`}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+    <div className="mt-2">
+      {quarter && <p className="text-sm text-muted-foreground">{quarter}</p>}
+      <ul className="mt-0.5 space-y-0.5">
+        {sections.map((section) => (
+          <li key={section.enroll_code} className="text-sm text-foreground">
+            {sectionLine(section)}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -168,13 +148,12 @@ function QuartersList({ quarters }: { quarters: string[] }) {
   )
 }
 
-export function ProfessorCard({ professor, score, courseId, index = 0 }: ProfessorCardProps) {
+export function ProfessorCard({ professor, score, courseId }: ProfessorCardProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <Card
-      className="mb-3 stagger-in shadow-none ring-1 ring-border"
-      style={{ '--stagger-delay': `${index * 40}ms` } as React.CSSProperties}
+      className="mb-3 shadow-none ring-1 ring-border"
     >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
@@ -182,15 +161,15 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
             <h3 className="text-xl font-semibold leading-tight">{professor.name}</h3>
             {professor.is_active_teacher && (
               <Badge className="bg-primary text-primary-foreground hover:bg-primary text-xs px-2 py-0.5 rounded-full whitespace-nowrap">
-                Actively Teaching
+                Taught recently
               </Badge>
             )}
-            {professor.teaching_next_quarter && (
+            {professor.teaching_next_quarter && (professor.scheduled_sections?.length ?? 0) === 0 && (
               <Badge
                 variant="outline"
                 className="border-primary text-primary hover:bg-primary/10 text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
               >
-                Teaching Next Quarter
+                Next quarter
               </Badge>
             )}
             {!professor.has_rmp && (
@@ -235,8 +214,8 @@ export function ProfessorCard({ professor, score, courseId, index = 0 }: Profess
             ))}
           </div>
         )}
-        {professor.teaching_next_quarter && professor.scheduled_sections.length > 0 && (
-          <SectionDetails sections={professor.scheduled_sections} />
+        {(professor.scheduled_sections?.length ?? 0) > 0 && (
+          <MeetingLines sections={professor.scheduled_sections} />
         )}
         {professor.recent_quarters.length > 0 && (
           <QuartersList quarters={professor.recent_quarters} />

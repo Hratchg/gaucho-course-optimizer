@@ -56,7 +56,7 @@ describe('CoursePage - Active Teacher Filter', () => {
   it('filter checkbox defaults to unchecked', async () => {
     renderCoursePage()
     await waitFor(() => expect(screen.getByText('Alice Smith')).toBeInTheDocument())
-    const checkbox = screen.getByRole('checkbox', { name: /show only active teachers/i })
+    const checkbox = screen.getByRole('checkbox', { name: /taught recently only/i })
     expect(checkbox).toHaveAttribute('data-state', 'unchecked')
   })
 
@@ -75,7 +75,7 @@ describe('CoursePage - Active Teacher Filter', () => {
       expect(screen.getByText('Alice Smith')).toBeInTheDocument()
       expect(screen.getByText('Bob Jones')).toBeInTheDocument()
     })
-    await user.click(screen.getByRole('checkbox', { name: /show only active teachers/i }))
+    await user.click(screen.getByRole('checkbox', { name: /taught recently only/i }))
     expect(screen.queryByText('Bob Jones')).toBeNull()
     expect(screen.getByText('Alice Smith')).toBeInTheDocument()
   })
@@ -95,10 +95,23 @@ describe('CoursePage - Active Teacher Filter', () => {
       expect(screen.getByText('Alice Smith')).toBeInTheDocument()
       expect(screen.getByText('Bob Jones')).toBeInTheDocument()
     })
-    await user.click(screen.getByRole('checkbox', { name: /show only active teachers/i }))
+    await user.click(screen.getByRole('checkbox', { name: /taught recently only/i }))
     expect(screen.getByText('Alice Smith')).toBeInTheDocument()
     expect(screen.getByText('Bob Jones')).toBeInTheDocument()
     expect(screen.getByText(/no professors have taught this course recently/i)).toBeInTheDocument()
+  })
+
+  it('starts on next quarter and shows the meeting time', async () => {
+    const user = userEvent.setup()
+    renderCoursePage()
+    expect(await screen.findByText('Alice Smith')).toBeInTheDocument()
+    expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Spring 2026', pressed: true })).toBeInTheDocument()
+    expect(screen.getByText(/MWF 10:00 AM–10:50 AM, Phelps 1260, 42 of 120/)).toBeInTheDocument()
+    expect(screen.getAllByText('Spring 2026').length).toBeGreaterThan(1)
+
+    await user.click(screen.getByRole('button', { name: 'All' }))
+    expect(screen.getByText('Bob Jones')).toBeInTheDocument()
   })
 
   it('shows a server-fault message and retry when the API fails', async () => {

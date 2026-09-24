@@ -102,6 +102,37 @@ describe('ProfessorCard', () => {
     expect(badge.className).toContain('bg-muted')
   })
 
+  it('shows a scheduled meeting without opening details', () => {
+    renderWithClient(
+      <ProfessorCard
+        professor={{
+          ...mockProfessor,
+          teaching_next_quarter: true,
+          scheduled_sections: [
+            {
+              quarter_code: '20264',
+              quarter_name: 'Fall 2026',
+              enroll_code: '08128',
+              instructor_name_raw: 'TEST',
+              days: 'M W    ',
+              begin_time: '15:30',
+              end_time: '16:45',
+              building: 'ILP',
+              room: '1203',
+              enrolled: 124,
+              max_enroll: 150,
+            },
+          ],
+        }}
+        score={75}
+        courseId={1}
+      />,
+    )
+    expect(screen.getByText('Fall 2026')).toBeInTheDocument()
+    expect(screen.getByText('MW 3:30 PM–4:45 PM, ILP 1203, 124 of 150')).toBeInTheDocument()
+    expect(screen.queryByText(/View Section/i)).not.toBeInTheDocument()
+  })
+
   it('toggles "Show details" / "Hide details" on click', async () => {
     const user = userEvent.setup()
     renderWithClient(<ProfessorCard professor={mockProfessor} score={75} courseId={1} />)

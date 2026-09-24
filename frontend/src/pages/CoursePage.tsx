@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
@@ -38,7 +38,7 @@ function ActiveTeacherFilter({
         htmlFor="active-filter"
         className="text-sm cursor-pointer select-none"
       >
-        Show only active teachers
+        Taught recently only
       </label>
     </div>
   )
@@ -47,14 +47,16 @@ function ActiveTeacherFilter({
 function QuarterFilterButtons({
   value,
   onChange,
+  scheduledQuarter,
 }: {
   value: QuarterFilter
   onChange: (v: QuarterFilter) => void
+  scheduledQuarter: string
 }) {
   const options: { label: string; value: QuarterFilter }[] = [
     { label: 'All', value: 'all' },
-    { label: 'Next Quarter', value: 'next' },
-    { label: 'Current', value: 'current' },
+    { label: scheduledQuarter, value: 'next' },
+    { label: 'Taught recently', value: 'current' },
   ]
 
   return (
@@ -97,7 +99,25 @@ export default function CoursePage({
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showActiveOnly, setShowActiveOnly] = useState(false)
   const [quarterFilter, setQuarterFilter] = useState<QuarterFilter>('all')
+  const quarterTouched = useRef(false)
   const showColdStart = useColdStartMessage(isLoading)
+
+  useEffect(() => {
+    quarterTouched.current = false
+    setQuarterFilter('all')
+  }, [numericCourseId])
+
+  useEffect(() => {
+    if (quarterTouched.current || !professors) return
+    if (professors.some((professor) => professor.teaching_next_quarter)) {
+      setQuarterFilter('next')
+    }
+  }, [professors])
+
+  function changeQuarter(value: QuarterFilter) {
+    quarterTouched.current = true
+    setQuarterFilter(value)
+  }
 
   useEffect(() => {
     if (compact) return
@@ -151,6 +171,15 @@ export default function CoursePage({
     [professors]
   )
 
+  const scheduledQuarter = useMemo(() => {
+    for (const professor of professors ?? []) {
+      if (!professor.teaching_next_quarter) continue
+      const name = professor.scheduled_sections?.find((section) => section.quarter_name)?.quarter_name
+      if (name) return name
+    }
+    return 'Next quarter'
+  }, [professors])
+
   return (
     <div className={compact ? 'h-full overflow-y-auto px-3 py-3' : 'mx-auto max-w-3xl px-5 py-10'}>
       {!compact && (
@@ -167,63 +196,8 @@ export default function CoursePage({
           </p>
         </header>
       )}
-      {compact && (
-        <div className="mb-4 space-y-4">
-          <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
-          <ActiveTeacherFilter
-            checked={showActiveOnly}
-            onCheckedChange={setShowActiveOnly}
-          />
-          <details className="rounded-xl border border-border bg-muted/40 p-3">
-            <summary className="cursor-pointer text-sm font-medium">Customize ranking</summary>
-            <div className="mt-3">
-              <WeightToggles weights={weights} onWeightsChange={setWeights} />
-            </div>
-          </details>
-        </div>
-      )}
-
-      {/* Mobile: "Adjust weights" button + bottom Sheet */}
-      <div className={compact ? 'hidden' : 'mb-4 md:hidden'}>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="w-full min-h-[44px]">
-              Customize Ranking
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="px-6 pb-8">
-            <SheetHeader>
-              <SheetTitle>Customize Ranking</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-6">
-              <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
-              <ActiveTeacherFilter
-                checked={showActiveOnly}
-                onCheckedChange={setShowActiveOnly}
-              />
-              <WeightToggles weights={weights} onWeightsChange={setWeights} />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      {/* Desktop: two-column layout */}
       <div className="flex gap-6">
-        {/* Left sidebar -- desktop only, sticky */}
-        <aside className={compact ? 'hidden' : 'hidden w-64 shrink-0 md:block'}>
-          <div className={`sticky space-y-6 rounded-xl border border-border bg-muted/40 p-4 ${compact ? 'top-0' : 'top-20'}`}>
-            <QuarterFilterButtons value={quarterFilter} onChange={setQuarterFilter} />
-            <ActiveTeacherFilter
-              checked={showActiveOnly}
-              onCheckedChange={setShowActiveOnly}
-            />
-            <WeightToggles weights={weights} onWeightsChange={setWeights} />
-          </div>
-        </aside>
-
-        {/* Main content: sections + professor cards */}
         <section className="min-w-0 flex-1" aria-label="Professor rankings">
-          <CourseSections courseId={numericCourseId} />
           {error ? (
             <div className="py-12 text-center" role="alert">
               <p className="font-semibold">
@@ -263,7 +237,7 @@ export default function CoursePage({
             <>
             {quarterFilter === 'next' && !hasNextQuarterProfs && (
               <div className="mb-4 rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground">
-                No professors are scheduled for next quarter yet. Showing all professors.
+                No professors are scheduled for {scheduledQuarter} yet. Showing all professors.
               </div>
             )}
             {showActiveOnly && !hasActiveProfs && rankedProfessors.length > 0 && (
@@ -282,7 +256,70 @@ export default function CoursePage({
             ))}
             </>
           )}
+          {!isLoading && !error && <CourseSections courseId={numericCourseId} />}
         </section>
+
+        <aside className={compact ? 'hidden' : 'hidden w-64 shrink-0 md:block'}>
+          <div className="sticky top-20 space-y-6 rounded-xl border border-border bg-muted/40 p-4">
+            <QuarterFilterButtons
+              value={quarterFilter}
+              onChange={changeQuarter}
+              scheduledQuarter={scheduledQuarter}
+            />
+            <ActiveTeacherFilter
+              checked={showActiveOnly}
+              onCheckedChange={setShowActiveOnly}
+            />
+            <WeightToggles weights={weights} onWeightsChange={setWeights} />
+          </div>
+        </aside>
+      </div>
+
+      {compact && (
+        <div className="mt-4 space-y-4">
+          <QuarterFilterButtons
+            value={quarterFilter}
+            onChange={changeQuarter}
+            scheduledQuarter={scheduledQuarter}
+          />
+          <ActiveTeacherFilter
+            checked={showActiveOnly}
+            onCheckedChange={setShowActiveOnly}
+          />
+          <details className="rounded-xl border border-border bg-muted/40 p-3">
+            <summary className="cursor-pointer text-sm font-medium">Customize ranking</summary>
+            <div className="mt-3">
+              <WeightToggles weights={weights} onWeightsChange={setWeights} />
+            </div>
+          </details>
+        </div>
+      )}
+
+      <div className={compact ? 'hidden' : 'mt-4 md:hidden'}>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full min-h-[44px]">
+              Customize ranking
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="px-6 pb-8">
+            <SheetHeader>
+              <SheetTitle>Customize ranking</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-6">
+              <QuarterFilterButtons
+                value={quarterFilter}
+                onChange={changeQuarter}
+                scheduledQuarter={scheduledQuarter}
+              />
+              <ActiveTeacherFilter
+                checked={showActiveOnly}
+                onCheckedChange={setShowActiveOnly}
+              />
+              <WeightToggles weights={weights} onWeightsChange={setWeights} />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   )

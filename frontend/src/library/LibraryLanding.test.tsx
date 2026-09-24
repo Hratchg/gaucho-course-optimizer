@@ -99,6 +99,21 @@ describe('LibraryLanding overlay', () => {
     expect(await screen.findByTestId('classic-book-hud', {}, { timeout: 3000 })).toHaveTextContent('CMPSC 8')
   })
 
+  it('puts the open book back before pulling the next search', async () => {
+    const user = userEvent.setup()
+    renderLanding()
+
+    await user.type(screen.getByLabelText('Search courses'), 'CS')
+    await user.keyboard('{Enter}')
+    await screen.findByTestId('classic-book-hud', {}, { timeout: 3000 })
+
+    await user.type(screen.getByLabelText('Search courses'), 'CS')
+    await user.click(await screen.findByRole('button', { name: /cmpsc 8/i }))
+
+    expect(screen.queryByTestId('classic-book-hud')).not.toBeInTheDocument()
+    expect(await screen.findByTestId('classic-book-hud', {}, { timeout: 4500 })).toHaveTextContent('CMPSC 8')
+  })
+
   it('closes the book and returns to the shelf', async () => {
     const user = userEvent.setup()
     renderLanding()

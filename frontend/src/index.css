@@ -80,8 +80,11 @@
     --brand-sky: oklch(0.62 0.05 240);
     --brand-ink: oklch(0.22 0.018 50);
     --brand-paper: oklch(0.975 0.012 82);
-    --library-fog: #d4cdc4;
-    --library-fog-night: #1c1916;
+    /* Deeper than the book page edge (#e9dfc2) so cream reads against the wall. */
+    --library-wall: #d8d0c6;
+    --library-wall-night: #1c1916;
+    --library-fog: var(--library-wall);
+    --library-fog-night: var(--library-wall-night);
 
     /* Legacy aliases for unused book-page chrome */
     --brand-gold: oklch(0.72 0.08 75);
@@ -90,7 +93,7 @@
     --brand-parchment: oklch(0.96 0.016 82);
 
     /* Semantic — light */
-    --background: oklch(0.955 0.012 75);
+    --background: var(--library-wall);
     --foreground: oklch(0.22 0.018 50);
     --card: oklch(0.985 0.008 82);
     --card-foreground: oklch(0.22 0.018 50);
@@ -125,7 +128,7 @@
 }
 
 .dark {
-    --background: oklch(0.18 0.014 50);
+    --background: var(--library-wall-night);
     --foreground: oklch(0.95 0.012 80);
     --card: oklch(0.24 0.016 50);
     --card-foreground: oklch(0.95 0.012 80);
@@ -156,6 +159,27 @@
     --sidebar-accent-foreground: oklch(0.95 0.012 80);
     --sidebar-border: oklch(1 0 0 / 12%);
     --sidebar-ring: oklch(0.70 0.11 42);
+}
+
+/* Same-hue air behind the sphere. Lighter at the globe, deeper at the edges. */
+.library-wall {
+  background-color: var(--library-wall);
+  background-image: radial-gradient(
+    ellipse 72% 62% at 50% 46%,
+    #e4dcd3 0%,
+    var(--library-wall) 58%,
+    #cfc6bb 100%
+  );
+}
+
+.dark .library-wall {
+  background-color: var(--library-wall-night);
+  background-image: radial-gradient(
+    ellipse 72% 62% at 50% 46%,
+    #26221e 0%,
+    var(--library-wall-night) 58%,
+    #100e0c 100%
+  );
 }
 
 /* Handwritten accent (Caveat) */

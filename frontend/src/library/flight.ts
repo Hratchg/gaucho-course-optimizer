@@ -1,6 +1,9 @@
 /** How long the pulled book travels before the course panel expands. */
 export const FLIGHT_MS = 1700
 
+/** How long the open book takes to settle back into the sphere. */
+export const RETURN_MS = 1050
+
 const DEFAULT_START: readonly [number, number, number] = [1.55, 0.12, 0.55]
 /** Where the book sits on the right, just before the panel expands. */
 const END: readonly [number, number, number] = [2.85, 0.18, 2.35]

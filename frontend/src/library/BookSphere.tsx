@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import BookInstances from './BookInstances'
-import { SPHERE_RADIUS, sphereBooks } from './sphere'
+import { pickFrontBook, sphereBooks, worldBookPosition, worldBookQuaternion } from './sphere'
+import type { BorrowedBook } from './PulledBook'
 
 /** One revolution about this many seconds — ambient, not a spinning globe. */
 const REVOLUTION_SECONDS = 70
@@ -13,8 +14,13 @@ interface BookSphereProps {
   night: boolean
   /** Click without a drag, used to close the open course. */
   onIdleClick?: () => void
-  /** World-space point on the sphere's right edge, updated every frame. */
-  exitPoint?: RefObject<THREE.Vector3 | null>
+  /** While true, one book is missing from the sphere. */
+  holdBook?: boolean
+  /** Increments when a new book should be lifted off the front-right. */
+  claimKey?: number
+  onClaim?: (book: BorrowedBook) => void
+  /** Live world position of the missing book, so it can fly home. */
+  slot?: RefObject<THREE.Vector3 | null>
 }
 
 function useRadialTexture() {
@@ -39,7 +45,15 @@ function useRadialTexture() {
  * A globe of books. Spins on its axis, and can be dragged.
  * While a course is open it sits smaller on the left.
  */
-export default function BookSphere({ docked, night, onIdleClick, exitPoint }: BookSphereProps) {
+export default function BookSphere({
+  docked,
+  night,
+  onIdleClick,
+  holdBook = false,
+  claimKey = 0,
+  onClaim,
+  slot,
+}: BookSphereProps) {
   const rig = useRef<THREE.Group>(null)
   const spin = useRef<THREE.Group>(null)
   const yaw = useRef(0.4)
@@ -52,6 +66,39 @@ export default function BookSphere({ docked, night, onIdleClick, exitPoint }: Bo
   clickRef.current = onIdleClick
 
   const books = useMemo(() => sphereBooks(), [])
+  const [heldIndex, setHeldIndex] = useState(-1)
+  const claimRef = useRef(onClaim)
+  claimRef.current = onClaim
+  const visibleBooks = useMemo(
+    () => (heldIndex < 0 ? books : books.filter((_, index) => index !== heldIndex)),
+    [books, heldIndex],
+  )
+
+  useEffect(() => {
+    if (!holdBook) {
+      setHeldIndex(-1)
+      return
+    }
+    if (claimKey <= 0) return
+    const index = pickFrontBook(books, yaw.current, slide.current, scale.current)
+    const book = books[index]
+    const position = worldBookPosition(book, yaw.current, slide.current, scale.current)
+    const quaternion = worldBookQuaternion(book, yaw.current)
+    setHeldIndex(index)
+    claimRef.current?.({
+      claimKey,
+      index,
+      variant: book.variant,
+      color: book.color,
+      scale: [
+        book.scale[0] * scale.current,
+        book.scale[1] * scale.current,
+        book.scale[2] * scale.current,
+      ],
+      position: [position.x, position.y, position.z],
+      quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
+    })
+  }, [books, claimKey, holdBook])
   const shadowMap = useRadialTexture()
   const { gl } = useThree()
 
@@ -100,12 +147,8 @@ export default function BookSphere({ docked, night, onIdleClick, exitPoint }: Bo
     scale.current = THREE.MathUtils.damp(scale.current, targetScale, 2.6, dt)
     rig.current.position.set(slide.current, 0.28, 0)
     rig.current.scale.setScalar(scale.current)
-    if (exitPoint?.current) {
-      exitPoint.current.set(
-        slide.current + SPHERE_RADIUS * scale.current * 0.86,
-        0.42,
-        0.35 * scale.current,
-      )
+    if (slot?.current && heldIndex >= 0) {
+      slot.current.copy(worldBookPosition(books[heldIndex], yaw.current, slide.current, scale.current))
     }
   })
 
@@ -115,10 +158,10 @@ export default function BookSphere({ docked, night, onIdleClick, exitPoint }: Bo
         {/* Matches the page color so gaps stay quiet and the far side stays hidden. */}
         <mesh>
           <sphereGeometry args={[1.96, 48, 32]} />
-          <meshBasicMaterial color={night ? '#1c1916' : '#e7e0d6'} toneMapped={false} />
+          <meshBasicMaterial color={night ? '#1c1916' : '#d8d0c6'} toneMapped={false} />
         </mesh>
         <group ref={spin}>
-          <BookInstances books={books} />
+          <BookInstances books={visibleBooks} />
         </group>
       </group>
 

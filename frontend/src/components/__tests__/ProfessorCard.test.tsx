@@ -77,14 +77,14 @@ describe('ProfessorCard - Active Teaching', () => {
     (useProfessorGrades as ReturnType<typeof vi.fn>).mockReturnValue({ data: undefined, isLoading: false })
   })
 
-  it('renders Actively Teaching badge when is_active_teacher is true', () => {
+  it('renders Taught recently badge when is_active_teacher is true', () => {
     renderCard(makeProfessor({ is_active_teacher: true }))
-    expect(screen.getByText('Actively Teaching')).toBeInTheDocument()
+    expect(screen.getByText('Taught recently')).toBeInTheDocument()
   })
 
-  it('does not render Actively Teaching badge when is_active_teacher is false', () => {
+  it('does not render Taught recently badge when is_active_teacher is false', () => {
     renderCard(makeProfessor({ is_active_teacher: false }))
-    expect(screen.queryByText('Actively Teaching')).toBeNull()
+    expect(screen.queryByText('Taught recently')).toBeNull()
   })
 
   it('renders Quarters Taught trigger with count when recent_quarters has items', () => {

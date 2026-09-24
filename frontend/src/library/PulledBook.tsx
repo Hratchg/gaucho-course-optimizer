@@ -1,54 +1,84 @@
 import { useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
-import { FLIGHT_MS, flightPoint, smoothstep } from './flight'
+import { FLIGHT_MS, RETURN_MS, flightPoint, smoothstep } from './flight'
+import { getSpineMaterials, useBookGeometry } from './books'
 
-interface PulledBookProps {
-  courseCode: string
-  courseTitle?: string
-  /** Reserved so the landing can still pass a resolved dept. */
-  dept?: string
-  active: boolean
-  exitPoint?: RefObject<THREE.Vector3 | null>
+export interface BorrowedBook {
+  claimKey: number
+  index: number
+  variant: number
+  color: string
+  /** World-space size, already multiplied by the sphere's current scale. */
+  scale: [number, number, number]
+  position: [number, number, number]
+  quaternion: [number, number, number, number]
 }
 
+interface PulledBookProps {
+  direction: 'out' | 'back'
+  claimKey: number
+  look: BorrowedBook
+  /** Live world position of the empty slot, so a return can meet the sphere. */
+  slot: RefObject<THREE.Vector3 | null>
+}
+
+const FACE = new THREE.Quaternion()
+
 /**
- * Closed book that leaves the sphere and travels to the right.
- * The course panel expands after this flight finishes.
+ * One sphere book, lifted out with the same spine, pages, and proportions.
+ * `out` carries it to the course panel. `back` flies that same book home.
  */
-export default function PulledBook({ active, exitPoint }: PulledBookProps) {
+export default function PulledBook({ direction, claimKey, look, slot }: PulledBookProps) {
   const group = useRef<THREE.Group>(null)
   const started = useRef<number | null>(null)
+  const materials = useRef<THREE.Material[] | null>(null)
+  const built = useRef<string>('')
+
+  const geo = useBookGeometry()
 
   useFrame((state) => {
-    if (!active || !group.current) return
+    if (!group.current) return
+    const id = `${look.claimKey}:${look.index}`
+    if (built.current !== id) {
+      built.current = id
+      started.current = null
+      materials.current?.forEach((material) => material.dispose())
+      const tint = new THREE.Color(look.color)
+      materials.current = getSpineMaterials()[look.variant].map((material) => {
+        const next = material.clone()
+        if (next instanceof THREE.MeshStandardMaterial) next.color.multiply(tint)
+        return next
+      })
+      const mesh = group.current.children[0] as THREE.Mesh
+      mesh.material = materials.current
+      mesh.scale.set(look.scale[0], look.scale[1], look.scale[2])
+    }
+
+    if (direction === 'out' && look.claimKey !== claimKey) return
     if (started.current == null) started.current = state.clock.elapsedTime
-    const linear = Math.min(1, (state.clock.elapsedTime - started.current) / (FLIGHT_MS / 1000))
+    const duration = (direction === 'back' ? RETURN_MS : FLIGHT_MS) / 1000
+    const linear = Math.min(1, (state.clock.elapsedTime - started.current) / duration)
     const ease = smoothstep(linear)
-    const start: [number, number, number] = exitPoint?.current
-      ? [exitPoint.current.x, exitPoint.current.y, exitPoint.current.z]
-      : [1.55, 0.12, 0.55]
-    const [x, y, z] = flightPoint(ease, start)
-    const [nx, , nz] = flightPoint(Math.min(1, ease + 0.04), start)
+    const travel = direction === 'back' ? 1 - ease : ease
+
+    const home: [number, number, number] = direction === 'back' && slot.current
+      ? [slot.current.x, slot.current.y, slot.current.z]
+      : look.position
+    const [x, y, z] = flightPoint(travel, home)
     group.current.position.set(x, y, z)
-    group.current.rotation.set(0.02, Math.atan2(nx - x, nz - z), THREE.MathUtils.lerp(0.22, -0.18, ease))
-    group.current.scale.setScalar(THREE.MathUtils.lerp(0.62, 0.95, ease))
+
+    const from = new THREE.Quaternion(...look.quaternion)
+    const orient = from.clone().slerp(FACE, travel)
+    group.current.quaternion.copy(orient)
+
+    const grow = THREE.MathUtils.lerp(1, 2.6, travel)
+    group.current.scale.setScalar(grow)
   })
 
   return (
     <group ref={group}>
-      <mesh>
-        <boxGeometry args={[0.42, 0.58, 0.09]} />
-        <meshStandardMaterial color="#8A4630" roughness={0.62} />
-      </mesh>
-      <mesh position={[-0.2, 0, 0.01]}>
-        <boxGeometry args={[0.028, 0.58, 0.096]} />
-        <meshStandardMaterial color="#C45C38" roughness={0.5} />
-      </mesh>
-      <mesh position={[0.04, 0.04, 0.048]}>
-        <boxGeometry args={[0.2, 0.09, 0.006]} />
-        <meshStandardMaterial color="#F4EFE6" roughness={0.7} />
-      </mesh>
+      <mesh geometry={geo} />
     </group>
   )
 }

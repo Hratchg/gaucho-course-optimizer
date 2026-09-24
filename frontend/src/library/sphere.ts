@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { SPINE_VARIANTS, mulberry32, tintHex, type BookInstance } from './books'
 
 /** Radius of the landing sphere, in world units. */
@@ -38,4 +39,49 @@ export function sphereBooks(seed = 29, radius = SPHERE_RADIUS): BookInstance[] {
   }
 
   return books
+}
+
+/** World position of a sphere book, matching BookSphere's rig, tilt, and spin. */
+export function worldBookPosition(
+  book: BookInstance,
+  yaw: number,
+  slide: number,
+  scale: number,
+): THREE.Vector3 {
+  const p = new THREE.Vector3(...book.pos)
+  p.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)
+  p.applyAxisAngle(new THREE.Vector3(1, 0, 0), 0.1)
+  p.multiplyScalar(scale)
+  p.add(new THREE.Vector3(slide, 0.28, 0))
+  return p
+}
+
+/** World orientation: tilt, then spin, then the book's outward spine. */
+export function worldBookQuaternion(book: BookInstance, yaw: number): THREE.Quaternion {
+  const [rx, ry, rz] = book.rotation ?? [0, 0, book.lean]
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.1, 0, 0))
+  q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)))
+  q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)))
+  return q
+}
+
+/**
+ * Index of the front-facing book farthest to the right — the one a pull
+ * should lift out of the sphere.
+ */
+export function pickFrontBook(
+  books: BookInstance[],
+  yaw: number,
+  slide: number,
+  scale: number,
+): number {
+  let best = 0
+  let bestX = -Infinity
+  books.forEach((book, index) => {
+    const p = worldBookPosition(book, yaw, slide, scale)
+    if (p.z <= 0 || p.x <= bestX) return
+    bestX = p.x
+    best = index
+  })
+  return best
 }
