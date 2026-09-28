@@ -1,20 +1,38 @@
 name: Production readiness ping
 
+# Alerts through a single "uptime" issue instead of a failed job: the issue
+# opens once when /ready goes down, is refreshed quietly while it stays down,
+# and gets a recovery comment and closes when /ready is back. The job stays
+# green either way so GitHub doesn't email on every 15-minute run.
+
 on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+    inputs:
+      url:
+        description: URL to ping (point at a non-200 URL to test the alert path)
+        required: false
+        default: https://gaucho-course-optimizer.onrender.com/ready
+
+permissions:
+  issues: write
+  contents: read
+
+# Never let two pings race to open duplicate issues.
+concurrency:
+  group: uptime
+  cancel-in-progress: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Hit /ready
-        run: |
-          set -euo pipefail
-          code=$(curl -sS -o /tmp/ready.json -w '%{http_code}' \
-            --max-time 30 \
-            https://gaucho-course-optimizer.onrender.com/ready)
-          echo "status=${code}"
-          cat /tmp/ready.json
-          test "${code}" = "200"
+      - uses: actions/checkout@v7
+      - name: Hit /ready and update the uptime issue
+        env:
+          URL: ${{ inputs.url || 'https://gaucho-course-optimizer.onrender.com/ready' }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: scripts/uptime_check.sh
