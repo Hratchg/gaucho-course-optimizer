@@ -149,7 +149,7 @@ def create_scheduler(start: bool = True) -> BlockingScheduler:
 
     scheduler.add_job(
         quarterly_grade_update,
-        trigger=CronTrigger(month="1,4,7,10", day=15, hour=3),
+        trigger=CronTrigger(month="1,4,7,10", day=25, hour=3),
         id=QUARTERLY_JOB_ID,
         replace_existing=True,
     )

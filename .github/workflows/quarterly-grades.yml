@@ -2,10 +2,11 @@ name: Quarterly Grades Update
 
 on:
   schedule:
-    # 10:00 UTC (3 AM PDT / 2 AM PST) on Jan, Apr, Jul and Oct 15th, the
-    # cadence scheduler/jobs.py gives APScheduler. Clear of the 08:30 nightly
+    # 10:00 UTC (3 AM PDT / 2 AM PST) on Jan, Apr, Jul and Oct 25th. The Daily
+    # Nexus has posted recent quarters a day or two after the 15th, so the 25th
+    # avoids missing a quarter for three months. Clear of the 08:30 nightly
     # sync, the Saturday 09:00 RMP refresh and the Sunday 06:00 backup.
-    - cron: "0 10 15 1,4,7,10 *"
+    - cron: "0 10 25 1,4,7,10 *"
   workflow_dispatch: # Allow manual trigger
 
 concurrency:

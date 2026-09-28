@@ -43,7 +43,7 @@ def parse_grades_csv(path: str) -> pd.DataFrame:
 
     Maps raw CSV columns to our internal schema:
     - course → course_code (normalized, no spaces)
-    - instructor → instructor
+    - instructor → instructor (leading/trailing whitespace stripped)
     - quarter, year → kept as-is
     - Ap/A/Am/Bp/B/Bm/Cp/C/Cm/Dp/D/Dm/F → a_plus/a/a_minus/.../f
     - avgGPA → avg_gpa
@@ -59,6 +59,10 @@ def parse_grades_csv(path: str) -> pd.DataFrame:
 
     # Normalize course codes
     df["course_code"] = df["course"].apply(normalize_course_code)
+
+    # The 2026 exports pad instructor names with trailing spaces. Strip the ends
+    # only (not internal spacing) so names still match the stored name_nexus.
+    df["instructor"] = df["instructor"].str.strip()
 
     # Fill NaN grade columns with 0
     for col in GRADE_COLUMNS:

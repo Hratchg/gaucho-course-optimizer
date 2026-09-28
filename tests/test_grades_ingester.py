@@ -31,3 +31,16 @@ def test_parse_grades_csv():
     # Course codes should have no spaces
     for code in df["course_code"]:
         assert " " not in code
+
+
+def test_parse_grades_csv_strips_padded_instructor_names(tmp_path):
+    """The 2026 Daily Nexus export pads names ("HOELLE J A" + 20 spaces). Unstripped,
+    each padded name misses the existing professor and creates a duplicate."""
+    csv = tmp_path / "grades.csv"
+    csv.write_text(
+        "course,instructor,quarter,year,A,B,C,D,F,avgGPA,dept\n"
+        '"ANTH      2  ","HOELLE J A                    ",Winter,2026,5,3,1,0,0,3.4,ANTH\n'
+    )
+    df = parse_grades_csv(str(csv))
+    assert df["instructor"].tolist() == ["HOELLE J A"]
+    assert df["course_code"].tolist() == ["ANTH2"]
