@@ -167,7 +167,7 @@ def _pass1_initial_match(
                 rmp_by_last[last] = [r for r in rmp_by_last[last] if r.id != rmp_prof.id]
                 stats["matched"] += 1
                 logger.info(
-                    f"Pass 1: {prof.name_nexus} -> {rmp_prof.name_rmp} "
+                    f"Pass 1: {prof.name_nexus} [id={prof.id}] -> {rmp_prof.name_rmp} "
                     f"(conf=90, dept=Y)"
                 )
         else:
@@ -231,7 +231,7 @@ def _pass2_fullname_fuzzy(
                 # Remove from candidate pool
                 rmp_profs.remove(best_rmp)
                 logger.info(
-                    f"Pass 2: {prof.name_nexus} -> {best_rmp.name_rmp} "
+                    f"Pass 2: {prof.name_nexus} [id={prof.id}] -> {best_rmp.name_rmp} "
                     f"(conf={confidence})"
                 )
         else:
@@ -300,7 +300,7 @@ def _pass3_dept_disambiguation(
                 rmp_by_last[last] = [r for r in rmp_by_last[last] if r.id != rmp_prof.id]
                 stats["matched"] += 1
                 logger.info(
-                    f"Pass 3: {prof.name_nexus} ({prof.department}) -> "
+                    f"Pass 3: {prof.name_nexus} [id={prof.id}] ({prof.department}) -> "
                     f"{rmp_prof.name_rmp} (dept disambiguated)"
                 )
         else:
@@ -419,6 +419,7 @@ def run_enhanced_matching(
     session: Session,
     min_year: int = 2023,
     dry_run: bool = False,
+    merge_duplicates: bool = True,
 ) -> dict:
     """Orchestrate all four matching passes.
 
@@ -426,6 +427,9 @@ def run_enhanced_matching(
         session: SQLAlchemy session
         min_year: Only consider professors active since this year
         dry_run: If True, don't modify the database
+        merge_duplicates: Run pass 4, which deletes abbreviated-name professor
+            rows after moving their grades onto a full-name row. Unattended
+            runs pass False: a wrong merge can't be undone without a backup.
 
     Returns:
         Combined stats dict with per-pass results
@@ -455,9 +459,13 @@ def run_enhanced_matching(
     logger.info(f"Pass 3 results: {p3}")
 
     # Pass 4
-    logger.info("--- Pass 4: Nexus Deduplication ---")
-    p4 = _pass4_deduplication(session, min_year, dry_run)
-    logger.info(f"Pass 4 results: {p4}")
+    if merge_duplicates:
+        logger.info("--- Pass 4: Nexus Deduplication ---")
+        p4 = _pass4_deduplication(session, min_year, dry_run)
+        logger.info(f"Pass 4 results: {p4}")
+    else:
+        p4 = {"merged": 0, "skipped_ambiguous": 0, "skipped": True}
+        logger.info("--- Pass 4: Nexus Deduplication skipped (merge_duplicates=False) ---")
 
     total_new = p1["matched"] + p2["matched"] + p3["matched"]
     total_merged = p4["merged"]

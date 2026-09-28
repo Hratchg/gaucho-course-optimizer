@@ -13,15 +13,23 @@ SCHEDULE_REFRESH_JOB_ID = "nightly_schedule_refresh"
 
 
 def rmp_targeted_refresh():
-    """Targeted RMP scrape -> NLP -> recompute scores.
+    """Targeted RMP scrape -> enhanced matching -> NLP -> recompute scores.
+
+    Matching runs link-only (passes 1-3). Pass 4, which merges duplicate
+    professors by deleting rows, is left out because nobody reviews this run
+    and a wrong merge can't be undone without a backup; run it by hand via
+    the "Enhanced professor matching" workflow. Every new link is logged with
+    the professor id, so this job's log is the review trail.
 
     Raises if any step fails or the scrape gave up on RMP, so the weekly
-    GitHub Actions job goes red instead of logging and exiting 0. An aborted
-    scrape still runs NLP and scoring over whatever it saved first. Under
-    APScheduler the exception is just logged.
+    GitHub Actions job goes red instead of logging and exiting 0. A matching
+    failure skips NLP and scoring. An aborted scrape still runs matching, NLP
+    and scoring over whatever it saved first. Under APScheduler the exception
+    is just logged.
     """
     logger.info("Starting targeted RMP refresh...")
     from scrapers.targeted_scrape import scrape_active_professors
+    from etl.enhanced_matcher import run_enhanced_matching
     from etl.nlp_processor import process_all_comments
     from etl.scoring import compute_all_scores
     from db.connection import get_session
@@ -30,6 +38,17 @@ def rmp_targeted_refresh():
     try:
         scrape_stats = scrape_active_professors(session, min_year=2023)
         logger.info(f"Scrape: {scrape_stats}")
+
+        match_stats = run_enhanced_matching(
+            session, min_year=2023, merge_duplicates=False
+        )
+        logger.info(
+            f"Matching: {match_stats['total_new_matches']} new RMP links "
+            f"(pass 1: {match_stats['pass1']['matched']}, "
+            f"pass 2: {match_stats['pass2']['matched']}, "
+            f"pass 3: {match_stats['pass3']['matched']}); "
+            f"duplicate merging skipped. Details: {match_stats}"
+        )
 
         nlp_stats = process_all_comments(session)
         logger.info(f"NLP: {nlp_stats}")

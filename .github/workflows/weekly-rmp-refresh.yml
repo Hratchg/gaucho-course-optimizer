@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Scrape RMP, run NLP, recompute scores
+      - name: Scrape RMP, link new matches (no merges), run NLP, recompute scores
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           RMP_AUTH_TOKEN: ${{ secrets.RMP_AUTH_TOKEN }}
