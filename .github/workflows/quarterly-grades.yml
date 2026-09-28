@@ -1,0 +1,42 @@
+name: Quarterly Grades Update
+
+on:
+  schedule:
+    # 10:00 UTC (3 AM PDT / 2 AM PST) on Jan, Apr, Jul and Oct 25th. The Daily
+    # Nexus has posted recent quarters a day or two after the 15th, so the 25th
+    # avoids missing a quarter for three months. Clear of the 08:30 nightly
+    # sync, the Saturday 09:00 RMP refresh and the Sunday 06:00 backup.
+    - cron: "0 10 25 1,4,7,10 *"
+  workflow_dispatch: # Allow manual trigger
+
+concurrency:
+  group: quarterly-grades
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    # Downloads the ~10 MB Daily Nexus CSV and inserts only the new quarters.
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Load new Daily Nexus grades
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python -c "
+          import logging
+          logging.basicConfig(level=logging.INFO)
+          from scheduler.jobs import quarterly_grade_update
+          quarterly_grade_update()
+          "

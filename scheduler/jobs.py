@@ -49,7 +49,17 @@ def rmp_targeted_refresh():
 
 
 def quarterly_grade_update():
-    """Quarterly job: fetch grades CSV -> load -> recompute scores."""
+    """Quarterly job: fetch the Daily Nexus grades CSV -> load new rows.
+
+    Raises if the fetch or the load fails, so the quarterly GitHub Actions job
+    goes red instead of logging and exiting 0. Under APScheduler the exception
+    is just logged.
+
+    No score recompute here: the API scores professors live from
+    grade_distributions, and nothing reads the gaucho_scores table, which the
+    weekly RMP refresh rewrites anyway. That refresh also picks up professors
+    this load creates (anyone with grades since 2023) and searches RMP for them.
+    """
     logger.info("Starting quarterly grade update...")
     from scrapers.grades_ingester import fetch_grades_csv
     from scrapers.grades_loader import load_grades_to_db
@@ -63,6 +73,7 @@ def quarterly_grade_update():
         logger.info(f"Loaded {inserted} new grade records")
     except Exception as e:
         logger.error(f"Quarterly grade update failed: {e}")
+        raise
     finally:
         session.close()
 
@@ -138,7 +149,7 @@ def create_scheduler(start: bool = True) -> BlockingScheduler:
 
     scheduler.add_job(
         quarterly_grade_update,
-        trigger=CronTrigger(month="1,4,7,10", day=15, hour=3),
+        trigger=CronTrigger(month="1,4,7,10", day=25, hour=3),
         id=QUARTERLY_JOB_ID,
         replace_existing=True,
     )
