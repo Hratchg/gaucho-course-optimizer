@@ -13,7 +13,13 @@ SCHEDULE_REFRESH_JOB_ID = "nightly_schedule_refresh"
 
 
 def rmp_targeted_refresh():
-    """Every-2-days job: targeted RMP scrape -> NLP -> recompute scores."""
+    """Targeted RMP scrape -> NLP -> recompute scores.
+
+    Raises if any step fails or the scrape gave up on RMP, so the weekly
+    GitHub Actions job goes red instead of logging and exiting 0. An aborted
+    scrape still runs NLP and scoring over whatever it saved first. Under
+    APScheduler the exception is just logged.
+    """
     logger.info("Starting targeted RMP refresh...")
     from scrapers.targeted_scrape import scrape_active_professors
     from etl.nlp_processor import process_all_comments
@@ -32,8 +38,14 @@ def rmp_targeted_refresh():
         logger.info(f"Scoring: {score_stats}")
     except Exception as e:
         logger.error(f"RMP refresh failed: {e}")
+        raise
     finally:
         session.close()
+
+    if scrape_stats.get("aborted"):
+        raise RuntimeError(
+            f"RMP scrape stopped after consecutive search errors: {scrape_stats}"
+        )
 
 
 def quarterly_grade_update():

@@ -31,7 +31,7 @@ A production dashboard for UCSB students that correlates grade distributions wit
 - **Scraping:** curl_cffi (RMP GraphQL), Pandas (Daily Nexus CSV)
 - **NLP:** VADER sentiment + TF-IDF keyword extraction
 - **Matching:** TheFuzz + multi-pass enhanced matcher (initial, fuzzy, dept disambiguation, dedup)
-- **Scheduling:** APScheduler (nightly RMP, quarterly grades)
+- **Scheduling:** GitHub Actions cron (nightly UCSB schedule sync, weekly RMP refresh, weekly Neon backup); `scheduler/jobs.py` holds the job bodies
 - **CI:** GitHub Actions
 - **Deployment:** Docker Compose
 

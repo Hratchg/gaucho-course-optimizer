@@ -171,3 +171,31 @@ def test_scrape_skips_stale_check(db_session):
 
     mock_scraper.search_teacher_by_name.assert_not_called()
     assert stats["already_fresh"] >= 1
+
+
+def test_scrape_aborts_after_consecutive_search_errors(db_session):
+    """A blocked or unreachable RMP stops the run instead of hammering it for every professor."""
+    course = Course(code="HIST17", department="HIST")
+    db_session.add(course)
+    db_session.flush()
+    for name in ("ADAMS, JOHN", "BAKER, MARY", "CLARK, ANNE"):
+        prof = Professor(name_nexus=name, department="HIST")
+        db_session.add(prof)
+        db_session.flush()
+        db_session.add(GradeDistribution(
+            professor_id=prof.id, course_id=course.id,
+            quarter="Fall", year=2024, avg_gpa=3.2,
+        ))
+    db_session.commit()
+
+    mock_scraper = MagicMock()
+    mock_scraper.search_teacher_by_name.side_effect = RuntimeError("403 Forbidden")
+
+    stats = scrape_active_professors(
+        db_session, scraper=mock_scraper, min_year=2024, delay=0,
+        max_consecutive_errors=2,
+    )
+
+    assert mock_scraper.search_teacher_by_name.call_count == 2
+    assert stats["errors"] == 2
+    assert stats["aborted"] is True

@@ -21,10 +21,15 @@ def scrape_active_professors(
     min_year: int = 2023,
     max_age_days: int = 2,
     delay: float | None = None,
+    max_consecutive_errors: int = 10,
 ) -> dict:
     """Scrape RMP for active professors using targeted name search.
 
-    Returns stats dict: {searched, matched, skipped, already_fresh, errors}.
+    Stops early once max_consecutive_errors searches in a row have failed
+    (RMP blocking us or a bad token), rather than firing a request per
+    professor at an endpoint that is refusing them.
+
+    Returns stats dict: {searched, matched, skipped, already_fresh, errors, aborted}.
     """
     if scraper is None:
         scraper = RmpScraper()
@@ -34,7 +39,11 @@ def scrape_active_professors(
     # Store IDs upfront so rollbacks don't invalidate ORM objects
     prof_ids = [(p.id, p.name_nexus) for p in professors]
     session.expire_all()
-    stats = {"searched": 0, "matched": 0, "skipped": 0, "already_fresh": 0, "errors": 0}
+    stats = {
+        "searched": 0, "matched": 0, "skipped": 0, "already_fresh": 0, "errors": 0,
+        "aborted": False,
+    }
+    consecutive_errors = 0
 
     for i, (prof_id, nexus_name) in enumerate(prof_ids):
         # Check if data is already fresh
@@ -61,9 +70,17 @@ def scrape_active_professors(
         try:
             results = scraper.search_teacher_by_name(search_name)
             stats["searched"] += 1
+            consecutive_errors = 0
         except Exception as e:
             logger.error(f"[{i+1}/{total}] Error searching '{search_name}': {e}")
             stats["errors"] += 1
+            consecutive_errors += 1
+            if consecutive_errors >= max_consecutive_errors:
+                logger.error(
+                    f"Aborting scrape after {consecutive_errors} consecutive search errors"
+                )
+                stats["aborted"] = True
+                break
             continue
 
         # Fuzzy match against results

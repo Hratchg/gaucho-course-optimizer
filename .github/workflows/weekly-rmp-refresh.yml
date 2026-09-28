@@ -1,0 +1,44 @@
+name: Weekly RMP Refresh
+
+on:
+  schedule:
+    # Every Saturday at 09:00 UTC (2 AM PDT), the day before the Sunday backup
+    - cron: "0 9 * * 6"
+  workflow_dispatch: # Allow manual trigger
+
+concurrency:
+  group: weekly-rmp-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # ~2,300 active professors at 2-4s apiece is about two hours.
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Scrape RMP, run NLP, recompute scores
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RMP_AUTH_TOKEN: ${{ secrets.RMP_AUTH_TOKEN }}
+        run: |
+          if [ -z "$RMP_AUTH_TOKEN" ]; then
+            echo "::error::RMP_AUTH_TOKEN secret is not set"
+            exit 1
+          fi
+          python -c "
+          import logging
+          logging.basicConfig(level=logging.INFO)
+          from scheduler.jobs import rmp_targeted_refresh
+          rmp_targeted_refresh()
+          "
