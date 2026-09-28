@@ -5,6 +5,7 @@ import pytest
 from scheduler.jobs import (
     create_scheduler,
     nightly_schedule_refresh,
+    rmp_targeted_refresh,
     RMP_REFRESH_JOB_ID,
     QUARTERLY_JOB_ID,
     SCHEDULE_REFRESH_JOB_ID,
@@ -61,6 +62,55 @@ def test_nightly_refresh_completes_when_all_departments_sync(refresh_deps):
     session, sync = refresh_deps
     nightly_schedule_refresh()
     assert sync.call_count == 4
+    session.close.assert_called_once()
+
+
+SCRAPE_STATS = {
+    "searched": 3, "matched": 2, "skipped": 1, "already_fresh": 0, "errors": 0,
+    "aborted": False,
+}
+
+
+@pytest.fixture
+def rmp_deps(mocker):
+    """Patch the dependencies rmp_targeted_refresh imports at call time."""
+    session = MagicMock()
+    mocker.patch("db.connection.get_session", return_value=session)
+    scrape = mocker.patch(
+        "scrapers.targeted_scrape.scrape_active_professors", return_value=SCRAPE_STATS
+    )
+    nlp = mocker.patch("etl.nlp_processor.process_all_comments", return_value={})
+    score = mocker.patch("etl.scoring.compute_all_scores", return_value={})
+    return session, scrape, nlp, score
+
+
+def test_rmp_refresh_runs_scrape_nlp_and_scoring(rmp_deps):
+    session, scrape, nlp, score = rmp_deps
+    rmp_targeted_refresh()
+    scrape.assert_called_once()
+    nlp.assert_called_once_with(session)
+    score.assert_called_once_with(session)
+    session.close.assert_called_once()
+
+
+def test_rmp_refresh_raises_when_a_step_fails(rmp_deps):
+    """A crashed step must fail the job, not log and exit 0."""
+    session, _, nlp, score = rmp_deps
+    nlp.side_effect = RuntimeError("data transfer quota")
+    with pytest.raises(RuntimeError, match="data transfer quota"):
+        rmp_targeted_refresh()
+    score.assert_not_called()
+    session.close.assert_called_once()
+
+
+def test_rmp_refresh_raises_when_scrape_aborts(rmp_deps):
+    """RMP refusing every search still rescores what we have, then fails the run."""
+    session, scrape, nlp, score = rmp_deps
+    scrape.return_value = {**SCRAPE_STATS, "searched": 0, "errors": 10, "aborted": True}
+    with pytest.raises(RuntimeError, match="consecutive search errors"):
+        rmp_targeted_refresh()
+    nlp.assert_called_once_with(session)
+    score.assert_called_once_with(session)
     session.close.assert_called_once()
 
 

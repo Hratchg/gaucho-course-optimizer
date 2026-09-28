@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useProfessors } from '@/hooks/useProfessors'
 import { ProfessorCard } from '@/components/ProfessorCard'
 import { SkeletonCard } from '@/components/SkeletonCard'
@@ -98,25 +98,22 @@ export default function CoursePage({
   const [weights, setWeights] = useState<ToggleWeights>(DEFAULT_TOGGLE_WEIGHTS)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showActiveOnly, setShowActiveOnly] = useState(false)
-  const [quarterFilter, setQuarterFilter] = useState<QuarterFilter>('all')
-  const quarterTouched = useRef(false)
+  // null until the user picks a quarter. The default is derived during render
+  // rather than set in an effect, so the list never paints every professor
+  // and then narrows to next quarter.
+  const [quarterChoice, setQuarterChoice] = useState<QuarterFilter | null>(null)
   const showColdStart = useColdStartMessage(isLoading)
 
   useEffect(() => {
-    quarterTouched.current = false
-    setQuarterFilter('all')
+    setQuarterChoice(null)
   }, [numericCourseId])
 
-  useEffect(() => {
-    if (quarterTouched.current || !professors) return
-    if (professors.some((professor) => professor.teaching_next_quarter)) {
-      setQuarterFilter('next')
-    }
-  }, [professors])
+  const quarterFilter: QuarterFilter =
+    quarterChoice ??
+    (professors?.some((professor) => professor.teaching_next_quarter) ? 'next' : 'all')
 
   function changeQuarter(value: QuarterFilter) {
-    quarterTouched.current = true
-    setQuarterFilter(value)
+    setQuarterChoice(value)
   }
 
   useEffect(() => {
