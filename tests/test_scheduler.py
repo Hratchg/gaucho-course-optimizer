@@ -5,6 +5,7 @@ import pytest
 from scheduler.jobs import (
     create_scheduler,
     nightly_schedule_refresh,
+    quarterly_grade_update,
     rmp_targeted_refresh,
     RMP_REFRESH_JOB_ID,
     QUARTERLY_JOB_ID,
@@ -111,6 +112,47 @@ def test_rmp_refresh_raises_when_scrape_aborts(rmp_deps):
         rmp_targeted_refresh()
     nlp.assert_called_once_with(session)
     score.assert_called_once_with(session)
+    session.close.assert_called_once()
+
+
+GRADE_ROWS = [{"instructor": "DOE J", "course_code": "CMPSC8", "quarter": "Spring", "year": 2026}]
+
+
+@pytest.fixture
+def grades_deps(mocker):
+    """Patch the dependencies quarterly_grade_update imports at call time."""
+    session = MagicMock()
+    mocker.patch("db.connection.get_session", return_value=session)
+    df = MagicMock()
+    df.to_dict.return_value = GRADE_ROWS
+    fetch = mocker.patch("scrapers.grades_ingester.fetch_grades_csv", return_value=df)
+    load = mocker.patch("scrapers.grades_loader.load_grades_to_db", return_value=1)
+    return session, fetch, load
+
+
+def test_quarterly_grades_loads_the_fetched_csv(grades_deps):
+    session, fetch, load = grades_deps
+    quarterly_grade_update()
+    fetch.assert_called_once_with()
+    load.assert_called_once_with(GRADE_ROWS, session)
+    session.close.assert_called_once()
+
+
+def test_quarterly_grades_raises_when_fetch_fails(grades_deps):
+    """An unreachable CSV must fail the job, not log and exit 0."""
+    session, fetch, load = grades_deps
+    fetch.side_effect = OSError("HTTP Error 404: Not Found")
+    with pytest.raises(OSError, match="404"):
+        quarterly_grade_update()
+    load.assert_not_called()
+    session.close.assert_called_once()
+
+
+def test_quarterly_grades_raises_when_load_fails(grades_deps):
+    session, _, load = grades_deps
+    load.side_effect = RuntimeError("data transfer quota")
+    with pytest.raises(RuntimeError, match="data transfer quota"):
+        quarterly_grade_update()
     session.close.assert_called_once()
 
 
