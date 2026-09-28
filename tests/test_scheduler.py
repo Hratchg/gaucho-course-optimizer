@@ -71,6 +71,15 @@ SCRAPE_STATS = {
     "aborted": False,
 }
 
+MATCH_STATS = {
+    "pass1": {"matched": 1, "ambiguous": 0, "no_candidate": 4, "dept_mismatch": 0},
+    "pass2": {"matched": 2, "below_threshold": 7},
+    "pass3": {"matched": 0, "still_ambiguous": 1, "no_dept": 0},
+    "pass4": {"merged": 0, "skipped_ambiguous": 0, "skipped": True},
+    "total_new_matches": 3,
+    "total_merges": 0,
+}
+
 
 @pytest.fixture
 def rmp_deps(mocker):
@@ -80,23 +89,69 @@ def rmp_deps(mocker):
     scrape = mocker.patch(
         "scrapers.targeted_scrape.scrape_active_professors", return_value=SCRAPE_STATS
     )
+    match = mocker.patch(
+        "etl.enhanced_matcher.run_enhanced_matching", return_value=MATCH_STATS
+    )
     nlp = mocker.patch("etl.nlp_processor.process_all_comments", return_value={})
     score = mocker.patch("etl.scoring.compute_all_scores", return_value={})
-    return session, scrape, nlp, score
+    return session, scrape, match, nlp, score
 
 
-def test_rmp_refresh_runs_scrape_nlp_and_scoring(rmp_deps):
-    session, scrape, nlp, score = rmp_deps
+def test_rmp_refresh_runs_scrape_match_nlp_and_scoring(rmp_deps):
+    session, scrape, match, nlp, score = rmp_deps
     rmp_targeted_refresh()
     scrape.assert_called_once()
+    match.assert_called_once()
     nlp.assert_called_once_with(session)
     score.assert_called_once_with(session)
     session.close.assert_called_once()
 
 
+def test_rmp_refresh_matches_between_scrape_and_nlp(rmp_deps, mocker):
+    """Newly scraped professors get linked before NLP and scoring see them."""
+    _, scrape, match, nlp, score = rmp_deps
+    order = mocker.MagicMock()
+    order.attach_mock(scrape, "scrape")
+    order.attach_mock(match, "match")
+    order.attach_mock(nlp, "nlp")
+    order.attach_mock(score, "score")
+    rmp_targeted_refresh()
+    assert [c[0] for c in order.mock_calls] == ["scrape", "match", "nlp", "score"]
+
+
+def test_rmp_refresh_matches_without_merging_duplicates(rmp_deps):
+    """Unattended runs only link; pass 4 (merge + delete) stays manual-only."""
+    session, _, match, _, _ = rmp_deps
+    rmp_targeted_refresh()
+    match.assert_called_once_with(session, min_year=2023, merge_duplicates=False)
+
+
+def test_rmp_refresh_logs_matching_summary(rmp_deps, caplog):
+    """The weekly log is the review trail, so it must say what matching changed."""
+    with caplog.at_level("INFO", logger="scheduler.jobs"):
+        rmp_targeted_refresh()
+    summary = [r.getMessage() for r in caplog.records if r.getMessage().startswith("Matching:")]
+    assert len(summary) == 1
+    assert "3 new RMP links" in summary[0]
+    assert "pass 1: 1" in summary[0]
+    assert "pass 2: 2" in summary[0]
+    assert "pass 3: 0" in summary[0]
+
+
+def test_rmp_refresh_raises_and_skips_nlp_when_matching_fails(rmp_deps):
+    """A matching crash must fail the job before NLP and scoring run."""
+    session, _, match, nlp, score = rmp_deps
+    match.side_effect = RuntimeError("matching blew up")
+    with pytest.raises(RuntimeError, match="matching blew up"):
+        rmp_targeted_refresh()
+    nlp.assert_not_called()
+    score.assert_not_called()
+    session.close.assert_called_once()
+
+
 def test_rmp_refresh_raises_when_a_step_fails(rmp_deps):
     """A crashed step must fail the job, not log and exit 0."""
-    session, _, nlp, score = rmp_deps
+    session, _, _, nlp, score = rmp_deps
     nlp.side_effect = RuntimeError("data transfer quota")
     with pytest.raises(RuntimeError, match="data transfer quota"):
         rmp_targeted_refresh()
@@ -106,10 +161,11 @@ def test_rmp_refresh_raises_when_a_step_fails(rmp_deps):
 
 def test_rmp_refresh_raises_when_scrape_aborts(rmp_deps):
     """RMP refusing every search still rescores what we have, then fails the run."""
-    session, scrape, nlp, score = rmp_deps
+    session, scrape, match, nlp, score = rmp_deps
     scrape.return_value = {**SCRAPE_STATS, "searched": 0, "errors": 10, "aborted": True}
     with pytest.raises(RuntimeError, match="consecutive search errors"):
         rmp_targeted_refresh()
+    match.assert_called_once()
     nlp.assert_called_once_with(session)
     score.assert_called_once_with(session)
     session.close.assert_called_once()

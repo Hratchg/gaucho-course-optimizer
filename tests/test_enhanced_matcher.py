@@ -265,3 +265,49 @@ class TestConsumedCandidatesAcrossPasses:
         unmatched = [p for p in (first, second) if p.rmp_id is None]
         assert len(linked) == 1
         assert len(unmatched) == 1
+
+
+class TestUnattendedRun:
+    """The weekly refresh runs matching with nobody reviewing the result."""
+
+    def test_merge_duplicates_false_skips_pass4(self, db_session):
+        """Pass 4 deletes professor rows, so unattended runs must leave it out."""
+        course = _make_course(db_session, code="CMPSCNOMERGE")
+        abbr = _make_nexus_prof(db_session, "CHANG S", dept="CMPSC", course=course)
+        full = _make_nexus_prof(db_session, "CHANG SHIYU", dept="CMPSC", course=course)
+        abbr_id, full_id = abbr.id, full.id
+
+        result = run_enhanced_matching(db_session, min_year=2023, merge_duplicates=False)
+
+        assert result["pass4"] == {"merged": 0, "skipped_ambiguous": 0, "skipped": True}
+        assert result["total_merges"] == 0
+        assert db_session.get(Professor, abbr_id) is not None
+        assert db_session.get(Professor, full_id) is not None
+
+    def test_links_still_happen_without_merging(self, db_session):
+        course = _make_course(db_session, code="CMPSCLINKONLY")
+        nexus = _make_nexus_prof(db_session, "SMITH, JOHN", course=course)
+        _make_rmp_prof(db_session, "John", "Smith", rmp_id=8801)
+
+        result = run_enhanced_matching(db_session, min_year=2023, merge_duplicates=False)
+
+        assert result["total_new_matches"] == 1
+        db_session.refresh(nexus)
+        assert nexus.rmp_id == 8801
+
+    def test_second_run_changes_nothing(self, db_session):
+        """Already-linked rows are filtered out, so a rerun is a no-op."""
+        course = _make_course(db_session, code="CMPSCRERUN")
+        nexus = _make_nexus_prof(db_session, "SMITH, JOHN", course=course)
+        _make_rmp_prof(db_session, "John", "Smith", rmp_id=8802)
+
+        first = run_enhanced_matching(db_session, min_year=2023, merge_duplicates=False)
+        assert first["total_new_matches"] == 1
+        db_session.refresh(nexus)
+        linked = (nexus.rmp_id, nexus.name_rmp, nexus.match_confidence)
+
+        second = run_enhanced_matching(db_session, min_year=2023, merge_duplicates=False)
+        assert second["total_new_matches"] == 0
+        db_session.refresh(nexus)
+        assert (nexus.rmp_id, nexus.name_rmp, nexus.match_confidence) == linked
+        assert db_session.query(Professor).filter_by(rmp_id=8802).count() == 1
