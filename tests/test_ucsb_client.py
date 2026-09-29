@@ -192,6 +192,71 @@ def test_fetch_department_classes(mock_get, client):
     assert len(sections) == 2
 
 
+def _http_error_response(status_code):
+    import requests as req_lib
+
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.text = '{"title": "Bad Request"}'
+    resp.raise_for_status.side_effect = req_lib.HTTPError(
+        f"{status_code} Client Error", response=resp
+    )
+    return resp
+
+
+@patch("ucsb_api.client.requests.get")
+def test_fetch_department_classes_error_carries_status(mock_get, client):
+    mock_get.return_value = _http_error_response(400)
+
+    with pytest.raises(UCSBApiError) as excinfo:
+        client.fetch_department_classes("20271", "ANTH")
+    assert excinfo.value.status_code == 400
+
+
+@patch("ucsb_api.client.requests.get")
+def test_probe_department_classes_sends_one_nightly_shaped_request(mock_get, client):
+    """The probe is page 1 of the exact request the nightly loop makes, nothing more."""
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = MOCK_CLASSES_RESPONSE * 100  # a full page
+    mock_resp.raise_for_status = MagicMock()
+    mock_get.return_value = mock_resp
+
+    client.probe_department_classes("20271", "ANTH")
+
+    mock_get.assert_called_once()
+    params = mock_get.call_args[1]["params"]
+    assert params == {
+        "quarter": "20271",
+        "subjectCode": "ANTH",
+        "pageNumber": 1,
+        "pageSize": 100,
+        "includeClassSections": "true",
+    }
+
+
+@patch("ucsb_api.client.requests.get")
+def test_probe_department_classes_raises_status_without_logging_error(mock_get, client, caplog):
+    """A probe failure is the caller's call to report, so the client stays quiet."""
+    mock_get.return_value = _http_error_response(400)
+
+    with caplog.at_level("DEBUG", logger="ucsb_api.client"):
+        with pytest.raises(UCSBApiError) as excinfo:
+            client.probe_department_classes("20271", "ANTH")
+    assert excinfo.value.status_code == 400
+    assert not [r for r in caplog.records if r.levelname == "ERROR"]
+
+
+@patch("ucsb_api.client.requests.get")
+def test_probe_department_classes_connection_error_has_no_status(mock_get, client):
+    import requests as req_lib
+
+    mock_get.side_effect = req_lib.ConnectionError("Connection refused")
+
+    with pytest.raises(UCSBApiError) as excinfo:
+        client.probe_department_classes("20271", "ANTH")
+    assert excinfo.value.status_code is None
+
+
 # ---------------------------------------------------------------------------
 # Quarter code utility tests
 # ---------------------------------------------------------------------------
