@@ -3,6 +3,7 @@
 **Applies to:** Neon project `ancient-river-48578866`, branch `production` (`br-steep-hill-akgx2zmo`), database `neondb`.
 **Target revision:** `9acf49a4b131` (head as of 2026-09-29).
 **Expected duration:** about 3 seconds of migration time. Writes to five tables are blocked for about 1.6 s, and reads of `gaucho_scores` for about 0.1 s.
+**Status:** applied to production on 2026-09-29. Production is at `9acf49a4b131`, and `compare_metadata` returns `[]`. Keep this runbook for the next migration: Render still doesn't run them (section 6). See [the 2026-09-29 handoff](../handoff/2026-09-29-operations-handoff.md).
 
 ## Why this is needed
 
