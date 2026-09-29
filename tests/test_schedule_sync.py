@@ -9,12 +9,14 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from db.models import Base, Course, Professor, ScheduledSection
+from ucsb_api.client import UCSBApiError
 from ucsb_api.schedule_sync import (
     _normalize_course_id,
     _extract_section_data,
     sync_course_sections,
     sync_department_sections,
     backfill_missing_titles,
+    is_quarter_published,
 )
 
 
@@ -326,6 +328,77 @@ def test_sync_department_reuses_auto_created_professor(db_session):
     assert len(profs) == 1
     section = db_session.query(ScheduledSection).filter_by(enroll_code="99903").one()
     assert section.professor_id == profs[0].id
+
+
+def test_sync_department_logs_error_and_returns_on_ucsb_400(db_session, caplog):
+    """A department UCSB rejects in a published quarter is still an ERROR, not a crash."""
+    mock_client = MagicMock()
+    mock_client.fetch_department_classes.side_effect = UCSBApiError(
+        "Failed to fetch dept classes: 400 Client Error", status_code=400
+    )
+
+    with caplog.at_level("INFO", logger="ucsb_api.schedule_sync"):
+        stats = sync_department_sections(db_session, "20264", "CMPSC", client=mock_client)
+
+    assert stats["inserted"] == 0
+    errors = [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
+    assert errors == [
+        "Failed to fetch department CMPSC: Failed to fetch dept classes: 400 Client Error"
+    ]
+
+
+# ---------------------------------------------------------------------------
+# is_quarter_published tests
+# ---------------------------------------------------------------------------
+
+def _probe_client(outcomes):
+    """A client whose probe answers per quarter: None = 200, int = that HTTP status."""
+    mock_client = MagicMock()
+
+    def probe(quarter_code, department):
+        status = outcomes[quarter_code]
+        if status is not None:
+            raise UCSBApiError(f"{status} for {quarter_code}/{department}", status_code=status)
+
+    mock_client.probe_department_classes.side_effect = probe
+    return mock_client
+
+
+def test_quarter_published_when_probe_succeeds():
+    client = _probe_client({"20271": None})
+    assert is_quarter_published(client, "20271", reference_quarter="20264", department="ANTH")
+    client.probe_department_classes.assert_called_once_with("20271", "ANTH")
+
+
+def test_quarter_unpublished_when_only_the_quarter_is_rejected():
+    """400 for 20271 while the same department is fine for 20264: 20271 isn't out yet."""
+    client = _probe_client({"20271": 400, "20264": None})
+    assert not is_quarter_published(client, "20271", reference_quarter="20264", department="ANTH")
+    assert [c.args for c in client.probe_department_classes.call_args_list] == [
+        ("20271", "ANTH"),
+        ("20264", "ANTH"),
+    ]
+
+
+def test_quarter_treated_as_published_when_reference_also_fails():
+    """If the department is rejected for both quarters the 400 isn't about the quarter."""
+    client = _probe_client({"20271": 400, "20264": 400})
+    assert is_quarter_published(client, "20271", reference_quarter="20264", department="ANTH")
+
+
+@pytest.mark.parametrize("status", [401, 403, 404, 429, 500, 503])
+def test_quarter_treated_as_published_on_other_statuses(status):
+    """Outages and auth errors keep today's behaviour: the full loop runs and logs them."""
+    client = _probe_client({"20271": status, "20264": None})
+    assert is_quarter_published(client, "20271", reference_quarter="20264", department="ANTH")
+    client.probe_department_classes.assert_called_once_with("20271", "ANTH")
+
+
+def test_quarter_treated_as_published_when_probe_cannot_connect():
+    client = MagicMock()
+    client.probe_department_classes.side_effect = UCSBApiError("Connection refused")
+    assert is_quarter_published(client, "20271", reference_quarter="20264", department="ANTH")
+    client.probe_department_classes.assert_called_once_with("20271", "ANTH")
 
 
 def test_sync_course_fills_missing_title(db_session):

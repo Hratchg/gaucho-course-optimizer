@@ -25,7 +25,19 @@ REQUEST_TIMEOUT = 15
 
 
 class UCSBApiError(Exception):
-    """Raised when a UCSB API request fails."""
+    """Raised when a UCSB API request fails.
+
+    ``status_code`` is the HTTP status UCSB answered with, or None when no
+    response came back (timeout, connection refused, missing key).
+    """
+
+    def __init__(self, message: str, *, status_code: int | None = None):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _status_of(exc: requests.RequestException) -> int | None:
+    return getattr(getattr(exc, "response", None), "status_code", None)
 
 
 class UCSBApiClient:
@@ -125,13 +137,7 @@ class UCSBApiClient:
 
         Used by the nightly bulk refresh job.
         """
-        params = {
-            "quarter": quarter_code,
-            "subjectCode": department.strip(),
-            "pageNumber": 1,
-            "pageSize": 100,
-            "includeClassSections": "true",
-        }
+        params = self._department_params(quarter_code, department)
 
         all_sections: list[dict[str, Any]] = []
         page = 1
@@ -148,7 +154,9 @@ class UCSBApiClient:
                 resp.raise_for_status()
             except requests.RequestException as exc:
                 logger.error("UCSB dept classes API error (page %d): %s", page, exc)
-                raise UCSBApiError(f"Failed to fetch dept classes: {exc}") from exc
+                raise UCSBApiError(
+                    f"Failed to fetch dept classes: {exc}", status_code=_status_of(exc)
+                ) from exc
 
             data = resp.json()
             classes = data if isinstance(data, list) else data.get("classes", [])
@@ -174,6 +182,38 @@ class UCSBApiClient:
             quarter_code,
         )
         return all_sections
+
+    def probe_department_classes(self, quarter_code: str, department: str) -> None:
+        """Make page 1 of the ``fetch_department_classes`` request and discard it.
+
+        Used to ask whether UCSB accepts a quarter at all before the nightly
+        job sends one request per department. Returns on a 2xx; otherwise
+        raises ``UCSBApiError`` with ``status_code`` set and logs nothing,
+        since whether the failure matters is the caller's decision.
+        """
+        try:
+            resp = requests.get(
+                CLASSES_BASE_URL + "/search",
+                headers=self._headers,
+                params=self._department_params(quarter_code, department),
+                timeout=REQUEST_TIMEOUT,
+            )
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            raise UCSBApiError(
+                f"Probe of {department} in {quarter_code} failed: {exc}",
+                status_code=_status_of(exc),
+            ) from exc
+
+    @staticmethod
+    def _department_params(quarter_code: str, department: str) -> dict[str, Any]:
+        return {
+            "quarter": quarter_code,
+            "subjectCode": department.strip(),
+            "pageNumber": 1,
+            "pageSize": 100,
+            "includeClassSections": "true",
+        }
 
     # ------------------------------------------------------------------
     # Quarter Calendar
