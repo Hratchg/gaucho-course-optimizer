@@ -7,9 +7,16 @@ against existing RMP professors already in the database.
 import logging
 from collections import defaultdict
 
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 
-from db.models import Professor, GradeDistribution, GauchoScore
+from db.models import (
+    Professor,
+    GradeDistribution,
+    GauchoScore,
+    RmpRating,
+    ScheduledSection,
+)
 from etl.name_utils import (
     parse_nexus_name,
     is_initial_only,
@@ -344,11 +351,44 @@ def _pass4_deduplication(
 ) -> dict:
     """Pass 4: Merge duplicate Nexus professor pairs (abbreviated + full name).
 
-    Transfers grade records from the abbreviated-name professor to the full-name one.
-    Skips abbreviated names that match more than one full name in the same
-    department — those need manual resolution (BUG-10).
+    The abbreviated-name row ("HUANG L") is the loser and is deleted; the
+    full-name row ("HUANG LEI") survives. Before the delete, every row that
+    references the loser is moved (see _merge_pair). Each merge runs in its
+    own SAVEPOINT, so a failure rolls back that pair only and is counted in
+    ``failed``; merges that succeeded are still committed.
+
+    A pair is skipped, untouched, when:
+      - the abbreviated name matches more than one full name in the same
+        department (``skipped_ambiguous``, BUG-10);
+      - both rows have their own RMP identity (``skipped_rmp_conflict``):
+        two RMP profiles means two people or an RMP duplicate, and either
+        way one profile's ratings would have to be thrown away;
+      - both rows have a grade row for the same (course, quarter, year) with
+        different numbers (``skipped_grade_conflict``). See _merge_blocker
+        for the grade rule.
+
+    With ``dry_run=True`` nothing is written, flushed or changed in the
+    session; ``merged`` counts the pairs that would merge.
+
+    Gaucho Scores are derived data. The survivor keeps its own score rows,
+    and the loser's score for a course the survivor already has is dropped,
+    so the survivor's scores reflect pre-merge grades until the next
+    ``etl.scoring.compute_all_scores`` run (weekly refresh, or
+    ``scripts/run_pipeline.py --score``) recomputes them.
     """
-    stats = {"merged": 0, "skipped_ambiguous": 0}
+    stats = {
+        "merged": 0,
+        "skipped_ambiguous": 0,
+        "skipped_rmp_conflict": 0,
+        "skipped_grade_conflict": 0,
+        "failed": 0,
+        "grades_moved": 0,
+        "grades_deduplicated": 0,
+        "sections_moved": 0,
+        "ratings_moved": 0,
+        "scores_moved": 0,
+        "scores_dropped": 0,
+    }
 
     # Get all Nexus professors (not just unmatched — we want to find duplicates)
     all_nexus = (
@@ -371,7 +411,8 @@ def _pass4_deduplication(
     for abbr_info, full_info in pairs:
         pairs_by_abbr[abbr_info["id"]].append((abbr_info, full_info))
 
-    for abbr_id, group in pairs_by_abbr.items():
+    # Sorted so runs are reproducible and the audit log reads in id order.
+    for abbr_id, group in sorted(pairs_by_abbr.items()):
         if len(group) != 1:
             stats["skipped_ambiguous"] += 1
             names = ", ".join(sorted({full["name"] for _abbr, full in group}))
@@ -388,56 +429,211 @@ def _pass4_deduplication(
         if not abbr or not full:
             continue
 
-        # If the abbreviated one has an RMP link but the full one doesn't, transfer it
-        if abbr.rmp_id and not full.rmp_id:
-            saved_rmp_id = abbr.rmp_id
-            full.name_rmp = abbr.name_rmp
-            full.match_confidence = abbr.match_confidence
-            for rating in list(abbr.rmp_ratings):
-                rating.professor_id = full.id
-            abbr.rmp_id = None
-            session.flush()
-            full.rmp_id = saved_rmp_id
+        pair = (
+            f"professor id={abbr.id} ({abbr.name_nexus!r}) into "
+            f"id={full.id} ({full.name_nexus!r}), dept={full.department!r}"
+        )
 
-        # Transfer grade records from abbreviated to full
-        if not dry_run:
-            for grade in list(abbr.grades):
-                # Check for duplicate (same course + quarter + year)
-                existing = (
-                    session.query(GradeDistribution)
-                    .filter_by(
-                        professor_id=full.id,
-                        course_id=grade.course_id,
-                        quarter=grade.quarter,
-                        year=grade.year,
-                    )
-                    .first()
-                )
-                if existing:
-                    # Duplicate — delete the abbreviated prof's copy
-                    session.delete(grade)
-                else:
-                    grade.professor_id = full.id
+        blocker, duplicate_grade_ids = _merge_blocker(session, abbr, full)
+        if blocker is not None:
+            stats[f"skipped_{blocker}"] += 1
+            logger.warning(f"Pass 4: skipped merging {pair} — {blocker.replace('_', ' ')}")
+            continue
 
-            # Transfer any scores
-            for score in list(abbr.scores):
-                score.professor_id = full.id
+        if dry_run:
+            stats["merged"] += 1
+            logger.info(f"Pass 4 (dry run): would merge {pair}")
+            continue
 
-            session.flush()
-            session.expire(abbr)
-            session.delete(abbr)
-            session.flush()
+        try:
+            with session.begin_nested():
+                moved = _merge_pair(session, abbr, full, duplicate_grade_ids)
+        except Exception:
+            stats["failed"] += 1
+            logger.exception(f"Pass 4: merge failed and was rolled back for {pair}")
+            continue
 
         stats["merged"] += 1
+        for key, count in moved.items():
+            stats[key] += count
         logger.info(
-            f"Pass 4: Merged {abbr_info['name']} -> {full_info['name']} "
-            f"(dept={full_info['department']})"
+            f"Pass 4: merged {pair}: "
+            + ", ".join(f"{key}={count}" for key, count in moved.items())
         )
 
     if not dry_run:
         session.commit()
 
     return stats
+
+
+# The per-student counts on a grade row, used to tell a duplicate from a conflict.
+_GRADE_VALUE_FIELDS = (
+    "a_plus", "a", "a_minus", "b_plus", "b", "b_minus",
+    "c_plus", "c", "c_minus", "d_plus", "d", "d_minus", "f", "avg_gpa",
+)
+
+
+def _has_rmp_identity(session: Session, prof: Professor) -> bool:
+    if prof.rmp_id is not None:
+        return True
+    return (
+        session.query(RmpRating.id).filter(RmpRating.professor_id == prof.id).first()
+        is not None
+    )
+
+
+def _merge_blocker(
+    session: Session, loser: Professor, survivor: Professor
+) -> tuple[str | None, list[int]]:
+    """Decide whether a pair can merge. Read-only.
+
+    Returns ``(reason, duplicate_grade_ids)``. ``reason`` is None when the
+    merge is safe, otherwise ``"rmp_conflict"`` or ``"grade_conflict"``.
+
+    Grade rule for a (course, quarter, year) both rows have:
+      - identical counts and avg_gpa: it is one Daily Nexus record loaded
+        twice under two spellings of the name. The loser's copy is listed in
+        ``duplicate_grade_ids`` and dropped; the survivor's row is kept.
+      - any difference: two instructors taught that course that quarter, or
+        the data disagrees. Summing would double count a re-loaded record and
+        keeping either row would lose students, so the pair is not merged.
+    """
+    if _has_rmp_identity(session, loser) and _has_rmp_identity(session, survivor):
+        return "rmp_conflict", []
+
+    def rows(prof_id: int) -> list[GradeDistribution]:
+        return (
+            session.query(GradeDistribution)
+            .filter(GradeDistribution.professor_id == prof_id)
+            .order_by(GradeDistribution.id)
+            .all()
+        )
+
+    survivor_by_key: dict[tuple, list[GradeDistribution]] = defaultdict(list)
+    for grade in rows(survivor.id):
+        survivor_by_key[(grade.course_id, grade.quarter, grade.year)].append(grade)
+
+    duplicates = []
+    for grade in rows(loser.id):
+        matches = survivor_by_key.get((grade.course_id, grade.quarter, grade.year))
+        if not matches:
+            continue
+        values = tuple(getattr(grade, f) for f in _GRADE_VALUE_FIELDS)
+        if not any(
+            values == tuple(getattr(m, f) for f in _GRADE_VALUE_FIELDS) for m in matches
+        ):
+            return "grade_conflict", []
+        duplicates.append(grade.id)
+
+    return None, duplicates
+
+
+def _move_grades(
+    session: Session, loser_id: int, survivor_id: int, duplicate_ids: list[int]
+) -> tuple[int, int]:
+    dropped = 0
+    if duplicate_ids:
+        dropped = session.execute(
+            delete(GradeDistribution).where(GradeDistribution.id.in_(duplicate_ids))
+        ).rowcount
+    moved = session.execute(
+        update(GradeDistribution)
+        .where(GradeDistribution.professor_id == loser_id)
+        .values(professor_id=survivor_id)
+    ).rowcount
+    return moved, dropped
+
+
+def _move_scores(session: Session, loser_id: int, survivor_id: int) -> tuple[int, int]:
+    """Move the loser's scores; drop the ones uq_gaucho_score_pair would reject."""
+    survivor_courses = [
+        course_id
+        for (course_id,) in session.query(GauchoScore.course_id).filter(
+            GauchoScore.professor_id == survivor_id
+        )
+    ]
+    dropped = 0
+    if survivor_courses:
+        dropped = session.execute(
+            delete(GauchoScore).where(
+                GauchoScore.professor_id == loser_id,
+                GauchoScore.course_id.in_(survivor_courses),
+            )
+        ).rowcount
+    moved = session.execute(
+        update(GauchoScore)
+        .where(GauchoScore.professor_id == loser_id)
+        .values(professor_id=survivor_id)
+    ).rowcount
+    return moved, dropped
+
+
+def _move_sections(session: Session, loser_id: int, survivor_id: int) -> int:
+    return session.execute(
+        update(ScheduledSection)
+        .where(ScheduledSection.professor_id == loser_id)
+        .values(professor_id=survivor_id)
+    ).rowcount
+
+
+def _move_rmp_link(session: Session, loser: Professor, survivor: Professor) -> int:
+    """Move the loser's RMP link and ratings (comments follow their rating).
+
+    _merge_blocker has already ensured the survivor has no RMP identity.
+    """
+    ratings_moved = session.execute(
+        update(RmpRating)
+        .where(RmpRating.professor_id == loser.id)
+        .values(professor_id=survivor.id)
+    ).rowcount
+    if loser.rmp_id is not None:
+        rmp_id, name_rmp, confidence = loser.rmp_id, loser.name_rmp, loser.match_confidence
+        loser.rmp_id = None
+        session.flush()  # free the unique rmp_id before the survivor takes it
+        survivor.rmp_id = rmp_id
+        survivor.name_rmp = name_rmp
+        survivor.match_confidence = confidence
+    return ratings_moved
+
+
+def _merge_pair(
+    session: Session,
+    loser: Professor,
+    survivor: Professor,
+    duplicate_grade_ids: list[int],
+) -> dict:
+    """Move everything referencing ``loser`` onto ``survivor``, then delete it.
+
+    Covers every table with a professors.id foreign key: grade_distributions,
+    gaucho_scores, scheduled_sections and rmp_ratings (rmp_comments hang off
+    rmp_ratings). The caller runs this inside a SAVEPOINT; if anything else
+    still references the loser, the delete raises and the SAVEPOINT rolls
+    the whole pair back.
+    """
+    ratings_moved = _move_rmp_link(session, loser, survivor)
+    grades_moved, grades_dropped = _move_grades(
+        session, loser.id, survivor.id, duplicate_grade_ids
+    )
+    scores_moved, scores_dropped = _move_scores(session, loser.id, survivor.id)
+    sections_moved = _move_sections(session, loser.id, survivor.id)
+
+    session.flush()
+    # Reload the loser's (now empty) collections so the ORM delete below has
+    # nothing to null out — a leftover row would fail loudly instead.
+    session.expire(loser)
+    session.expire(survivor)
+    session.delete(loser)
+    session.flush()
+
+    return {
+        "grades_moved": grades_moved,
+        "grades_deduplicated": grades_dropped,
+        "sections_moved": sections_moved,
+        "ratings_moved": ratings_moved,
+        "scores_moved": scores_moved,
+        "scores_dropped": scores_dropped,
+    }
 
 
 def run_enhanced_matching(

@@ -11,6 +11,8 @@ from scheduler.jobs import (
     QUARTERLY_JOB_ID,
     SCHEDULE_REFRESH_JOB_ID,
 )
+from ucsb_api.client import UCSBApiError
+from ucsb_api.schedule_sync import sync_department_sections as real_sync_department_sections
 
 
 STATS = {"inserted": 0, "updated": 1, "matched": 1, "auto_created": 0}
@@ -64,6 +66,90 @@ def test_nightly_refresh_completes_when_all_departments_sync(refresh_deps):
     nightly_schedule_refresh()
     assert sync.call_count == 4
     session.close.assert_called_once()
+
+
+def test_nightly_refresh_probes_only_the_next_quarter(refresh_deps, mocker):
+    """The current quarter always syncs in full; only the next one is probed."""
+    _, sync = refresh_deps
+    mocker.patch(
+        "ucsb_api.quarters.current_and_next_quarter_codes", return_value=("20264", "20271")
+    )
+    probe = mocker.patch("ucsb_api.schedule_sync.is_quarter_published", return_value=True)
+
+    nightly_schedule_refresh()
+
+    probe.assert_called_once()
+    args, kwargs = probe.call_args
+    assert args[1:] == ("20271",)
+    assert kwargs == {"reference_quarter": "20264", "department": "ANTH"}
+    assert [c.args[1:3] for c in sync.call_args_list] == [
+        ("20264", "ANTH"), ("20264", "CMPSC"), ("20271", "ANTH"), ("20271", "CMPSC"),
+    ]
+
+
+def test_nightly_refresh_skips_unpublished_next_quarter(refresh_deps, mocker, caplog):
+    """An unpublished next quarter is one INFO line, not a request and two ERRORs per department."""
+    session, sync = refresh_deps
+    mocker.patch(
+        "ucsb_api.quarters.current_and_next_quarter_codes", return_value=("20264", "20271")
+    )
+    mocker.patch("ucsb_api.schedule_sync.is_quarter_published", return_value=False)
+
+    with caplog.at_level("INFO"):
+        nightly_schedule_refresh()
+
+    assert [c.args[1] for c in sync.call_args_list] == ["20264", "20264"]
+    skipped = [r for r in caplog.records if "not published yet" in r.getMessage()]
+    assert len(skipped) == 1
+    assert skipped[0].levelname == "INFO"
+    assert skipped[0].getMessage().startswith("Quarter 20271 not published yet; skipping")
+    assert not [r for r in caplog.records if r.levelname == "ERROR"]
+    session.close.assert_called_once()
+
+
+def test_nightly_refresh_published_quarter_logs_a_department_400_and_continues(
+    refresh_deps, mocker, caplog
+):
+    """In a published quarter one department's UCSB 400 is still an ERROR, and the rest sync."""
+    _, sync = refresh_deps
+    sync.side_effect = real_sync_department_sections  # real per-department error handling
+    mocker.patch(
+        "ucsb_api.quarters.current_and_next_quarter_codes", return_value=("20264", "20271")
+    )
+    client = MagicMock()
+    mocker.patch("ucsb_api.client.UCSBApiClient", return_value=client)
+    client.probe_department_classes.return_value = None  # 20271 is published
+
+    fetched = []
+
+    def fetch(qcode, dept):
+        fetched.append((qcode, dept))
+        if (qcode, dept) == ("20271", "CMPSC"):
+            raise UCSBApiError("Failed to fetch dept classes: 400 Client Error", status_code=400)
+        return []
+
+    client.fetch_department_classes.side_effect = fetch
+
+    with caplog.at_level("INFO"):
+        nightly_schedule_refresh()  # UCSB errors never fail the run
+
+    assert fetched == [
+        ("20264", "ANTH"), ("20264", "CMPSC"), ("20271", "ANTH"), ("20271", "CMPSC"),
+    ]
+    errors = [r.getMessage() for r in caplog.records if r.levelname == "ERROR"]
+    assert errors == [
+        "Failed to fetch department CMPSC: Failed to fetch dept classes: 400 Client Error"
+    ]
+    assert not [r for r in caplog.records if "not published yet" in r.getMessage()]
+
+
+def test_nightly_refresh_skips_probe_when_no_departments(refresh_deps, mocker):
+    _, sync = refresh_deps
+    mocker.patch("db.queries.get_departments", return_value=[])
+    probe = mocker.patch("ucsb_api.schedule_sync.is_quarter_published")
+    nightly_schedule_refresh()
+    probe.assert_not_called()
+    sync.assert_not_called()
 
 
 SCRAPE_STATS = {

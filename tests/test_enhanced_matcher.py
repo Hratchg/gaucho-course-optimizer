@@ -1,9 +1,13 @@
 """Tests for etl/enhanced_matcher.py — multi-pass professor matching."""
 
+import logging
+
 import pytest
 from db.models import (
-    Professor, GradeDistribution, Course, RmpRating, ScheduledSection, GauchoScore,
+    Professor, GradeDistribution, Course, RmpRating, RmpComment, GauchoScore,
+    ScheduledSection,
 )
+import etl.enhanced_matcher as enhanced_matcher
 from etl.enhanced_matcher import (
     _get_unmatched_nexus,
     _get_unlinked_rmp,
@@ -274,6 +278,296 @@ class TestPass4:
         assert db_session.get(Professor, abbr_id) is not None
         assert db_session.get(Professor, john_id) is not None
         assert db_session.get(Professor, jane_id) is not None
+
+
+
+def _add_grade(session, prof, course, quarter="Fall", year=2024, a=10, b=0, avg_gpa=3.5):
+    grade = GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter=quarter, year=year, a=a, b=b, avg_gpa=avg_gpa,
+    )
+    session.add(grade)
+    session.flush()
+    return grade
+
+
+def _add_score(session, prof, course, score=70.0):
+    row = GauchoScore(professor_id=prof.id, course_id=course.id, score=score, weights_used={})
+    session.add(row)
+    session.flush()
+    return row
+
+
+def _add_section(session, prof, course, enroll_code, quarter_code="20264"):
+    section = ScheduledSection(
+        professor_id=prof.id, course_id=course.id, quarter_code=quarter_code,
+        enroll_code=enroll_code, instructor_name_raw=prof.name_nexus,
+    )
+    session.add(section)
+    session.flush()
+    return section
+
+
+def _link_rmp(session, prof, rmp_id, name_rmp):
+    """Give a Nexus professor an RMP link with one rating and one comment."""
+    prof.rmp_id = rmp_id
+    prof.name_rmp = name_rmp
+    prof.match_confidence = 90.0
+    rating = RmpRating(professor_id=prof.id, overall_quality=4.0, difficulty=3.0, num_ratings=10)
+    session.add(rating)
+    session.flush()
+    comment = RmpComment(rmp_rating_id=rating.id, comment_text="great")
+    session.add(comment)
+    session.flush()
+    return rating, comment
+
+
+def _grade_rows(session, prof_id):
+    return (
+        session.query(GradeDistribution)
+        .filter_by(professor_id=prof_id)
+        .order_by(GradeDistribution.id)
+        .all()
+    )
+
+
+class TestPass4MergesEveryReference:
+    """Pass 4 deletes a professor row, so every row pointing at it must move first."""
+
+    def test_scores_on_both_sides_for_same_course(self, db_session):
+        """uq_gaucho_score_pair: the loser's score for a course the survivor
+        already has is dropped (scores are derived); its other scores move."""
+        shared = _make_course(db_session, code="P4SCORE1")
+        only_abbr = _make_course(db_session, code="P4SCORE2")
+        abbr = _make_nexus_prof(db_session, "HUANG L", course=shared, year=2023)
+        full = _make_nexus_prof(db_session, "HUANG LEI", course=shared, year=2024)
+        _add_grade(db_session, abbr, only_abbr)
+        _link_rmp(db_session, abbr, 9101, "Lei Huang")
+        survivor_score = _add_score(db_session, full, shared, score=80.0)
+        _add_score(db_session, abbr, shared, score=60.0)
+        moved_score = _add_score(db_session, abbr, only_abbr, score=65.0)
+        abbr_id, full_id = abbr.id, full.id
+        survivor_score_id, moved_score_id = survivor_score.id, moved_score.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 1
+        db_session.expire_all()
+        assert db_session.get(Professor, abbr_id) is None
+        scores = {
+            s.course_id: (s.id, s.score)
+            for s in db_session.query(GauchoScore).filter_by(professor_id=full_id)
+        }
+        assert scores == {
+            shared.id: (survivor_score_id, 80.0),
+            only_abbr.id: (moved_score_id, 65.0),
+        }
+        assert db_session.query(GauchoScore).filter_by(professor_id=abbr_id).count() == 0
+
+    def test_rmp_link_ratings_and_comments_move_to_survivor(self, db_session):
+        course = _make_course(db_session, code="P4RMP")
+        abbr = _make_nexus_prof(db_session, "HUANG L", course=course, year=2023)
+        full = _make_nexus_prof(db_session, "HUANG LEI", course=course, year=2024)
+        rating, comment = _link_rmp(db_session, abbr, 9102, "Lei Huang")
+        abbr_id, full_id, rating_id, comment_id = abbr.id, full.id, rating.id, comment.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 1
+        db_session.expire_all()
+        survivor = db_session.get(Professor, full_id)
+        assert (survivor.rmp_id, survivor.name_rmp, survivor.match_confidence) == (
+            9102, "Lei Huang", 90.0,
+        )
+        assert db_session.get(RmpRating, rating_id).professor_id == full_id
+        assert db_session.get(RmpComment, comment_id).rmp_rating_id == rating_id
+        assert db_session.get(Professor, abbr_id) is None
+
+    def test_both_linked_to_different_rmp_profiles_is_not_merged(self, db_session):
+        """Two RMP profiles means two people (or an RMP duplicate): leave it for a human."""
+        course = _make_course(db_session, code="P4RMPBOTH")
+        abbr = _make_nexus_prof(db_session, "HUANG L", course=course, year=2023)
+        full = _make_nexus_prof(db_session, "HUANG LEI", course=course, year=2024)
+        _link_rmp(db_session, abbr, 9103, "Lin Huang")
+        _link_rmp(db_session, full, 9104, "Lei Huang")
+        _add_score(db_session, abbr, course)
+        _add_score(db_session, full, course)
+        abbr_id, full_id = abbr.id, full.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 0
+        assert stats["skipped_rmp_conflict"] == 1
+        db_session.expire_all()
+        assert db_session.get(Professor, abbr_id).rmp_id == 9103
+        assert db_session.get(Professor, full_id).rmp_id == 9104
+        assert len(_grade_rows(db_session, abbr_id)) == 1
+        assert db_session.query(GauchoScore).filter_by(professor_id=abbr_id).count() == 1
+
+    def test_sections_move_to_survivor(self, db_session):
+        course = _make_course(db_session, code="P4SECT")
+        abbr = _make_nexus_prof(db_session, "CHANG S", course=course, year=2023)
+        full = _make_nexus_prof(db_session, "CHANG SHIYU", course=course, year=2024)
+        s1 = _add_section(db_session, abbr, course, "11111")
+        s2 = _add_section(db_session, abbr, course, "22222")
+        s3 = _add_section(db_session, full, course, "33333")
+        section_ids = [s1.id, s2.id, s3.id]
+        abbr_id, full_id = abbr.id, full.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 1
+        db_session.expire_all()
+        owners = [db_session.get(ScheduledSection, sid).professor_id for sid in section_ids]
+        assert owners == [full_id, full_id, full_id]
+        # Raw instructor name is kept for debugging.
+        assert db_session.get(ScheduledSection, section_ids[0]).instructor_name_raw == "CHANG S"
+        assert db_session.get(Professor, abbr_id) is None
+
+    def test_grades_without_key_collision_all_move(self, db_session):
+        course = _make_course(db_session, code="P4GRADES")
+        abbr = _make_nexus_prof(db_session, "CHANG S", course=course, year=2022)
+        full = _make_nexus_prof(db_session, "CHANG SHIYU", course=course, year=2024)
+        _add_grade(db_session, abbr, course, quarter="Spring", year=2023)
+        abbr_ids = [g.id for g in _grade_rows(db_session, abbr.id)]
+        full_ids = [g.id for g in _grade_rows(db_session, full.id)]
+        abbr_id, full_id = abbr.id, full.id
+
+        _pass4_deduplication(db_session, min_year=2023)
+
+        db_session.expire_all()
+        assert sorted(g.id for g in _grade_rows(db_session, full_id)) == sorted(abbr_ids + full_ids)
+        assert _grade_rows(db_session, abbr_id) == []
+
+    def test_identical_grade_key_is_deduplicated(self, db_session):
+        """Same (course, quarter, year) with the same numbers is one record loaded
+        twice under two spellings: keep the survivor's row, drop the copy."""
+        course = _make_course(db_session, code="P4DUPKEY")
+        abbr = _make_nexus_prof(db_session, "CHANG S", course=course, year=2024)
+        full = _make_nexus_prof(db_session, "CHANG SHIYU", course=course, year=2024)
+        _add_grade(db_session, abbr, course, quarter="Winter", year=2023)
+        survivor_row_id = _grade_rows(db_session, full.id)[0].id
+        moved_row_id = _grade_rows(db_session, abbr.id)[1].id
+        total_before = db_session.query(GradeDistribution).count()
+        abbr_id, full_id = abbr.id, full.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 1
+        db_session.expire_all()
+        rows = _grade_rows(db_session, full_id)
+        assert sorted(g.id for g in rows) == sorted([survivor_row_id, moved_row_id])
+        keys = [(g.course_id, g.quarter, g.year) for g in rows]
+        assert len(keys) == len(set(keys))
+        assert db_session.query(GradeDistribution).count() == total_before - 1
+        assert db_session.get(Professor, abbr_id) is None
+
+    def test_conflicting_grade_key_skips_the_merge(self, db_session):
+        """Same key with different numbers: two instructors taught the course that
+        quarter, or the data disagrees. Neither is safe to fold together."""
+        course = _make_course(db_session, code="P4CONFLICT")
+        abbr = _make_nexus_prof(db_session, "CHANG S", dept="CMPSC")
+        full = _make_nexus_prof(db_session, "CHANG SHIYU", dept="CMPSC")
+        _add_grade(db_session, abbr, course, a=10, avg_gpa=3.5)
+        _add_grade(db_session, full, course, a=12, b=4, avg_gpa=3.4)
+        _add_section(db_session, abbr, course, "44444")
+        abbr_id, full_id = abbr.id, full.id
+
+        stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 0
+        assert stats["skipped_grade_conflict"] == 1
+        db_session.expire_all()
+        assert db_session.get(Professor, abbr_id) is not None
+        assert [g.a for g in _grade_rows(db_session, abbr_id)] == [10]
+        assert [g.a for g in _grade_rows(db_session, full_id)] == [12]
+        assert db_session.query(ScheduledSection).filter_by(professor_id=abbr_id).count() == 1
+
+
+class TestPass4DryRun:
+    def _setup(self, db_session):
+        course = _make_course(db_session, code="P4DRY")
+        other = _make_course(db_session, code="P4DRY2")
+        abbr = _make_nexus_prof(db_session, "HUANG L", course=course, year=2023)
+        full = _make_nexus_prof(db_session, "HUANG LEI", course=course, year=2024)
+        rating, _comment = _link_rmp(db_session, abbr, 9201, "Lei Huang")
+        _add_score(db_session, abbr, course)
+        _add_score(db_session, abbr, other)
+        _add_score(db_session, full, course)
+        _add_section(db_session, abbr, course, "55555")
+        db_session.commit()
+        return abbr.id, full.id, rating.id
+
+    def _assert_untouched(self, db_session, abbr_id, full_id, rating_id):
+        assert not db_session.new and not db_session.dirty and not db_session.deleted
+        db_session.expire_all()
+        abbr = db_session.get(Professor, abbr_id)
+        full = db_session.get(Professor, full_id)
+        assert abbr is not None
+        assert (abbr.rmp_id, abbr.name_rmp) == (9201, "Lei Huang")
+        assert (full.rmp_id, full.name_rmp, full.match_confidence) == (None, None, None)
+        assert db_session.get(RmpRating, rating_id).professor_id == abbr_id
+        assert len(_grade_rows(db_session, abbr_id)) == 1
+        assert db_session.query(GauchoScore).filter_by(professor_id=abbr_id).count() == 2
+        assert db_session.query(ScheduledSection).filter_by(professor_id=abbr_id).count() == 1
+
+    def test_pass4_dry_run_makes_no_changes(self, db_session):
+        abbr_id, full_id, rating_id = self._setup(db_session)
+
+        stats = _pass4_deduplication(db_session, min_year=2023, dry_run=True)
+
+        assert stats["merged"] == 1  # reported as "would merge"
+        self._assert_untouched(db_session, abbr_id, full_id, rating_id)
+
+    def test_run_enhanced_matching_dry_run_makes_no_changes(self, db_session):
+        abbr_id, full_id, rating_id = self._setup(db_session)
+
+        result = run_enhanced_matching(db_session, min_year=2023, dry_run=True)
+
+        assert result["total_merges"] == 1
+        self._assert_untouched(db_session, abbr_id, full_id, rating_id)
+
+
+class TestPass4Atomicity:
+    def test_failed_merge_leaves_that_pair_untouched_and_others_merge(
+        self, db_session, monkeypatch, caplog,
+    ):
+        course = _make_course(db_session, code="P4ATOMIC")
+        bad_abbr = _make_nexus_prof(db_session, "CHANG S", course=course, year=2022)
+        bad_full = _make_nexus_prof(db_session, "CHANG SHIYU", course=course, year=2024)
+        _add_section(db_session, bad_abbr, course, "66666")
+        good_abbr = _make_nexus_prof(db_session, "WONG K", course=course, year=2022)
+        good_full = _make_nexus_prof(db_session, "WONG KAREN", course=course, year=2024)
+        bad_abbr_id, bad_full_id = bad_abbr.id, bad_full.id
+        good_abbr_id, good_full_id = good_abbr.id, good_full.id
+
+        # Fail after the grades have already been moved for the first pair.
+        real_move_sections = enhanced_matcher._move_sections
+
+        def flaky_move_sections(session, loser_id, survivor_id):
+            if loser_id == bad_abbr_id:
+                raise RuntimeError("boom")
+            return real_move_sections(session, loser_id, survivor_id)
+
+        monkeypatch.setattr(enhanced_matcher, "_move_sections", flaky_move_sections)
+
+        with caplog.at_level(logging.INFO, logger="etl.enhanced_matcher"):
+            stats = _pass4_deduplication(db_session, min_year=2023)
+
+        assert stats["merged"] == 1
+        assert stats["failed"] == 1
+        db_session.expire_all()
+        # The failed pair is exactly as it was: grades not half-moved.
+        assert db_session.get(Professor, bad_abbr_id) is not None
+        assert [g.year for g in _grade_rows(db_session, bad_abbr_id)] == [2022]
+        assert [g.year for g in _grade_rows(db_session, bad_full_id)] == [2024]
+        assert db_session.query(ScheduledSection).filter_by(professor_id=bad_abbr_id).count() == 1
+        # The other pair merged.
+        assert db_session.get(Professor, good_abbr_id) is None
+        assert len(_grade_rows(db_session, good_full_id)) == 2
+        # Audit trail names both ids.
+        merged_logs = [r.getMessage() for r in caplog.records if "merged professor" in r.getMessage()]
+        assert any(f"id={good_abbr_id}" in m and f"id={good_full_id}" in m for m in merged_logs)
 
 
 class TestConsumedCandidatesAcrossPasses:

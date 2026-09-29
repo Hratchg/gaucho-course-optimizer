@@ -15,7 +15,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from db.models import Course, Professor, ScheduledSection
-from ucsb_api.client import UCSBApiClient, quarter_code_to_name
+from ucsb_api.client import UCSBApiClient, UCSBApiError, quarter_code_to_name
 from ucsb_api.name_matcher import (
     match_instructor_to_professor,
     parse_ucsb_instructor,
@@ -253,6 +253,38 @@ def sync_course_sections(
         stats["unmatched"],
     )
     return stats
+
+
+def is_quarter_published(
+    client: UCSBApiClient,
+    quarter_code: str,
+    *,
+    reference_quarter: str,
+    department: str,
+) -> bool:
+    """Return False only when UCSB clearly has no classes for ``quarter_code`` yet.
+
+    Sends the nightly department request for ``quarter_code``. If UCSB answers
+    400, sends the same request for ``reference_quarter`` (a quarter known to
+    be published). A 400 for one and a success for the other means the only
+    thing UCSB rejected is the quarter, i.e. it hasn't published that schedule.
+
+    Every other outcome returns True, so the caller keeps today's behaviour of
+    requesting each department and logging each failure: a 2xx; a non-400
+    status (auth, rate limit, outage); no response at all; or the reference
+    request failing too, which means the 400 wasn't about the quarter.
+    """
+    try:
+        client.probe_department_classes(quarter_code, department)
+        return True
+    except UCSBApiError as exc:
+        if exc.status_code != 400:
+            return True
+    try:
+        client.probe_department_classes(reference_quarter, department)
+    except UCSBApiError:
+        return True
+    return False
 
 
 def sync_department_sections(

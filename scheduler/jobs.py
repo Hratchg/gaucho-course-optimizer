@@ -98,18 +98,28 @@ def quarterly_grade_update():
 
 
 def nightly_schedule_refresh():
-    """Nightly job: fetch next-quarter schedule from UCSB API for all departments.
+    """Nightly job: fetch the current and next quarter schedules for all departments.
 
     Raises if the refresh could not run or any department failed for a reason
     other than the UCSB API, so the GitHub Actions job goes red instead of
     logging and exiting 0. Under APScheduler the exception is just logged.
+
+    The next quarter is probed first (see ``is_quarter_published``) and
+    skipped with one INFO line while UCSB hasn't published it, rather than
+    sending a request and logging two ERRORs for every department. The
+    current quarter is never probed or skipped: if UCSB rejects it, every
+    department still logs its ERROR, because that is a real problem.
     """
     logger.info("Starting nightly schedule refresh...")
     from db.connection import get_session
     from db.queries import get_departments
     from ucsb_api.client import UCSBApiClient
     from ucsb_api.quarters import current_and_next_quarter_codes
-    from ucsb_api.schedule_sync import backfill_missing_titles, sync_department_sections
+    from ucsb_api.schedule_sync import (
+        backfill_missing_titles,
+        is_quarter_published,
+        sync_department_sections,
+    )
 
     session = get_session()
     failed: list[str] = []  # "DEPT/quarter" for each sync that raised
@@ -123,6 +133,18 @@ def nightly_schedule_refresh():
 
         # Sync both current and next quarter so students always see data
         for qcode in [current_qcode, next_qcode]:
+            if (
+                qcode == next_qcode
+                and departments
+                and not is_quarter_published(
+                    client, qcode, reference_quarter=current_qcode, department=departments[0]
+                )
+            ):
+                logger.info(
+                    f"Quarter {qcode} not published yet; skipping "
+                    f"(UCSB rejects {departments[0]} for {qcode} but not for {current_qcode})"
+                )
+                continue
             logger.info(f"Syncing quarter {qcode}...")
             for dept in departments:
                 try:

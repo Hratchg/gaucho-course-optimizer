@@ -40,8 +40,8 @@ class GradeDistribution(Base):
     __tablename__ = "grade_distributions"
 
     id = Column(Integer, primary_key=True)
-    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
     quarter = Column(Text, nullable=False)
     year = Column(Integer, nullable=False)
     a_plus = Column(Integer, default=0)
@@ -67,7 +67,7 @@ class RmpRating(Base):
     __tablename__ = "rmp_ratings"
 
     id = Column(Integer, primary_key=True)
-    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False)
+    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False, index=True)
     overall_quality = Column(Float)
     difficulty = Column(Float)
     would_take_again_pct = Column(Float, nullable=True)
@@ -82,7 +82,7 @@ class RmpComment(Base):
     __tablename__ = "rmp_comments"
 
     id = Column(Integer, primary_key=True)
-    rmp_rating_id = Column(Integer, ForeignKey("rmp_ratings.id"), nullable=False)
+    rmp_rating_id = Column(Integer, ForeignKey("rmp_ratings.id"), nullable=False, index=True)
     comment_text = Column(Text)
     sentiment_score = Column(Float, nullable=True)
     keywords = Column(JSON, nullable=True)
@@ -98,8 +98,8 @@ class GauchoScore(Base):
     )
 
     id = Column(Integer, primary_key=True)
-    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=False, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
     score = Column(Float)
     weights_used = Column(JSON)
     computed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -115,9 +115,9 @@ class ScheduledSection(Base):
     )
 
     id = Column(Integer, primary_key=True)
-    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=True)
-    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)
-    quarter_code = Column(Text, nullable=False)  # e.g. "20262"
+    professor_id = Column(Integer, ForeignKey("professors.id"), nullable=True, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True, index=True)
+    quarter_code = Column(Text, nullable=False, index=True)  # e.g. "20262"
     quarter_name = Column(Text, nullable=True)    # e.g. "Spring 2026"
     enroll_code = Column(Text, nullable=False)     # UCSB enrollment code
     instructor_name_raw = Column(Text, nullable=True)  # e.g. "CONRAD P T" — preserved for debugging
