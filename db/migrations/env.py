@@ -4,6 +4,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy import text
 
 from alembic import context
 
@@ -79,6 +80,16 @@ def run_migrations_online() -> None:
         )
 
         with context.begin_transaction():
+            if connection.dialect.name == "postgresql":
+                # DDL here takes SHARE / ACCESS EXCLUSIVE locks. If a long
+                # transaction (e.g. the weekly RMP refresh) holds a conflicting
+                # lock, fail the migration after a few seconds instead of
+                # queueing, which would stall every reader queued behind us.
+                # A failed preDeployCommand just leaves the old release running.
+                connection.execute(
+                    text("SELECT set_config('lock_timeout', :t, true)"),
+                    {"t": os.environ.get("ALEMBIC_LOCK_TIMEOUT", "5s")},
+                )
             context.run_migrations()
 
 
