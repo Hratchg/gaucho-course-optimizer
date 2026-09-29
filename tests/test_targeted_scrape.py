@@ -199,3 +199,73 @@ def test_scrape_aborts_after_consecutive_search_errors(db_session):
     assert mock_scraper.search_teacher_by_name.call_count == 2
     assert stats["errors"] == 2
     assert stats["aborted"] is True
+
+
+def _active_prof(session, name, dept, code):
+    prof = Professor(name_nexus=name, department=dept)
+    session.add(prof)
+    session.flush()
+    course = Course(code=code, department=dept)
+    session.add(course)
+    session.flush()
+    session.add(GradeDistribution(
+        professor_id=prof.id, course_id=course.id,
+        quarter="Fall", year=2024, avg_gpa=3.3,
+    ))
+    session.commit()
+    return prof
+
+
+def _teacher(legacy_id, first, last):
+    return {
+        "legacy_id": legacy_id, "first_name": first, "last_name": last,
+        "department": "Economics", "avg_rating": 4.0, "avg_difficulty": 3.0,
+        "would_take_again_pct": 80.0, "num_ratings": 12, "comments": [],
+    }
+
+
+def test_scrape_rejects_rmp_first_name_that_conflicts_with_nexus_initials(db_session):
+    """BERGSTROM R E scored 85 against "Ted Bergstrom", another professor's profile.
+
+    token_sort_ratio only sees the shared surname; neither R nor E starts "Ted".
+    """
+    prof = _active_prof(db_session, "BERGSTROM R E", "ECON", "ECON1")
+    raw = score_fn(normalize_nexus_name(prof.name_nexus), normalize_rmp_name("Ted Bergstrom"))
+    assert raw >= AUTO_MATCH_THRESHOLD, "test needs a pair the fuzzy score alone would accept"
+
+    mock_scraper = MagicMock()
+    mock_scraper.search_teacher_by_name.return_value = [_teacher(110288, "Ted", "Bergstrom")]
+    stats = scrape_active_professors(db_session, scraper=mock_scraper, min_year=2024, delay=0)
+
+    assert stats["matched"] == 0
+    assert stats["skipped"] == 1
+    db_session.refresh(prof)
+    assert prof.rmp_id is None
+    assert prof.match_confidence is None
+
+
+def test_scrape_picks_the_consistent_candidate_over_a_higher_scoring_conflict(db_session):
+    """CHEN J scores 92 against "Chen Ji" (surname-first) but 86 against "Jia Chen"."""
+    prof = _active_prof(db_session, "CHEN J", "MATH", "MATH2")
+    mock_scraper = MagicMock()
+    mock_scraper.search_teacher_by_name.return_value = [
+        _teacher(1992617, "Chen", "Ji"),
+        _teacher(424242, "Jia", "Chen"),
+    ]
+    stats = scrape_active_professors(db_session, scraper=mock_scraper, min_year=2024, delay=0)
+
+    assert stats["matched"] == 1
+    db_session.refresh(prof)
+    assert prof.rmp_id == 424242
+
+
+def test_scrape_keeps_middle_initial_matches(db_session):
+    """ZIMMERMAN E D -> "Don Zimmerman" is a middle-name match and must still link."""
+    prof = _active_prof(db_session, "ZIMMERMAN E D", "ENV", "ENV3")
+    mock_scraper = MagicMock()
+    mock_scraper.search_teacher_by_name.return_value = [_teacher(2811373, "Don", "Zimmerman")]
+    stats = scrape_active_professors(db_session, scraper=mock_scraper, min_year=2024, delay=0)
+
+    assert stats["matched"] == 1
+    db_session.refresh(prof)
+    assert prof.rmp_id == 2811373
