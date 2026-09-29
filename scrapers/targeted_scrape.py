@@ -11,6 +11,7 @@ from etl.name_matcher import (
     normalize_rmp_name,
     match_confidence,
 )
+from etl.name_utils import given_name_conflict
 
 logger = logging.getLogger(__name__)
 
@@ -83,10 +84,16 @@ def scrape_active_professors(
                 break
             continue
 
-        # Fuzzy match against results
+        # Fuzzy match against results. The score is dominated by the shared
+        # surname, so first drop profiles whose given name can't be this
+        # professor's (BERGSTROM R E vs "Ted Bergstrom" scores 85).
         best_match = None
         best_confidence = 0
         for teacher in results:
+            if given_name_conflict(
+                nexus_name, teacher.get("first_name") or "", teacher.get("last_name") or ""
+            ):
+                continue
             rmp_name = f"{teacher['first_name']} {teacher['last_name']}"
             norm_rmp = normalize_rmp_name(rmp_name)
             confidence = match_confidence(norm, norm_rmp)

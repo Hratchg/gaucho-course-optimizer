@@ -23,6 +23,7 @@ from etl.name_utils import (
     initial_matches,
     find_duplicate_pairs,
     truncated_name_match,
+    given_name_conflict,
 )
 from etl.department_mapper import departments_match
 from etl.name_matcher import normalize_nexus_name, normalize_rmp_name, match_confidence
@@ -92,6 +93,27 @@ def _link_professor(
     # Transfer ratings from the RMP-only professor to the Nexus professor
     for rating in list(rmp_prof.rmp_ratings):
         rating.professor_id = nexus_prof.id
+
+    # Move everything else that points at the RMP-only row before deleting it.
+    # The schedule sync can attach sections to it by name_rmp; leaving them
+    # would strand those sections with no professor until the next sync.
+    for section in list(rmp_prof.scheduled_sections):
+        section.professor_id = nexus_prof.id
+    for grade in list(rmp_prof.grades):
+        grade.professor_id = nexus_prof.id
+    # gaucho_scores is unique per (professor, course): keep the Nexus row's
+    # score where both exist; scoring recomputes it on the next run anyway.
+    nexus_score_courses = {
+        course_id
+        for (course_id,) in session.query(GauchoScore.course_id).filter_by(
+            professor_id=nexus_prof.id
+        )
+    }
+    for score in list(rmp_prof.scores):
+        if score.course_id in nexus_score_courses:
+            session.delete(score)
+        else:
+            score.professor_id = nexus_prof.id
 
     # Clear rmp_id on the RMP-only row and flush the rating transfers
     rmp_prof.rmp_id = None
@@ -219,6 +241,9 @@ def _pass2_fullname_fuzzy(
 
         for rmp in rmp_profs:
             if rmp.id in consumed or not rmp.name_rmp:
+                continue
+            rmp_first, _, rmp_last = rmp.name_rmp.strip().partition(" ")
+            if given_name_conflict(prof.name_nexus, rmp_first, rmp_last):
                 continue
             norm_rmp = normalize_rmp_name(rmp.name_rmp)
             score = match_confidence(norm_nexus, norm_rmp)

@@ -104,6 +104,42 @@ class TestLinkProfessor:
         assert result is False
         assert another.rmp_id is None
 
+    def test_moves_sections_and_scores_off_the_deleted_rmp_row(self, db_session):
+        """The schedule sync can attach sections to an RMP-only row by name_rmp.
+        Linking deletes that row, so its sections (and scores) must move to the
+        Nexus professor instead of being left with no professor (WANG E ->
+        "Eric Wang" stranded 15 sections)."""
+        course = _make_course(db_session)
+        other_course = _make_course(db_session, code="CMPSC 130B")
+        nexus = _make_nexus_prof(db_session, "WANG E", course=course)
+        rmp = _make_rmp_prof(db_session, "Eric", "Wang", rmp_id=5150)
+        rmp_row_id = rmp.id
+        for code in ("11111", "22222"):
+            db_session.add(ScheduledSection(
+                professor_id=rmp.id, course_id=course.id, quarter_code="20264",
+                enroll_code=code, instructor_name_raw="WANG E",
+            ))
+        # Same course on both rows collides on uq_gaucho_score_pair: keep the
+        # Nexus row's score. A course only the RMP row has moves across.
+        db_session.add(GauchoScore(professor_id=nexus.id, course_id=course.id, score=60.0))
+        db_session.add(GauchoScore(professor_id=rmp.id, course_id=course.id, score=99.0))
+        db_session.add(GauchoScore(professor_id=rmp.id, course_id=other_course.id, score=70.0))
+        db_session.flush()
+
+        assert _link_professor(db_session, nexus, rmp, 90.0) is True
+
+        assert db_session.get(Professor, rmp_row_id) is None
+        sections = db_session.query(ScheduledSection).filter(
+            ScheduledSection.enroll_code.in_(["11111", "22222"])
+        ).all()
+        assert [s.professor_id for s in sections] == [nexus.id, nexus.id]
+        scores = {
+            s.course_id: s.score
+            for s in db_session.query(GauchoScore).filter_by(professor_id=nexus.id)
+        }
+        assert scores == {course.id: 60.0, other_course.id: 70.0}
+        assert db_session.query(GauchoScore).filter_by(professor_id=rmp_row_id).count() == 0
+
 
 class TestPass1:
     def test_matches_initial_to_rmp(self, db_session):
@@ -189,6 +225,27 @@ class TestPass2:
         assert nexus.rmp_id is not None
         assert nexus.name_rmp == "Ana Castellanos Cabrera"
         assert nexus.match_confidence >= 85
+
+    def test_rejects_rmp_first_name_that_conflicts_with_nexus_initials(self, db_session):
+        """Multi-initial names skip passes 1 and 3 and land here; the fuzzy
+        score alone links BERGSTROM R E to "Ted Bergstrom" at 85."""
+        course = _make_course(db_session, code="ECON1")
+        nexus = _make_nexus_prof(db_session, "BERGSTROM R E", dept="ECON", course=course)
+        _make_rmp_prof(db_session, "Ted", "Bergstrom", dept="Economics", rmp_id=110288)
+
+        stats = _pass2_fullname_fuzzy(db_session, min_year=2023)
+        assert stats["matched"] == 0
+        assert nexus.rmp_id is None
+
+    def test_keeps_middle_initial_match(self, db_session):
+        course = _make_course(db_session, code="ENV3")
+        nexus = _make_nexus_prof(db_session, "ZIMMERMAN E D", dept="ENV", course=course)
+        _make_rmp_prof(db_session, "Don", "Zimmerman", dept="Environmental Studies", rmp_id=2811373)
+
+        stats = _pass2_fullname_fuzzy(db_session, min_year=2023)
+        assert stats["matched"] == 1
+        db_session.refresh(nexus)
+        assert nexus.rmp_id == 2811373
 
 
 class TestPass4:

@@ -1,6 +1,7 @@
 """Utilities for parsing and comparing Nexus professor names."""
 
 import re
+import unicodedata
 
 
 def parse_nexus_name(name: str) -> dict:
@@ -118,6 +119,68 @@ def initial_matches(initial: str, rmp_first_name: str) -> bool:
     if not initial or not rmp_first_name:
         return False
     return initial[0].lower() == rmp_first_name[0].lower()
+
+
+_RMP_TITLES = {"dr", "prof", "professor", "mr", "mrs", "ms"}
+
+
+def _name_tokens(text: str) -> list[str]:
+    """Lowercase, accent-free word tokens; hyphens and dots split words."""
+    folded = unicodedata.normalize("NFKD", text or "")
+    folded = "".join(c for c in folded if not unicodedata.combining(c)).lower()
+    return [t for t in re.split(r"[^a-z']+", folded) if t]
+
+
+def _shares_prefix(left: str, right: str, min_len: int = 2) -> bool:
+    if min(len(left), len(right)) < min_len:
+        return left == right
+    return left.startswith(right) or right.startswith(left)
+
+
+def given_name_conflict(nexus_name: str, rmp_first: str, rmp_last: str = "") -> bool:
+    """True when the RMP given name cannot belong to the Nexus professor.
+
+    Fuzzy scores (token_sort_ratio) are dominated by a shared surname, so
+    "BERGSTROM R E" scores 85 against "Ted Bergstrom" and "CHEN J" scores 92
+    against the surname-first profile "Chen Ji". This checks the given name:
+
+    - Nexus initials ("YANG M", "SMITH J R"): the RMP first name must start
+      with one of them. A middle initial counts, so "SMITH J R" may be
+      "Robert Smith". An RMP profile with no usable given name ("DR Walker",
+      ". Mulfinger") cannot be checked and counts as a conflict.
+    - Nexus full given name ("CHANG YU-CHI"): conflict only when the RMP first
+      name starts with a different letter and the Nexus token isn't really a
+      surname fragment (Nexus cuts names at 13 characters, so "RAMIREZ MENDE"
+      is two surnames) or a later given name.
+    - No Nexus given name ("CASTELLA-CABE"): nothing to check.
+    """
+    parsed = parse_nexus_name(nexus_name)
+    given = parsed["first"].split()
+    if not given:
+        return False
+
+    first_tokens = [t for t in _name_tokens(rmp_first) if t not in _RMP_TITLES]
+    rmp_initial = first_tokens[0][0] if first_tokens else ""
+
+    if all(len(g) == 1 and g.isalpha() for g in given):
+        return rmp_initial not in given
+
+    if not rmp_initial:
+        return False
+    given_tokens = _name_tokens(parsed["first"])
+    if given_tokens and given_tokens[0][0] == rmp_initial:
+        return False
+    # A later Nexus token that starts the RMP first name: middle-name use.
+    if any(t[0] == rmp_initial for t in given_tokens[1:]):
+        return False
+    # The Nexus "given" token is really more surname, or RMP stores the name
+    # surname-first ("Zhang Liming").
+    rmp_surname_tokens = _name_tokens(rmp_last)
+    if any(
+        _shares_prefix(g, t) for g in given_tokens for t in rmp_surname_tokens
+    ):
+        return False
+    return True
 
 
 def find_duplicate_pairs(
