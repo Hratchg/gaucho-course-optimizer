@@ -68,11 +68,18 @@ python scripts/run_pipeline.py --score      # Gaucho Score computation only
 # Install dev dependencies (includes pytest)
 pip install -r requirements-dev.txt
 
-# Run the full test suite (requires PostgreSQL running on localhost:5432)
-pytest -v
+# Start a throwaway PostgreSQL (any free local port works)
+docker run -d --rm --name gco-ci-pg -e POSTGRES_USER=gco -e POSTGRES_PASSWORD=gco \
+  -e POSTGRES_DB=gco_test -p 5445:5432 postgres:16
+
+# Run the full test suite against it
+DATABASE_URL=postgresql://gco:gco@localhost:5445/gco_test pytest -v
 ```
 
-The test suite expects a PostgreSQL database at `postgresql://gco:gco@localhost:5432/gco_test`. Tests use savepoint-based transactions that roll back after each test, so no test data persists.
+Tests use savepoint-based transactions that roll back after each test, but the session **creates every table at the start and drops every table at the end**, so only ever point them at a throwaway database:
+
+- `DATABASE_URL` comes from the environment only; the tests do not read `.env`, which holds the app's own (production) database. Without it, they use `postgresql://gco:gco@localhost:5432/gco_test`, which is what CI provides.
+- pytest refuses to start unless `DATABASE_URL`'s host is `localhost`, `127.0.0.1` or `::1`, and names the host it refused. Set `ALLOW_REMOTE_TEST_DB=1` to override that, only for a disposable remote database.
 
 ## Database Management
 

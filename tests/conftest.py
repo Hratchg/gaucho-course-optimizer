@@ -3,19 +3,25 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Load .env if present so DATABASE_URL is available without manual env injection.
-# setdefault ensures that an already-set DATABASE_URL (e.g. from CI env) wins.
-try:
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
-except ImportError:
-    pass  # python-dotenv not installed; rely on environment
+from tests.db_guard import ALLOW_REMOTE_ENV, remote_database_error
 
+# DATABASE_URL comes from the environment only, never from .env: .env holds the
+# app's own database (.env.example is a Neon URL), and the session fixture
+# below drops every table. CI sets DATABASE_URL; locally, pass it explicitly.
 os.environ.setdefault("DATABASE_URL", "postgresql://gco:gco@localhost:5432/gco_test")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "0")
 
 from db.models import Base
 from db.connection import get_engine
+
+
+def pytest_configure(config):
+    """Stop before collection, and so before any engine exists, on a remote DATABASE_URL."""
+    refusal = remote_database_error(
+        os.environ["DATABASE_URL"], allow_remote=os.environ.get(ALLOW_REMOTE_ENV) == "1"
+    )
+    if refusal:
+        raise pytest.UsageError(refusal)
 
 
 @pytest.fixture(scope="session")
