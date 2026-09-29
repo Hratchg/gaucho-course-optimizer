@@ -4,6 +4,8 @@ One-off cleanup of the duplicate `professors` rows the nightly schedule sync
 created before PR #1 (commit 4337c14). The script is
 `scripts/delete_orphan_professors.py`. It is dry-run by default.
 
+**Status:** applied to production on 2026-09-29. It deleted 84,034 rows and left 8,656; `still_deletable` is 0. See [the 2026-09-29 handoff](../handoff/2026-09-29-operations-handoff.md).
+
 ## What gets deleted
 
 A row is deleted only if all of these hold:
@@ -89,11 +91,9 @@ committed stay deleted; just run it again. A second run deletes nothing.
 Only the rows being deleted are locked, and nothing references them, so the
 site and the other jobs keep working while it runs.
 
-Note: production's `alembic_version` is still `3ee0c9e2add3` (the initial
-schema), and the `ix_*_professor_id` indexes from `1fd97b94581d` and
-`c4a8e1b0f2d3` do not exist there. The cleanup doesn't need them, but
-`alembic upgrade head` beforehand would make the batches much faster. That is
-a separate change; decide on it on its own.
+Note: the timings above are from before the `ix_*_professor_id` indexes
+existed. Production was upgraded to Alembic head on 2026-09-29, before the
+real run, and with the indexes all 17 batches took 15 s in total.
 
 ## 5. Verify
 

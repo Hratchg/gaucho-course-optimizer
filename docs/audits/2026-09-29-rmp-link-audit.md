@@ -6,6 +6,12 @@ production (Neon project `ancient-river-48578866`, default branch `production`,
 2026-09-28 weekly RMP refresh refusing 13 saves because the best RMP profile
 was already linked to a different professor.
 
+**Status (2026-09-29, after the audit):** the 96 clearly-wrong links were
+unlinked in production, along with 4 of the 7 served probably-wrong links
+(5540, 6618, 10865, 11029). The other 3 (5787, 9905, 10360) were checked
+against RMP and kept. The 24 unserved probably-wrong links have not been
+reviewed yet. See [the 2026-09-29 handoff](../handoff/2026-09-29-operations-handoff.md).
+
 ## Summary
 
 1,023 Daily Nexus professors have an `rmp_id` (plus 346 RMP-only rows, which
@@ -227,7 +233,10 @@ for Guadalupe) unlinked 97 professors. It deleted 113 ratings, 1,273 comments an
 A second dry run then found nothing left to do. Linked Nexus rows went from 1,023 to 926 on the
 branch, and production still has 1,023.
 
-## Other finding (not fixed here)
+## Other finding (fixed separately, 2026-09-29)
+
+Fixed by `scripts/delete_orphan_professors.py` (#13), which deleted 84,034 of these rows in
+production on 2026-09-29.
 
 `professors` has 92,341 rows with a Nexus name but only 6,829 distinct names. 84,450 rows have no
 grades and no scheduled sections. For example, "HARMON C J" appears on about 100 rows, and only

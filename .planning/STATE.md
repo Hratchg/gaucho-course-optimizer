@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Schedule Data Completeness
 status: complete
-stopped_at: Phase 18 complete, v2.2 milestone done
-last_updated: "2026-04-14"
-last_activity: 2026-04-14
+stopped_at: Operations work (CI, scheduled jobs, production cleanup) done; see docs/handoff/2026-09-29-operations-handoff.md
+last_updated: "2026-09-29"
+last_activity: 2026-09-29
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Milestone v2.2 complete — all phases delivered
+**Current focus:** Milestone v2.2 complete. Since then (2026-09-28/29): CI restored, every scheduled job on GitHub Actions, production schema at Alembic head, and production data cleaned up. Start from [docs/handoff/2026-09-29-operations-handoff.md](../docs/handoff/2026-09-29-operations-handoff.md).
 
 ## Current Position
 
@@ -56,14 +56,20 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None.
+The full list, with details, is in "Start here" in docs/handoff/2026-09-29-operations-handoff.md. In short:
+
+- Check the first scheduled runs after the cleanup: nightly sync 2026-09-30, RMP refresh 2026-10-03, quarterly grades 2026-10-25.
+- Review the 24 unserved probably-wrong RMP links, and the 4 duplicate pairs pass 4 skipped.
+- Delete the Neon backup branches `pre-schema-reconcile-2026-09-29` and `pre-data-cleanup-2026-09-29` after about 2026-10-06.
 
 ### Blockers/Concerns
 
-None.
+- Render does not run `preDeployCommand`, so migrations must be applied to production by hand (docs/runbooks/reconcile-production-schema.md).
+- `tests/conftest.py` drops every table at the end of a test session and reads `DATABASE_URL` from `.env`. Never run pytest with a `.env` that points at Neon.
+- Grade loads can create abbreviated-name duplicate professors. Pass 4 (the "Enhanced professor matching" workflow) cleans them up, but only when run by hand.
 
 ## Session Continuity
 
-Last session: 2026-04-14
-Stopped at: Phase 18 implementation in progress
-Resume file: None
+Last session: 2026-09-29
+Stopped at: Operations handoff written; no work in progress
+Resume file: docs/handoff/2026-09-29-operations-handoff.md

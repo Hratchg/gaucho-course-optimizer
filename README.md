@@ -99,7 +99,7 @@ bash scripts/import_db.sh
 │   └── scoring.py             # Gaucho Value Score computation
 ├── db/                 # SQLAlchemy models + Alembic migrations
 ├── dashboard/          # Streamlit app
-├── scheduler/          # APScheduler jobs (every-2-day + quarterly)
+├── scheduler/          # Job bodies the GitHub Actions workflows call (APScheduler for local runs)
 ├── scripts/            # CLI pipeline runner + DB export/import
 ├── tests/              # pytest suite
 ├── docs/               # PRD, design docs, plans
@@ -119,6 +119,9 @@ bash scripts/import_db.sh
 - [Targeted RMP Pipeline](docs/plans/2026-02-25-targeted-rmp-pipeline-implementation.md)
 - [Enhanced Matching Pipeline](docs/plans/2026-02-26-enhanced-matching-implementation.md)
 - [Production Deployment](docs/plans/prod.md)
+- [Operations handoff, 2026-09-29](docs/handoff/2026-09-29-operations-handoff.md): current state, scheduled jobs and open items. Start here.
+- Runbooks: [reconcile the production schema](docs/runbooks/reconcile-production-schema.md), [delete orphan professors](docs/runbooks/delete-orphan-professors.md)
+- [RMP link audit, 2026-09-29](docs/audits/2026-09-29-rmp-link-audit.md)
 
 ## License
 
