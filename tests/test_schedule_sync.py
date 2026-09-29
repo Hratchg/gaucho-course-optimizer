@@ -424,3 +424,39 @@ def test_backfill_missing_titles(db_session):
     assert stats["updated"] == 1
     db_session.refresh(course)
     assert course.title == "Data Structures and Algorithms I"
+
+
+def test_sync_department_repoints_a_section_to_the_right_professor(db_session):
+    """A section the old matcher gave to someone in another department moves
+    to a professor created under its UCSB name, and stays there."""
+    course = Course(code="MATH3A", title="Calculus", department="MATH")
+    kim_t = Professor(name_nexus="KIM T", department="MAT")
+    db_session.add_all([course, kim_t])
+    db_session.flush()
+    db_session.add(ScheduledSection(
+        professor_id=kim_t.id, course_id=course.id, quarter_code="20262",
+        enroll_code="55501", instructor_name_raw="KIM TAEHWAN",
+    ))
+    db_session.flush()
+    sections = [{
+        "courseId": "MATH      3A",
+        "title": "Calculus",
+        "classSections": [{
+            "enrollCode": "55501",
+            "courseCancelled": None,
+            "instructors": [{"instructor": "KIM TAEHWAN", "functionCode": "Teaching and in charge"}],
+            "timeLocations": [],
+            "enrolledTotal": 0,
+            "maxEnroll": 30,
+        }],
+    }]
+    mock_client = _make_mock_client(sections)
+
+    first = sync_department_sections(db_session, "20262", "MATH", client=mock_client, auto_create_cache={})
+    second = sync_department_sections(db_session, "20262", "MATH", client=mock_client, auto_create_cache={})
+
+    assert (first["auto_created"], second["auto_created"], second["matched"]) == (1, 0, 1)
+    taehwan = db_session.query(Professor).filter_by(name_nexus="KIM TAEHWAN").one()
+    assert taehwan.department == "MATH"
+    section = db_session.query(ScheduledSection).filter_by(enroll_code="55501").one()
+    assert section.professor_id == taehwan.id

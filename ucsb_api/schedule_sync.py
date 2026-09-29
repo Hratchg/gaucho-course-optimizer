@@ -88,7 +88,8 @@ def _build_professor_lookup(session: Session) -> list[dict]:
     """
     profs = session.query(Professor).order_by(Professor.id).all()
     return [
-        {"id": p.id, "name_rmp": p.name_rmp, "name_nexus": p.name_nexus}
+        {"id": p.id, "name_rmp": p.name_rmp, "name_nexus": p.name_nexus,
+         "department": p.department}
         for p in profs
     ]
 
@@ -187,7 +188,7 @@ def sync_course_sections(
         if section_data["instructor_name_raw"]:
             parsed = parse_ucsb_instructor(section_data["instructor_name_raw"])
             if parsed:
-                match = match_instructor_to_professor(parsed, professors)
+                match = match_instructor_to_professor(parsed, professors, course.department)
                 if match:
                     professor_id = match.professor_id
                     stats["matched"] += 1
@@ -346,7 +347,7 @@ def sync_department_sections(
         if section_data["instructor_name_raw"]:
             parsed = parse_ucsb_instructor(section_data["instructor_name_raw"])
             if parsed:
-                match = match_instructor_to_professor(parsed, professors)
+                match = match_instructor_to_professor(parsed, professors, department)
                 if match:
                     professor_id = match.professor_id
                     total_stats["matched"] += 1

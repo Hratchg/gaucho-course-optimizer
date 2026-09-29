@@ -439,3 +439,91 @@ def test_match_uppercase_name_distinguishes_initial():
     professors = [{"id": 8, "name_rmp": None, "name_nexus": "GURVEN K"}]
     parsed = parse_ucsb_instructor("GURVEN M D")
     assert match_instructor_to_professor(parsed, professors) is None
+
+
+# ---------------------------------------------------------------------------
+# Name matcher — full given names and departments (2026-09-29: the nightly
+# sync attached 352 Fall 2026 sections to the wrong professor)
+# ---------------------------------------------------------------------------
+
+def _prof(prof_id, name_nexus, department, name_rmp=None):
+    return {"id": prof_id, "name_rmp": name_rmp, "name_nexus": name_nexus, "department": department}
+
+
+def _match_id(raw, professors, department=None):
+    result = match_instructor_to_professor(parse_ucsb_instructor(raw), professors, department)
+    return result.professor_id if result else None
+
+
+def test_match_prefers_the_exact_name_over_an_earlier_similar_one():
+    """POPESCU P F's 129 sections went to POPESCU P E, the older row."""
+    professors = [_prof(1, "POPESCU P E", "PHYS"), _prof(2, "POPESCU P F", "PHYS")]
+    assert _match_id("POPESCU P F", professors, "PHYS") == 2
+
+
+def test_match_rejects_a_different_second_initial():
+    assert _match_id("POPESCU P F", [_prof(1, "POPESCU P E", "PHYS")], "PHYS") is None
+    assert _match_id("WOODS M P", [_prof(1, "WOODS M J", "ED")], "ED") is None
+
+
+def test_match_reads_full_given_names():
+    """ZHAO XIAOLEI used to be read as last name ZHAO and no initials, so it
+    matched the first ZHAO on file."""
+    professors = [_prof(1, "ZHAO B Y", "MATH"), _prof(2, "ZHAO XIAOLEI", "MATH")]
+    assert _match_id("ZHAO XIAOLEI", professors, "MATH") == 2
+    assert _match_id("ZHAO XIAOLEI", professors[:1], "MATH") is None
+
+
+def test_match_returns_none_when_two_people_fit():
+    professors = [_prof(1, "WOODS M J", "ED"), _prof(2, "WOODS M P", "ED")]
+    assert _match_id("WOODS M", professors, "ED") is None
+
+
+def test_match_rows_sharing_a_name_count_as_one_person():
+    professors = [_prof(1, "KOTH M K", "ART"), _prof(2, "KOTH M K", "ART")]
+    assert _match_id("KOTH M", professors, "ART") == 1
+
+
+def test_match_requires_the_section_department_unless_the_name_is_exact():
+    """KIM TAEHWAN teaching MATH is not the KIM T of Media Arts."""
+    professors = [_prof(1, "KIM T", "MAT")]
+    assert _match_id("KIM TAEHWAN", professors, "MATH") is None
+    assert _match_id("KIM TAEHWAN", professors, "MAT") == 1
+    assert _match_id("KIM T", professors, "MATH") == 1  # same name: any department
+    assert _match_id("KIM TAEHWAN", professors) == 1  # no department: as before
+
+
+def test_match_treats_online_codes_as_their_department():
+    assert _match_id("CHEN SIYU", [_prof(1, "CHEN S", "PSTAT")], "PSTATW") == 1
+    assert _match_id("CHEN SIYU", [_prof(1, "CHEN S", "PSTATW")], "PSTAT") == 1
+
+
+def test_match_reads_rmp_department_names():
+    assert _match_id("MASOOD B", [_prof(1, None, "Statistics", "B. Masood")], "PSTAT") == 1
+    assert _match_id("FU W", [_prof(1, None, "Philosophy", "Wade  Fu")], "MATH") is None
+
+
+def test_match_prefers_a_nexus_row_over_an_unlinked_rmp_row():
+    professors = [
+        _prof(1, "HENDERSON O G", "ENGL"),
+        _prof(2, None, "English", "Olivia Henderson"),
+    ]
+    assert _match_id("HENDERSON O", professors, "ENGL") == 1
+
+
+def test_match_registrar_names_need_the_same_last_name():
+    """The registrar spells a name one way; fuzzy last names are for RMP spellings."""
+    assert _match_id("ZHANG S", [_prof(1, "HUANG SUNZEYU", "CHEM")], "CHEM") is None
+    assert _match_id("CHEN A", [_prof(1, "COHEN A S", "PSY")], "PSY") is None
+    rmp_only = [_prof(1, None, "Computer Science", "Yekaterina Kharitonova")]
+    assert _match_id("KHARITONOV Y", rmp_only, "CMPSC") == 1
+
+
+def test_match_full_given_name_needs_a_lone_initial():
+    """As in pass 4: CHEN S may be CHEN SIYU, but WANG Y-D is not WANG YAXUAN."""
+    assert _match_id("CHEN SIYU", [_prof(1, "CHEN S", "PSTAT")], "PSTAT") == 1
+    assert _match_id("TROY K", [_prof(1, "TROY KRIS", "MCDB")], "MCDB") == 1
+    assert _match_id("WANG YAXUAN", [_prof(1, "WANG Y-D", "PSTAT")], "PSTAT") is None
+    assert _match_id("NGUYEN TRUC", [_prof(1, "NGUYEN T T", "CHEM")], "CHEM") is None
+    # RMP names are first-name-first, so initials still match a full first name
+    assert _match_id("CONRAD P T", [_prof(1, None, "Computer Science", "Phill Conrad")], "CMPSC") == 1
