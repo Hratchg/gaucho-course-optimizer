@@ -33,6 +33,10 @@ Production row counts at the end of the session:
 
 ## Start here: open items, in order
 
+To hand these to an agent, point it at
+[docs/prompts/2026-09-29-open-items-spec.md](../prompts/2026-09-29-open-items-spec.md). That
+spec turns each item into a task, with safety rules and approval gates.
+
 1. **Check the first scheduled runs after the cleanup** (GitHub, Actions tab):
    - **Nightly Schedule Sync, 2026-09-30 08:30 UTC.**
      - This is the first run with #10. The next quarter (20271) should be skipped until UCSB publishes it, instead of failing with about 95 UCSB API 400s.
