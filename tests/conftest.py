@@ -30,26 +30,16 @@ def engine():
 def db_session(engine):
     """Create a transactional session that rolls back after each test.
 
-    Uses the nested-transaction (SAVEPOINT) pattern so that even explicit
-    session.commit() calls inside tests are contained and rolled back.
+    The session joins an outer connection-level transaction with
+    join_transaction_mode="create_savepoint" (the SQLAlchemy 2.x recipe), so
+    session.commit() only releases a SAVEPOINT and everything is rolled back
+    at the end. Unlike the old "restart the savepoint after every commit"
+    listener, this also lets code under test use session.begin_nested().
     """
     connection = engine.connect()
     transaction = connection.begin()
-    Session = sessionmaker(bind=connection)
+    Session = sessionmaker(bind=connection, join_transaction_mode="create_savepoint")
     session = Session()
-
-    # Start a SAVEPOINT — session.commit() will release *this* savepoint,
-    # not the outer transaction, so we can still roll everything back.
-    nested = connection.begin_nested()
-
-    # After every commit, re-open a new SAVEPOINT so subsequent operations
-    # within the same test keep working inside the outer transaction.
-    from sqlalchemy import event
-
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(sess, trans):
-        if trans.nested and not trans._parent.nested:
-            sess.begin_nested()
 
     yield session
 
