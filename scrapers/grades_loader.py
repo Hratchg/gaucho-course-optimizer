@@ -25,6 +25,7 @@ def _resolve_abbreviated_names(
     prof_ids: dict[str, int],
     existing: list[dict],
     course_ids: dict[str, int],
+    placeholders: frozenset[str] = frozenset(),
 ) -> dict[str, int]:
     """Map new abbreviated instructor names onto the existing professor they abbreviate.
 
@@ -47,15 +48,28 @@ def _resolve_abbreviated_names(
     Several rows with the same full name count as one candidate: the grades go
     to its oldest row, as they would for an exact match.
 
+    ``placeholders`` are names whose exact match holds no grades and no RMP
+    identity: rows the schedule sync created for a UCSB instructor it couldn't
+    match. They go through the same rule, so the outcome doesn't depend on
+    whether the sync saw the name first. Without this, the sync's "SCHMITT R"
+    (ESM) took the CSV's "SCHMITT R" rows by exact match and got a copy of the
+    grades already stored under "SCHMITT R J" (ENV). When the rule leaves a
+    placeholder alone, it keeps its sync-created row instead of getting a new one.
+
     Only the name's first row's department is used, because that is the
     department the loader would create the professor with.
     """
     departments: dict[str, str] = {}
     for row in rows:
-        if row["instructor"] not in prof_ids:
+        if row["instructor"] not in prof_ids or row["instructor"] in placeholders:
             departments.setdefault(row["instructor"], row.get("department") or "")
     if not departments:
         return {}
+
+    def fallback(name: str) -> str:
+        if name in placeholders:
+            return f"keeping its sync-created professor id={prof_ids[name]}"
+        return "creating a new professor"
 
     incoming = [
         {"id": None, "name": name, "department": dept, "incoming": True}
@@ -72,8 +86,8 @@ def _resolve_abbreviated_names(
             unique[name] = prof_ids[next(iter(fulls))]
         else:
             logger.warning(
-                "Grades load: %r (%s) matches %d full names (%s); creating a new professor",
-                name, departments[name], len(fulls), ", ".join(sorted(fulls)),
+                "Grades load: %r (%s) matches %d full names (%s); %s",
+                name, departments[name], len(fulls), ", ".join(sorted(fulls)), fallback(name),
             )
     if not unique:
         return {}
@@ -94,9 +108,8 @@ def _resolve_abbreviated_names(
         if matches and not any(_same_record(m, row) for m in matches):
             conflicts.add(name)
             logger.warning(
-                "Grades load: %r has different grades from professor id=%d for %s %s %s; "
-                "creating a new professor",
-                name, unique[name], row["course_code"], row["quarter"], row["year"],
+                "Grades load: %r has different grades from professor id=%d for %s %s %s; %s",
+                name, unique[name], row["course_code"], row["quarter"], row["year"], fallback(name),
             )
 
     resolved = {name: prof_id for name, prof_id in unique.items() if name not in conflicts}
@@ -114,8 +127,8 @@ def load_grades_to_db(rows: list[dict], session) -> int:
     skipped, so reloading the full Daily Nexus CSV only adds the new quarters.
     Professors are matched on name_nexus and courses on code, creating either
     when missing. A new abbreviated name that belongs to exactly one existing
-    professor is matched to that professor instead (see
-    _resolve_abbreviated_names).
+    professor is matched to that professor instead, and so is one whose exact
+    match is a sync-created row with no grades (see _resolve_abbreviated_names).
 
     Existing professors, courses and grade keys are read up front in three
     queries instead of three per row: the quarterly job reloads the whole
@@ -125,13 +138,19 @@ def load_grades_to_db(rows: list[dict], session) -> int:
     """
     prof_ids: dict[str, int] = {}
     existing: list[dict] = []
-    for prof_id, name, department in (
-        session.query(Professor.id, Professor.name_nexus, Professor.department)
+    has_rmp: set[int] = set()
+    for prof_id, name, department, rmp_id, name_rmp in (
+        session.query(
+            Professor.id, Professor.name_nexus, Professor.department,
+            Professor.rmp_id, Professor.name_rmp,
+        )
         .filter(Professor.name_nexus.isnot(None))
         .order_by(Professor.id)
     ):
         prof_ids.setdefault(name, prof_id)  # oldest row wins, like the schedule sync
         existing.append({"id": prof_id, "name": name, "department": department or ""})
+        if rmp_id is not None or name_rmp is not None:
+            has_rmp.add(prof_id)
 
     course_ids: dict[str, int] = dict(session.query(Course.code, Course.id))
 
@@ -145,7 +164,15 @@ def load_grades_to_db(rows: list[dict], session) -> int:
         )
     }
 
-    resolved = _resolve_abbreviated_names(rows, session, prof_ids, existing, course_ids)
+    # Names whose rows hold no grades and no RMP identity: what the schedule
+    # sync creates for an instructor it can't match.
+    graded = {key[0] for key in seen} | has_rmp
+    with_data = {p["name"] for p in existing if p["id"] in graded}
+    placeholders = frozenset(p["name"] for p in existing if p["name"] not in with_data)
+
+    resolved = _resolve_abbreviated_names(
+        rows, session, prof_ids, existing, course_ids, placeholders
+    )
     prof_ids.update(resolved)
 
     inserted = 0
