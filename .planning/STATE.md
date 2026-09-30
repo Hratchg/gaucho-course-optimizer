@@ -59,20 +59,19 @@ Recent decisions affecting current work:
 The full list, with details, is in "Open items, in order" in docs/handoff/2026-09-29-evening-operations-handoff.md. In short:
 
 - Check the scheduled runs:
-  - nightly sync 2026-09-30, #19's first run: expect about 49 new professors and about 119 `auto_created` sections;
+  - nightly sync 2026-10-01: after #19's first run on 2026-09-30 (72 professors created, checked), expect only a handful;
   - RMP refresh 2026-10-03;
   - backup 2026-10-04;
   - quarterly grades 2026-10-25.
 - Review the 24 probably-wrong RMP links (needs `RMP_AUTH_TOKEN`), after the 2026-10-03 refresh.
-- Fix B6 before 2026-10-25: short-name professors the sync creates would get copies of existing grades at the next grade load (about 12 rows today).
+- At the 2026-10-25 grade load, confirm B6's fix (#23): no grades copied onto sync-created short names.
 - Review the pass 4 pair `YIN Y` → `YIN YOUWEI` before anyone dispatches "Enhanced professor matching".
 - Fix the schedule sync for multi-word department codes (POL S, CH E, RG ST, ...), which have never had sections.
-- Delete the Neon backup and rehearsal branches from about 2026-10-06 (2026-09-29 backups) and 2026-10-07 (2026-09-30 backups).
+- Delete the Neon backup branches from about 2026-10-06 (2026-09-29 backups) and 2026-10-07 (2026-09-30 backups).
 
 ### Blockers/Concerns
 
 - Render does not run `preDeployCommand`, so migrations must be applied to production by hand (docs/runbooks/reconcile-production-schema.md). The daily drift check (#20) opens a `migration-drift` issue when one is pending.
-- B6 must be fixed before the 2026-10-25 grade load, or that load copies grades onto sync-created short-name professors.
 - The GitHub `*/15` uptime schedule actually runs every 4-6 hours, so an outage can go unnoticed for hours.
 
 ## Session Continuity

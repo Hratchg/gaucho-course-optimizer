@@ -12,7 +12,8 @@ Early on 2026-09-30 (UTC) the owner approved everything that was waiting:
 
 - #19, #20 and #21 were merged.
 - The C3 plan, the past-quarter re-point and the WOODS merge ran on production. See "Production changes made (2026-09-30)".
-- The checks after those writes found one more problem, **B6**. It must be fixed before the 2026-10-25 grade load.
+- The checks after those writes found one more problem, **B6**. It was fixed the same day by [#23](https://github.com/Hratchg/gaucho-course-optimizer/pull/23).
+- The 2026-09-30 nightly, #19's first run, was checked (item 1).
 
 Everything below was checked at about 05:50 UTC on 2026-09-30.
 
@@ -46,18 +47,17 @@ Production row counts:
 
 ## Open items, in order
 
-1. **Nightly Schedule Sync, 2026-09-30** (A1).
-   - **When:** scheduled for 08:30 UTC, but runs have started between 13:00 and 17:00.
-   - **Next quarter:** check that 20271 is skipped with one INFO line (#10), with no UCSB 400s.
-   - **#19 is merged, so this is its first run.** A replay of the new matcher over production after the 2026-09-30 writes predicts:
-     - **`auto_created`:** about **119**. The counter counts sections, not new rows.
-     - **"Auto-created professor record" log lines:** about **49**, one per new professor. Without the past-quarter re-point this would have been 112; the re-point already created the other 63 names.
-     - **Fall sections moved:** about 354, to another existing professor.
+1. **Nightly Schedule Sync, 2026-09-30** (A1). **Done**: [run 36733952342](https://github.com/Hratchg/gaucho-course-optimizer/actions/runs/36733952342), 15:04 UTC, green. It was #19's first run.
 
-     UCSB's data can shift these a little. Hundreds of new professors would mean something is wrong.
-   - **Then check:**
-     - `POPESCU P F` now has its roughly 129 PHYS sections;
-     - the run after it auto-creates only a handful again.
+   | | forecast | actual |
+   |---|---:|---:|
+   | Professors created ("Auto-created professor record" lines) | about 49 | 72 |
+   | `auto_created` (counts sections) | about 119 | 166 |
+
+   - **The extra professors:** they're mostly instructors newly assigned in UCSB's data since the forecast (ME, PHYS, PSY). No professor name appears twice. Professors: 7,277 → 7,349.
+   - **Next quarter:** 20271 was skipped with one INFO line, and there were no errors.
+   - **`POPESCU P F`:** has all 129 of his sections (46 in 20262, 33 in 20263, 50 in 20264).
+   - **Still to check:** the next nightly (2026-10-01) should auto-create only a handful.
 2. **Weekly RMP Refresh, Saturday 2026-10-03** (A2). Check what the morning handoff lists:
    - the five freed profiles went to their likely owners;
    - fewer "already linked" refusals than the 13 seen on 2026-09-28;
@@ -68,9 +68,7 @@ Production row counts:
    - **Reminder:** the owner has one. It was emailed to them on 2026-09-30: "Reminder (on or after Sat Oct 3, 2026): give Claude the RMP token for the CoursePick C1 review".
    - **Timing:** do it after the Saturday refresh, which can change links.
    - **Method:** in spec section C1.
-5. **B6: fix before the Quarterly Grades Update on 2026-10-25.** Short-name professors created by the sync will get copies of grades that are already stored. Details under "New problems found".
-   - **Before the fix:** load the current CSV on a Neon branch copied from production after tonight's nightly. It should insert about 12 rows onto `SCHMITT R`, `ZHANG W` and `MARTIN J`.
-   - **After the fix:** the same load should insert 0 rows.
+5. **B6: fixed by [#23](https://github.com/Hratchg/gaucho-course-optimizer/pull/23), merged 2026-09-30.** Short-name professors created by the sync would have got copies of grades that are already stored. Details under "New problems found". Confirm at the 2026-10-25 load (item 10).
 6. **Review one pair pass 4 would now merge:** `YIN Y` (101113) into `YIN YOUWEI` (101117), CHEM.
    - Found by a pass 4 dry run after the C3 cleanup. Not merged.
    - Dispatching "Enhanced professor matching" would merge it. That's a production write, so check the pair first.
@@ -81,7 +79,7 @@ Production row counts:
    - **From about 2026-10-07:** the 2026-09-30 backups.
    - **Any time:** the rehearsal branch.
 10. **After the Quarterly Grades Update on 2026-10-25** (D3).
-    - #18 has landed, so the load should create no abbreviated-name duplicates. If B6 is fixed, it should also copy no grades onto sync-created short names.
+    - #18 and #23 have landed, so the load should create no abbreviated-name duplicates and copy no grades onto sync-created short names (`SCHMITT R`, `ZHANG W`, `MARTIN J`).
     - Confirm it:
       - on a Neon branch copied from production after the load, run pass 4 as a dry run;
       - expect no new pairs;
@@ -91,7 +89,7 @@ Production row counts:
 
 | Task | Status |
 |---|---|
-| A1: nightly sync check | Deferred to 2026-09-30 (item 1). |
+| A1: nightly sync check | Done on 2026-09-30 (item 1). |
 | A2: RMP refresh check | Deferred to 2026-10-03 (item 2). |
 | A3: backup check | Deferred to 2026-10-04 (item 3). |
 | A4: uptime | Done. No open `uptime` issue. `/ready` returned 500 from 2026-09-24 22:37 to 2026-09-28 19:40 UTC; that was before #8 and has since recovered. New finding: see "Uptime cadence" below. |
@@ -103,7 +101,7 @@ Production row counts:
 | C1: 24 probably-wrong links | Blocked on `RMP_AUTH_TOKEN` (item 4). |
 | C2: 4 pairs pass 4 skipped | KOTH and BUENO merged on 2026-09-29. WOODS merged on 2026-09-30, after C3. RAVEN deferred. |
 | C3 (new): same-name duplicates | Plan [#21](https://github.com/Hratchg/gaucho-course-optimizer/pull/21), merged. Run on production on 2026-09-30. |
-| B6 (new): short-name auto-creates get copied grades | Found by the 2026-09-30 checks. Recorded, not fixed (item 5). |
+| B6 (new): short-name auto-creates get copied grades | Found by the 2026-09-30 checks. Fixed by [#23](https://github.com/Hratchg/gaucho-course-optimizer/pull/23), merged the same day. |
 | D1: backup branches | After 2026-10-06 (item 9). |
 | D2: old agent worktrees | Done. The owner approved removing the 5 leftover worktrees; all were clean and on merged branches (#10 to #14). This session's own worktrees were removed after its PRs merged. |
 | D3: after the 2026-10-25 load | Item 10. |
@@ -197,7 +195,7 @@ Sections, ratings, comments, scores and `alembic_version` didn't change.
 - **C3: 1,476 same-name duplicate professor rows remained from the old sync.**
   - Only past-quarter sections referenced them.
   - Removed on 2026-09-30; see above.
-- **B6: sync-created short names will receive copies of existing grades at the next grade load.**
+- **B6: sync-created short names would have received copies of existing grades at the next grade load.** Fixed by #23; see the end of this entry.
   - **What happens:** #19 matches only within the section's department. When a UCSB name like `SCHMITT R` has a full-name row only in another department, the sync creates a short-name row. Here the ESM/GEOG sections are taught by `SCHMITT R J` (5995), stored as `ENV`, the truncated `ENV S` from B5. The grade loader then matches the CSV's `SCHMITT R` exactly to that new row, instead of resolving it to `SCHMITT R J` as #18 does. So it stores those grades a second time.
   - **Measured on the rehearsal branch** (the 2026-09-30 writes, then a simulated nightly, then the current CSV): 12 copied rows.
 
@@ -207,19 +205,17 @@ Sections, ratings, comments, scores and `alembic_version` didn't change.
     | `ZHANG W` (ECON) | 4 | `ZHANG WEIDI` (ART) |
     | `MARTIN J` (EARTH) | 2 | `MARTIN J A` (HIST) |
 
-    `SCHMITT R` already exists on production (created by the past-quarter re-point). The other two will be created by tonight's nightly.
+    `SCHMITT R` was created by the past-quarter re-point, and the other two by the 2026-09-30 nightly.
   - **Cause:** #19 together with #18. The nightly alone creates all three names.
-  - **Deadline:** nothing is copied until the next grade load, 2026-10-25.
-  - **Directions to weigh (not started):**
-    - the loader skips a CSV row whose course, quarter, year and grade counts already sit under a professor with a compatible name;
-    - or the loader prefers #18's abbreviated-name resolution over an exact match on a row that has no grades and no RMP identity.
-
-    Either needs tests and a CSV-load rehearsal on a branch. Separately, decide whether `SCHMITT R` and the others should be merged into the full-name rows once their grades are safe. Watch B5: its truncated departments are part of the cause.
+  - **Deadline:** the next grade load, 2026-10-25. Met: nothing had been copied yet.
+  - **Fix ([#23](https://github.com/Hratchg/gaucho-course-optimizer/pull/23)):** a name whose rows hold no grades and no RMP identity now goes through #18's abbreviated-name rule, as if the row didn't exist. When that rule doesn't apply, the grades go to the sync's row as before.
+    - **Rehearsal:** on a production copy with the nightly simulated, the CSV load inserted 0 rows (master: 12) and created 0 professors.
+    - **Left open:** the sections stay on the short-name rows, so `SCHMITT R` still shows on its ESM courses without grades. Merging these rows into the full names is a separate decision. Watch B5: its truncated departments are part of the cause.
 - **Uptime cadence.**
   - `uptime.yml` is scheduled every 15 minutes, but GitHub has been running it only every 4 to 6 hours. So an outage can go unnoticed for hours.
   - If faster detection matters, use an external pinger. That's an owner decision: it's a new service and may cost money.
 - **Unreferenced auto-created rows.**
-  - After #19, some rows the old matcher created can lose all their sections. The past-quarter re-point left none; tonight's nightly may leave a few.
+  - After #19, some rows the old matcher created can lose all their sections. The past-quarter re-point left none; the 2026-09-30 nightly may have left a few.
   - Production has 10 rows with no references and no RMP identity (2026-09-30).
   - The orphan script keeps the oldest row of every name, so rows with a unique name stay.
   - This is harmless, but worth a later decision.
@@ -234,10 +230,12 @@ Sections, ratings, comments, scores and `alembic_version` didn't change.
 | `pre-same-name-dedup-2026-09-30` | `br-cool-term-akmghnsq` | Production just before C3 | after about 2026-10-07 |
 | `pre-past-quarter-repoint-2026-09-30` | `br-lingering-cell-ak2sk3oa` | Production after C3, before the past-quarter re-point | after about 2026-10-07 |
 | `pre-woods-merge-2026-09-30` | `br-wild-term-akcrjj4z` | Production after the re-point, before the WOODS merge | after about 2026-10-07 |
-| `prod-writes-rehearsal-2026-09-30` | `br-wispy-mouse-ak9dm4zr` | 2026-09-30 rehearsal, with a simulated nightly and CSV load on top (B6 evidence). It has a compute endpoint. | any time |
 
-- **Already deleted:** the three 2026-09-29 rehearsal branches, on 2026-09-30 with the owner's approval.
-- **Branch limit:** that's 8 non-production branches plus `production`. The free plan allows about 10, so delete some before the next rehearsal.
+- **Already deleted, with the owner's approval on 2026-09-30:**
+  - the three 2026-09-29 rehearsal branches;
+  - `prod-writes-rehearsal-2026-09-30`;
+  - `b6-loader-rehearsal-2026-09-30`, the #23 rehearsal.
+- **Branch limit:** that leaves 6 non-production branches plus `production`. The free plan allows about 10.
 
 - **Other backups:** the pg_dump artifact `neon-backup-36607600841` is kept until about 2026-12-28.
 - **Approval:** deleting any branch needs the owner's approval.
