@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Schedule Data Completeness
 status: complete
-stopped_at: Open-items spec worked through; PRs #19-#21 await a merge decision; see docs/handoff/2026-09-29-evening-operations-handoff.md
-last_updated: "2026-09-29"
-last_activity: 2026-09-29
+stopped_at: Open-items spec worked through; #19-#21 merged and the 2026-09-30 production cleanup done; see docs/handoff/2026-09-29-evening-operations-handoff.md
+last_updated: "2026-09-30"
+last_activity: 2026-09-30
 progress:
   total_phases: 1
   completed_phases: 1
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students can search any UCSB course and instantly see which professor will give them the best outcome -- ranked by a score combining GPA, RMP quality, difficulty, and sentiment
-**Current focus:** Milestone v2.2 complete. Since then (2026-09-28/29): CI restored, every scheduled job on GitHub Actions, production schema at Alembic head, and production data cleaned up. The follow-up session fixed the test-suite guard (#17) and the grade loader (#18), and opened #19 (sync misattribution), #20 (migration drift check) and #21 (same-name duplicates plan). Start from [docs/handoff/2026-09-29-evening-operations-handoff.md](../docs/handoff/2026-09-29-evening-operations-handoff.md).
+**Current focus:** Milestone v2.2 complete. Since then (2026-09-28/29): CI restored, every scheduled job on GitHub Actions, production schema at Alembic head, and production data cleaned up. The follow-up session fixed the test-suite guard (#17), the grade loader (#18), the sync misattribution (#19) and added a migration drift check (#20). On 2026-09-30 it removed the 1,476 same-name duplicate professors (#21), re-pointed past-quarter sections with the new matcher, and merged WOODS. Start from [docs/handoff/2026-09-29-evening-operations-handoff.md](../docs/handoff/2026-09-29-evening-operations-handoff.md).
 
 ## Current Position
 
@@ -58,21 +58,25 @@ Recent decisions affecting current work:
 
 The full list, with details, is in "Open items, in order" in docs/handoff/2026-09-29-evening-operations-handoff.md. In short:
 
-- Decide on PRs #19 (merging it changes production data at the next nightly), #20 and #21.
-- Check the scheduled runs: nightly sync 2026-09-30, RMP refresh 2026-10-03, backup 2026-10-04, quarterly grades 2026-10-25.
+- Check the scheduled runs:
+  - nightly sync 2026-09-30, #19's first run: expect about 49 new professors and about 119 `auto_created` sections;
+  - RMP refresh 2026-10-03;
+  - backup 2026-10-04;
+  - quarterly grades 2026-10-25.
 - Review the 24 probably-wrong RMP links (needs `RMP_AUTH_TOKEN`), after the 2026-10-03 refresh.
-- After #19: re-point past-quarter sections (20262/20263) with the new matcher. Run the #21 plan, then the WOODS merge.
+- Fix B6 before 2026-10-25: short-name professors the sync creates would get copies of existing grades at the next grade load (about 12 rows today).
+- Review the pass 4 pair `YIN Y` → `YIN YOUWEI` before anyone dispatches "Enhanced professor matching".
 - Fix the schedule sync for multi-word department codes (POL S, CH E, RG ST, ...), which have never had sections.
-- Delete the Neon backup and rehearsal branches after about 2026-10-06.
+- Delete the Neon backup and rehearsal branches from about 2026-10-06 (2026-09-29 backups) and 2026-10-07 (2026-09-30 backups).
 
 ### Blockers/Concerns
 
-- Render does not run `preDeployCommand`, so migrations must be applied to production by hand (docs/runbooks/reconcile-production-schema.md). Once #20 merges, a `migration-drift` issue flags a pending migration.
-- The nightly sync attaches some sections to the wrong professor until #19 merges, and past quarters stay wrong until they're re-pointed.
+- Render does not run `preDeployCommand`, so migrations must be applied to production by hand (docs/runbooks/reconcile-production-schema.md). The daily drift check (#20) opens a `migration-drift` issue when one is pending.
+- B6 must be fixed before the 2026-10-25 grade load, or that load copies grades onto sync-created short-name professors.
 - The GitHub `*/15` uptime schedule actually runs every 4-6 hours, so an outage can go unnoticed for hours.
 
 ## Session Continuity
 
-Last session: 2026-09-29
-Stopped at: Evening operations handoff written; PRs #19-#21 open, no work in progress
+Last session: 2026-09-30
+Stopped at: #19-#21 merged, production cleanup done and verified, no work in progress
 Resume file: docs/handoff/2026-09-29-evening-operations-handoff.md
