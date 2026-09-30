@@ -191,6 +191,88 @@ def test_duplicate_full_name_rows_count_as_one_candidate(db_session):
     assert grade.professor_id == oldest.id
 
 
+def _sync_created(session, name, dept, **fields):
+    """A row the schedule sync created for an instructor it couldn't match: no grades."""
+    prof = Professor(name_nexus=name, department=dept, **fields)
+    session.add(prof)
+    session.flush()
+    return prof
+
+
+def test_sync_created_short_name_does_not_take_the_full_names_grades(db_session):
+    """SCHMITT R / SCHMITT R J (B6): the sync created SCHMITT R for ESM sections
+    because the full name is stored under ENV. The CSV's SCHMITT R rows matched
+    that row exactly and got a copy of the grades already under SCHMITT R J."""
+    history = [_row(code="ENVS144", year=2025, dept="ENV"), _row(code="GEOG144", year=2025, dept="ENV")]
+    full = _history(db_session, "SCHMITT R J", "ENV", history)
+    short = _sync_created(db_session, "SCHMITT R", "ESM")
+
+    resent = [{**r, "instructor": "SCHMITT R"} for r in history]
+    new_quarter = _row(instructor="SCHMITT R", code="ENVS144", year=2026, dept="ENV")
+    assert load_grades_to_db(resent + [new_quarter], db_session) == 1
+
+    assert db_session.query(Professor).count() == 2
+    assert {g.professor_id for g in db_session.query(GradeDistribution)} == {full.id}
+    assert db_session.get(Professor, short.id) is not None  # its sections stay where they are
+    assert load_grades_to_db(resent + [new_quarter], db_session) == 0
+
+
+def test_sync_created_short_name_in_the_same_department_resolves_too(db_session):
+    full = _history(db_session, "ZHANG WEIDI", "ART", [_row(code="ART7", year=2025, dept="ART")])
+    _sync_created(db_session, "ZHANG W", "ART")
+
+    assert load_grades_to_db([_row(instructor="ZHANG W", code="ART7", year=2026, dept="ART")], db_session) == 1
+
+    assert db_session.query(GradeDistribution).filter_by(year=2026).one().professor_id == full.id
+
+
+def test_sync_created_short_name_keeps_its_row_when_two_full_names_fit(db_session):
+    """Ambiguous, so the grades go to the sync's row, as an exact match would, and no third row appears."""
+    _history(db_session, "WOODS M J", "ED", [_row(code="ED321", year=2022, dept="ED")])
+    _history(db_session, "WOODS M P", "ED", [_row(code="ED111", year=2023, dept="ED")])
+    short = _sync_created(db_session, "WOODS M", "ED")
+
+    assert load_grades_to_db([_row(instructor="WOODS M", code="ED321", year=2020, dept="ED")], db_session) == 1
+
+    assert db_session.query(Professor).filter_by(name_nexus="WOODS M").count() == 1
+    assert db_session.query(GradeDistribution).filter_by(year=2020).one().professor_id == short.id
+
+
+def test_sync_created_short_name_keeps_its_row_when_grades_conflict(db_session):
+    _history(db_session, "RAVEN M A", "MCDB", [_row(code="MCDB126BL", year=2015, dept="MCDB")])
+    short = _sync_created(db_session, "RAVEN M", "MCDB")
+    other_section = {**_row(instructor="RAVEN M", code="MCDB126BL", year=2015, dept="MCDB"), "a": 9}
+
+    assert load_grades_to_db([other_section], db_session) == 1
+
+    assert db_session.query(Professor).filter_by(name_nexus="RAVEN M").count() == 1
+    assert db_session.query(GradeDistribution).filter_by(a=9).one().professor_id == short.id
+
+
+def test_short_name_with_its_own_grades_keeps_its_exact_match(db_session):
+    """A short name that already has grades is a professor in its own right, as before."""
+    _history(db_session, "MARTIN J A", "HIST", [_row(code="HIST4A", year=2024, dept="HIST")])
+    short = _sync_created(db_session, "MARTIN J", "HIST")
+    course = Course(code="HIST17A", department="HIST")
+    db_session.add(course)
+    db_session.flush()
+    db_session.add(GradeDistribution(professor_id=short.id, course_id=course.id, quarter="Fall", year=2023, a=5))
+    db_session.flush()
+
+    load_grades_to_db([_row(instructor="MARTIN J", code="HIST17B", year=2026, dept="HIST")], db_session)
+
+    assert db_session.query(GradeDistribution).filter_by(year=2026).one().professor_id == short.id
+
+
+def test_short_name_linked_to_rmp_keeps_its_exact_match(db_session):
+    _history(db_session, "MARTIN J A", "HIST", [_row(code="HIST4A", year=2024, dept="HIST")])
+    short = _sync_created(db_session, "MARTIN J", "HIST", rmp_id=4242, name_rmp="Jane Martin")
+
+    load_grades_to_db([_row(instructor="MARTIN J", code="HIST17B", year=2026, dept="HIST")], db_session)
+
+    assert db_session.query(GradeDistribution).filter_by(year=2026).one().professor_id == short.id
+
+
 def test_resolving_abbreviated_names_does_not_cost_a_query_per_row(db_session):
     history = [_row(instructor="FAVERTY P W", code="ED101", year=2000 + i, dept="ED") for i in range(30)]
     load_grades_to_db(history, db_session)
