@@ -1,6 +1,8 @@
 # Plan: fold the 1,476 same-name duplicate professor rows into their keepers
 
-**Status:** plan only. Nothing here has run against production. Every production step below needs the owner's explicit approval. Each one follows the write sequence in section 1 of `docs/prompts/2026-09-29-open-items-spec.md`:
+**Status:** executed on production on 2026-09-30, 05:47–05:50 UTC, with the owner's approval, together with the past-quarter re-point and the WOODS merge. See "Execution" at the end. The rest of this document is the plan as approved.
+
+Each production step followed the write sequence in section 1 of `docs/prompts/2026-09-29-open-items-spec.md`:
 
 1. rehearse on a Neon branch;
 2. dry-run against production;
@@ -8,7 +10,7 @@
 4. apply;
 5. verify the counts.
 
-Numbers are from read-only queries on production, 2026-09-29 around 23:30 UTC. Re-measure them at the dry run.
+Numbers are from read-only queries on production, 2026-09-29 around 23:30 UTC. The dry run on 2026-09-30 found the same numbers.
 
 ## What they are
 
@@ -120,7 +122,7 @@ After step 2, `WOODS M P` is only row 15235 (MUS), and 95409's ED section points
 
 **Why the order matters:** once 95409 is gone, ED has only one full name for `WOODS M`, so the grade loader (PR #18) resolves the CSV's `WOODS M` rows to 10233 instead of recreating 101066. **Prove this on the rehearsal branch** by loading the CSV after the merge: expect 0 inserted and 0 created.
 
-This merge is a separate approval.
+This merge was a separate approval. It was approved and run on 2026-09-30; see "Execution".
 
 `RAVEN M` (101052) stays unmerged. Its MCDB 126BL Winter 2015 row has different numbers from `RAVEN M A`'s, so it's another section or another instructor. Merging it would give `RAVEN M A` a second row for that course and quarter, and PR #18's conflict rule would then recreate `RAVEN M` on the next grade load.
 
@@ -128,3 +130,48 @@ This merge is a separate approval.
 
 - Duplicates whose names differ (abbreviated vs full). That's pass 4's job; see C2 and the dry run above.
 - Rows that the B4 re-point leaves with no references but a unique name. The orphan script keeps the oldest row of every name, so they remain until a separate decision.
+
+## Execution, 2026-09-30
+
+Run from a worktree at master `bb1a65b` (#19 merged). The script was a one-off; its logic is described here.
+
+1. **Rehearsal** on `prod-writes-rehearsal-2026-09-30` (`br-wispy-mouse-ak9dm4zr`), in the production order below. Every count matched the production run.
+2. **Dry run** on production: 3,323 sections on 1,476 duplicate rows (2,586 in 20262, 735 in 20263, 2 in 20264), the same as the plan.
+3. **Production**, three writes, each after its own backup branch (no compute):
+
+   | Step | Backup branch | Result |
+   |---|---|---|
+   | Step 1: re-point to keepers, then step 2: orphan delete | `pre-same-name-dedup-2026-09-30` (`br-cool-term-akmghnsq`) | 3,323 sections re-pointed; 1,476 rows deleted; professors 8,616 → 7,140; orphan dry run afterwards finds 0 |
+   | Past-quarter re-point of 20262/20263 with the #19 matcher | `pre-past-quarter-repoint-2026-09-30` (`br-lingering-cell-ak2sk3oa`) | 926 sections changed (576 to another existing professor, 350 to 138 newly created professors); professors 7,140 → 7,278 |
+   | WOODS: `_merge_pair(101066 → 10233)` | `pre-woods-merge-2026-09-30` (`br-wild-term-akcrjj4z`) | professors 7,278 → 7,277; grades 105,729 → 105,728 (one exact duplicate row dropped) |
+
+   Sections (12,439), RMP ratings (1,581), comments (13,858), Gaucho scores (10,962) and `alembic_version` (`9acf49a4b131`) didn't change. Same-name duplicates: 0.
+
+**How the past-quarter re-point worked.** It mirrors `sync_department_sections`:
+
+- It goes quarter by quarter and department by department, in `get_departments` order. The department is the section's `courses.department`.
+- It builds the professor lookup per department, with one shared auto-create cache.
+- It runs `parse_ucsb_instructor` and then `match_instructor_to_professor(parsed, lookup, department)`. When nothing matches, it calls `_auto_create_professor`.
+- It never sets a section's professor to NULL, and it touches only `professor_id`.
+
+The dry run matched the 2026-09-29 snapshot estimate exactly (1,763 / 2,586 / 468 / 271 in 20262; 404 / 735 / 108 / 79 in 20263).
+
+- **Review of the moves:** of the 576 "another professor" moves, 557 go to a row whose name is exactly the UCSB name. Before, the old surname guess had put them elsewhere, for example `AFIFI W A` on `AFIFI T D` and `WANG Y-D` on `WANG YUXIANG`. The other 19 follow #19's rule that a full given name matches a lone initial in the same department, for example `TROY K` → `TROY KRIS`.
+- **What the re-point didn't do:** no old row was left without references.
+
+**Checks after the writes (production, and the rehearsal where noted):**
+
+- No section points at a missing professor.
+- A second run of the re-point changes 0 sections and creates 0 professors.
+- **Tonight's nightly, replayed** over 20264/20271 before and after: 175 sections differ, and all 175 now resolve to a row the re-point created under the same name, instead of the nightly creating it. Nothing else differs. The nightly still changes about 650 Fall sections, as estimated for #19.
+- **WOODS:** only `WOODS M J` (10233, ED) and `WOODS M P` (15235, MUS) remain.
+- **API:** `/ready` and `/courses/{id}/professors` and `/courses/{id}/sections` return 200 for COMM 1, COMM 199RA, ED 111 and ESM 596. No professor is listed twice.
+- **Pass 4 dry run (rehearsal):** one new pair, `YIN Y` (101113) → `YIN YOUWEI` (101117), CHEM. It's recorded for review and not merged. `RAVEN M` is still skipped (grade conflict), as intended.
+- **CSV load (rehearsal): 6 rows inserted, 0 professors created,** where the plan expected 0 and 0. The 6 rows are all `SCHMITT R`, a row the re-point created for ESM/GEOG sections. They copy grades already stored under `SCHMITT R J` (5995, ENV). #19's department rule doesn't match ESM/GEOG sections to an ENV professor, so the sync creates the short name. The grade loader then matches that name exactly instead of resolving it to the full name.
+  - **Simulated with tonight's nightly as well:** 12 duplicated rows under `SCHMITT R`, `ZHANG W` and `MARTIN J`.
+  - **Cause:** #19 together with #18, not this plan. The nightly creates `SCHMITT R` from its Fall section anyway.
+  - **Deadline:** nothing duplicates until the next grade load (2026-10-25), so it needs a fix before then. It's recorded in the 2026-09-29 evening handoff.
+  - **WOODS proof:** the load inserted no `WOODS M` row and created no professor, so 101066 isn't recreated.
+  - **Note for next time:** `load_grades_to_db` commits. So the rehearsal load kept its 6 rows even though the script rolled back afterwards. Run this check only on a throwaway branch, never on production.
+
+**Rollback.** The mapping files `c3-mapping-production.csv` and `repoint-mapping-production.csv` (section id, old and new professor) are in the operator's local `.context/` and aren't committed. The backup branches above are the reliable rollback: restore the one taken before the step to undo. That also discards anything written after it.
