@@ -138,6 +138,17 @@ Check in the Render dashboard:
 
 When you change `db/models.py`, generate the migration with `alembic revision --autogenerate -m "..."` and review it.
 
+CI only proves the migrations are right; it doesn't apply them. `.github/workflows/migration-drift.yml` watches production itself. It runs daily at 20:00 UTC, on every push to master that touches `db/migrations/**` or `db/models.py`, and by hand. It runs `scripts/check_migration_drift.py` read-only against the `DATABASE_URL` secret, and flags drift in two cases:
+
+* `alembic_version` isn't the repo head, whether behind or at a revision the repo doesn't have;
+* `compare_metadata` isn't empty.
+
+It tracks drift in one `migration-drift` issue, which lists the pending revisions and schema differences. The issue closes itself once production is in sync. So after merging a migration, expect that issue to open, and apply the migration with steps 1 to 4 above. To check by hand:
+
+```bash
+DATABASE_URL=... python scripts/check_migration_drift.py   # exit 0 in sync, 1 drift, 2 couldn't check
+```
+
 ## Rehearsal (2026-09-29)
 
 On Neon branch `fix-schema-drift-dry-run` (`br-wandering-cloud-akweblcq`), branched from `production` at LSN `0/21EF15B8`:

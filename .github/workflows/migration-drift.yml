@@ -1,0 +1,51 @@
+name: Migration drift check
+
+# Render doesn't run preDeployCommand for this service, so a merged migration
+# reaches production only when someone runs `alembic upgrade head` by hand
+# (docs/runbooks/reconcile-production-schema.md, section 6). This compares
+# production's alembic_version and live schema with master, read-only, and
+# tracks drift in a single "migration-drift" issue: opened once, refreshed
+# quietly while the drift lasts, closed when production is in sync again.
+
+on:
+  schedule:
+    # Daily at 20:00 UTC, clear of the 08:30 sync and the weekend jobs.
+    - cron: "0 20 * * *"
+  push:
+    # Right after a merge that adds a migration: the issue is the reminder to apply it.
+    branches: [master]
+    paths:
+      - "db/migrations/**"
+      - "db/models.py"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+# Never let two checks race to open duplicate issues.
+concurrency:
+  group: migration-drift
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compare production with master and update the drift issue
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: scripts/migration_drift_check.sh
